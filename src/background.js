@@ -1,13 +1,60 @@
 // 在文件开头添加调试日志
 const requestControllers = new Map(); // 存储请求控制器
 
+// 加载自定义Provider
+async function loadCustomProviders() {
+  return new Promise((resolve) => {
+    chrome.storage.sync.get('customProviders', (data) => {
+      resolve(data.customProviders || []);
+    });
+  });
+}
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "getSettings") {
-    chrome.storage.sync.get(
-      ["deepseekApiKey", "siliconflowApiKey", "openrouterApiKey","volcengineApiKey", "tencentcloudApiKey", "iflytekstarApiKey", "baiducloudApiKey", "aliyunApiKey", "aihubmixApiKey",
-       "deepseekCustomApiUrl", "siliconflowCustomApiUrl", "openrouterCustomApiUrl", "volcengineCustomApiUrl", "tencentcloudCustomApiUrl", "iflytekstarCustomApiUrl", "baiducloudCustomApiUrl", "aliyunCustomApiUrl", "aihubmixCustomApiUrl",
-       "language", "model", "provider"],
-      (data) => {
+    // 先获取自定义服务商列表，然后再获取其他设置
+    chrome.storage.sync.get(['customProviders', 'provider'], async (initialData) => {
+      const customProviders = initialData.customProviders || [];
+      const provider = initialData.provider || 'deepseek';
+
+      // 构建需要获取的键名列表
+      const keysToGet = [
+        "deepseekApiKey", "siliconflowApiKey", "openrouterApiKey","volcengineApiKey",
+        "tencentcloudApiKey", "iflytekstarApiKey", "baiducloudApiKey", "aliyunApiKey", "aihubmixApiKey",
+        "deepseekCustomApiUrl", "siliconflowCustomApiUrl", "openrouterCustomApiUrl",
+        "volcengineCustomApiUrl", "tencentcloudCustomApiUrl", "iflytekstarCustomApiUrl",
+        "baiducloudCustomApiUrl", "aliyunCustomApiUrl", "aihubmixCustomApiUrl",
+        "language", "model"
+      ];
+
+      // 为每个自定义服务商添加API key的键名
+      customProviders.forEach(p => {
+        if (p.id.startsWith('custom_')) {
+          keysToGet.push(`${p.id}ApiKey`);
+        }
+      });
+
+      chrome.storage.sync.get(keysToGet, (data) => {
+        let customApiKey = '';
+        let customApiUrl = '';
+
+        if (provider.startsWith('custom_')) {
+          const customProvider = customProviders.find(p => p.id === provider);
+          if (customProvider) {
+            // 先从customProvider中获取apiKey
+            customApiKey = customProvider.apiKey || '';
+            customApiUrl = customProvider.apiUrl || '';
+
+            // 如果customApiKey为空，尝试从${providerId}ApiKey中获取
+            if (!customApiKey) {
+              const apiKeyName = `${provider}ApiKey`;
+              if (data[apiKeyName]) {
+                customApiKey = data[apiKeyName];
+              }
+            }
+          }
+        }
+
         sendResponse({
           deepseekApiKey: data.deepseekApiKey || '',
           siliconflowApiKey: data.siliconflowApiKey || '',
@@ -29,14 +76,22 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           aihubmixCustomApiUrl: data.aihubmixCustomApiUrl || '',
           language: data.language || 'en',
           model: data.model || 'deepseek-chat',
-          provider: data.provider || 'deepseek'
+          provider: provider,
+          customApiKey: customApiKey,
+          customApiUrl: customApiUrl,
+          customProviders: customProviders
         });
-      }
-    );
+      });
+    });
     return true;
   }
 
   if (request.action === "proxyRequest") {
+    console.log(`🔄 收到代理请求: ${request.url}`);
+    console.log(`📤 请求方法: ${request.method}`);
+    console.log(`🔑 请求头:`, request.headers);
+    console.log(`📦 请求体:`, request.body ? request.body.substring(0, 200) + (request.body.length > 200 ? '...' : '') : '无');
+
     const controller = new AbortController();
     const signal = controller.signal;
 
@@ -45,62 +100,64 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       requestControllers.set(sender.tab.id, controller);
     }
 
-    // 如果请求体中没有model参数，从storage中获取
-    if (request.body && !request.body.includes('"model"')) {
-      chrome.storage.sync.get(['model'], (data) => {
-        const model = data.model || 'deepseek-chat';
-        const bodyObj = JSON.parse(request.body);
-        bodyObj.model = model;
-        request.body = JSON.stringify(bodyObj);
-      });
-    }
+    // 修复: 确保模型参数被正确添加到请求中
+    const processRequest = (requestBody) => {
+      console.log(`🚀 发送请求到: ${request.url}`);
+      console.log(`📤 完整请求体:`, requestBody);
 
-    fetch(request.url, {
-      method: request.method,
-      headers: request.headers,
-      body: request.body,
-      signal
-    })
-    .then(async response => {
-      // 如果不是流式响应，直接返回状态
-      if (!request.body.includes('"stream":true')) {
-        sendResponse({
-          status: response.status,
-          ok: response.ok
-        });
-        return;
-      }
+      fetch(request.url, {
+        method: request.method,
+        headers: request.headers,
+        body: requestBody,
+        signal
+      })
+      .then(async response => {
+        console.log(`📥 收到响应 - 状态码: ${response.status}, OK: ${response.ok}`);
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+        // 如果不是流式响应，直接返回状态
+        if (!requestBody.includes('"stream":true')) {
+          // 尝试读取响应内容以获取更多错误信息
+          try {
+            const responseText = await response.text();
+            console.log(`📄 响应内容:`, responseText.substring(0, 500) + (responseText.length > 500 ? '...' : ''));
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-
-          if (done) {
-            if (sender?.tab?.id) {
-              chrome.tabs.sendMessage(sender.tab.id, {
-                type: "streamResponse",
-                response: { data: 'data: [DONE]\n\n', ok: true, done: true }
-              });
+            let responseData = null;
+            try {
+              responseData = JSON.parse(responseText);
+            } catch (e) {
+              console.log(`⚠️ 响应不是有效的JSON`);
             }
-            break;
+
+            sendResponse({
+              status: response.status,
+              ok: response.ok,
+              data: responseData,
+              text: responseText
+            });
+          } catch (error) {
+            console.error(`❌ 读取响应内容错误:`, error);
+            sendResponse({
+              status: response.status,
+              ok: response.ok,
+              error: error.message
+            });
           }
+          return;
+        }
 
-          const chunk = decoder.decode(value);
-          const lines = chunk.split('\n');
+        if (!response.ok) {
+          console.error(`❌ HTTP错误! 状态码: ${response.status}`);
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
-          for (const line of lines) {
-            if (line.trim() === '') continue;
-            if (!line.startsWith('data: ')) continue;
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
 
-            const data = line.slice(6);
-            if (data === '[DONE]') {
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+
+            if (done) {
               if (sender?.tab?.id) {
                 chrome.tabs.sendMessage(sender.tab.id, {
                   type: "streamResponse",
@@ -110,37 +167,73 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
               break;
             }
 
-            if (sender?.tab?.id) {
-              chrome.tabs.sendMessage(sender.tab.id, {
-                type: "streamResponse",
-                response: { data: line + '\n\n', ok: true, done: false }
-              });
+            const chunk = decoder.decode(value);
+            const lines = chunk.split('\n');
+
+            for (const line of lines) {
+              if (line.trim() === '') continue;
+              if (!line.startsWith('data: ')) continue;
+
+              const data = line.slice(6);
+              if (data === '[DONE]') {
+                if (sender?.tab?.id) {
+                  chrome.tabs.sendMessage(sender.tab.id, {
+                    type: "streamResponse",
+                    response: { data: 'data: [DONE]\n\n', ok: true, done: true }
+                  });
+                }
+                break;
+              }
+
+              if (sender?.tab?.id) {
+                chrome.tabs.sendMessage(sender.tab.id, {
+                  type: "streamResponse",
+                  response: { data: line + '\n\n', ok: true, done: false }
+                });
+              }
             }
           }
+        } catch (error) {
+          console.error('读取响应流错误:', error);
+          if (sender?.tab?.id) {
+            chrome.tabs.sendMessage(sender.tab.id, {
+              type: "streamResponse",
+              response: { ok: false, error: error.message }
+            });
+          }
+        } finally {
+          reader.releaseLock();
         }
-      } catch (error) {
+      })
+      .catch(error => {
+        console.error('请求错误:', error);
+        sendResponse({
+          ok: false,
+          error: error.message
+        });
+      })
+      .finally(() => {
+        // 清理控制器
         if (sender?.tab?.id) {
-          chrome.tabs.sendMessage(sender.tab.id, {
-            type: "streamResponse",
-            response: { ok: false, error: error.message }
-          });
+          requestControllers.delete(sender.tab.id);
         }
-      } finally {
-        reader.releaseLock();
-      }
-    })
-    .catch(error => {
-      sendResponse({
-        ok: false,
-        error: error.message
       });
-    })
-    .finally(() => {
-      // 清理控制器
-      if (sender?.tab?.id) {
-        requestControllers.delete(sender.tab.id);
-      }
-    });
+    };
+
+    // 如果请求体中没有model参数，从storage中获取
+    if (request.body && !request.body.includes('"model"')) {
+      chrome.storage.sync.get(['model'], (data) => {
+        const model = data.model || 'deepseek-chat';
+        const bodyObj = JSON.parse(request.body);
+        bodyObj.model = model;
+        request.body = JSON.stringify(bodyObj);
+        processRequest(request.body);
+      });
+    } else {
+      // 请求体已经包含model参数，直接处理
+      console.log(`✅ 请求已包含模型参数，直接处理: ${request.body.substring(0, 100)}...`);
+      processRequest(request.body);
+    }
 
     return true;
   }
@@ -189,23 +282,25 @@ chrome.commands.onCommand.addListener(async (command) => {
       return;
     }
 
-    // 获取选中的文本
     try {
+      // 使用executeScript获取选中文本
       const [{result}] = await chrome.scripting.executeScript({
         target: { tabId: tab.id },
-        func: () => window.getSelection().toString()
+        func: () => window.getSelection().toString().trim()
       });
 
+      // 发送toggleChat消息以实现真正的切换功能
       chrome.tabs.sendMessage(tab.id, {
         action: "toggleChat",
         selectedText: result || null,
-        message: result || getGreeting()
+        useGreeting: getGreeting()
       });
     } catch (error) {
+      console.error("获取选中文本出错:", error);
       chrome.tabs.sendMessage(tab.id, {
         action: "toggleChat",
         selectedText: null,
-        message: getGreeting()
+        useGreeting: getGreeting()
       });
     }
   } else if (command === "close-chat") {

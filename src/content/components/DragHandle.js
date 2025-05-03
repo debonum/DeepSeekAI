@@ -14,6 +14,16 @@ export function initDraggable(dragHandle, popup) {
     initialX = popup.offsetLeft;
     initialY = popup.offsetTop;
     popup.style.transition = 'none';
+
+    // 添加拖拽状态样式，提供更好的视觉反馈
+    popup.classList.add('dragging');
+    // 改变光标样式
+    dragHandle.style.cursor = 'grabbing';
+
+    // 添加拖拽开始的触感反馈
+    if ('vibrate' in navigator) {
+      navigator.vibrate(10);
+    }
   }
 
   function drag(e) {
@@ -23,13 +33,71 @@ export function initDraggable(dragHandle, popup) {
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
 
+    // 添加拖拽的惯性和流畅感
     popup.style.left = `${initialX + dx}px`;
     popup.style.top = `${initialY + dy}px`;
+
+    // 更新窗口位置时显示距离指示器（仅当移动足够距离时）
+    const moveDistance = Math.sqrt(dx * dx + dy * dy);
+    if (moveDistance > 50) {
+      // 显示拖拽距离指示器
+      showDragDistance(popup, moveDistance.toFixed(0));
+    }
   }
 
   function stopDragging() {
+    if (!isDragging) return;
+
     isDragging = false;
     popup.style.transition = 'transform 0.05s cubic-bezier(0.4, 0, 0.2, 1)';
+
+    // 移除拖拽状态样式
+    popup.classList.remove('dragging');
+    // 恢复光标样式
+    dragHandle.style.cursor = 'grab';
+
+    // 移除拖拽距离指示器
+    const distanceIndicator = popup.querySelector('.drag-distance');
+    if (distanceIndicator) {
+      distanceIndicator.remove();
+    }
+
+    // 添加"放置"的触感反馈
+    if ('vibrate' in navigator) {
+      navigator.vibrate(5);
+    }
+
+    // 添加放置动画效果
+    popup.classList.add('drag-placed');
+    setTimeout(() => {
+      popup.classList.remove('drag-placed');
+    }, 150);
+  }
+
+  // 显示拖拽距离指示器
+  function showDragDistance(popup, distance) {
+    let distanceIndicator = popup.querySelector('.drag-distance');
+
+    if (!distanceIndicator) {
+      distanceIndicator = document.createElement('div');
+      distanceIndicator.className = 'drag-distance';
+      distanceIndicator.style.position = 'absolute';
+      distanceIndicator.style.bottom = '-25px';
+      distanceIndicator.style.left = '50%';
+      distanceIndicator.style.transform = 'translateX(-50%)';
+      distanceIndicator.style.backgroundColor = 'var(--bg-secondary)';
+      distanceIndicator.style.color = 'var(--text-secondary)';
+      distanceIndicator.style.padding = '4px 8px';
+      distanceIndicator.style.borderRadius = '4px';
+      distanceIndicator.style.fontSize = '10px';
+      distanceIndicator.style.pointerEvents = 'none';
+      distanceIndicator.style.zIndex = '2000';
+      distanceIndicator.style.opacity = '0.9';
+      distanceIndicator.style.boxShadow = 'var(--shadow-sm)';
+      popup.appendChild(distanceIndicator);
+    }
+
+    distanceIndicator.textContent = `已移动 ${distance}px`;
   }
 
   return () => {
@@ -63,7 +131,7 @@ export function createDragHandle(removeCallback) {
     left: "0",
     width: "100%",
     height: "40px",
-    cursor: "move",
+    cursor: "grab", // 改为grab光标，更符合拖拽操作的直觉
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -107,78 +175,158 @@ export function createDragHandle(removeCallback) {
   titleContainer.appendChild(logo);
   titleContainer.appendChild(textNode);
 
+  // 添加拖拽提示
+  const dragTooltip = document.createElement("div");
+  dragTooltip.className = "tool-tip";
+  dragTooltip.textContent = "Drag to move the window";
+  dragTooltip.style.top = "45px";
+  dragTooltip.style.left = "50%";
+  dragTooltip.style.transform = "translateX(-50%)";
+  dragHandle.appendChild(dragTooltip);
+
   const closeButton = document.createElement("button");
-  closeButton.className = "close-button";
+  closeButton.className = "close-button tooltip-trigger";
   Object.assign(closeButton.style, {
     display: "none",
     background: "none",
     border: "none",
     cursor: "pointer",
-    padding: "0",
+    padding: "8px",
     margin: "0",
-    transition: "all 0.2s ease",
+    transition: "all 0.2s cubic-bezier(0.25, 1, 0.5, 1)",
     position: "absolute",
     right: "10px",
     top: "50%",
     transform: "translateY(-50%) scale(1)",
-    width: "20px",
-    height: "20px",
-    minWidth: "20px",
-    minHeight: "20px",
-    maxWidth: "20px",
-    maxHeight: "20px",
+    width: "24px",
+    height: "24px",
+    minWidth: "24px",
+    minHeight: "24px",
+    maxWidth: "24px",
+    maxHeight: "24px",
     lineHeight: "1",
     outline: "none",
     boxSizing: "content-box",
-    zIndex: "2147483647",
+    zIndex: "10",
     appearance: "none",
     WebkitAppearance: "none",
-    MozAppearance: "none"
+    MozAppearance: "none",
+    borderRadius: "6px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center"
   });
 
-  const closeIcon = document.createElement("img");
-  closeIcon.src = chrome.runtime.getURL("icons/close.svg");
+  const closeIcon = document.createElement("div");
+  closeIcon.className = "close-icon";
+  // 使用已有的关闭图标SVG
+  closeIcon.innerHTML = `
+    <img src="${chrome.runtime.getURL('icons/close.svg')}" alt="关闭" width="16" height="16" style="display: block;">
+  `;
+
+  // 简化图标样式
   Object.assign(closeIcon.style, {
-    width: "20px",
-    height: "20px",
-    display: "block",
+    width: "16px",
+    height: "16px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+    color: "var(--text-secondary)",
+    transition: "transform 0.15s ease, color 0.15s ease",
     padding: "0",
-    margin: "0",
-    border: "none",
-    outline: "none",
-    boxSizing: "border-box",
-    pointerEvents: "none",
-    userSelect: "none",
-    WebkitUserSelect: "none"
+    zIndex: "10"
   });
 
   closeButton.appendChild(closeIcon);
-  dragHandle.appendChild(titleContainer);
-  dragHandle.appendChild(closeButton);
+
+  // 添加关闭按钮工具提示
+  const closeTooltip = document.createElement("div");
+  closeTooltip.className = "tool-tip";
+  closeTooltip.textContent = "关闭窗口";
+  closeTooltip.style.right = "16px";
+  closeTooltip.style.top = "45px";
+  dragHandle.appendChild(closeTooltip);
+
+  closeButton.addEventListener("mouseenter", () => {
+    // 悬停时变为苹果蓝色并轻微放大
+    closeIcon.style.transform = "scale(1.1)";
+    const img = closeIcon.querySelector('img');
+    if (img) {
+      img.style.filter = "invert(48%) sepia(57%) saturate(6300%) hue-rotate(193deg) brightness(101%) contrast(101%)";
+    }
+  });
+
+  closeButton.addEventListener("mouseleave", () => {
+    // 恢复正常状态
+    closeIcon.style.transform = "scale(1)";
+    const img = closeIcon.querySelector('img');
+    if (img) {
+      img.style.filter = "";
+    }
+  });
+
+  closeButton.addEventListener("mousedown", (e) => {
+    e.stopPropagation();
+    // 点击时只放大图标而不是整个按钮
+    closeIcon.style.transform = "scale(1.2)";
+
+    // 强制按钮保持在原位置
+    closeButton.style.transform = "translateY(-50%)";
+    closeButton.style.top = "50%";
+
+    // 触觉反馈
+    if ('vibrate' in navigator) {
+      navigator.vibrate(8);
+    }
+  });
+
+  closeButton.addEventListener("mouseup", () => {
+    // 恢复到悬停状态，按钮保持位置不变
+    closeIcon.style.transform = "scale(1.1)";
+    closeButton.style.transform = "translateY(-50%)";
+  });
+
+  closeButton.addEventListener("click", (e) => {
+    e.stopPropagation();
+    e.preventDefault(); // 防止默认行为
+
+    // 强制按钮保持在原位置
+    closeButton.style.transform = "translateY(-50%)";
+    closeButton.style.transition = "none";
+
+    // 确保图标不会发生变形
+    closeIcon.style.transition = "none";
+    closeIcon.style.transform = "scale(1)";
+
+    // 阻止所有可能的动画或滑动
+    const img = closeIcon.querySelector('img');
+    if (img) {
+      img.style.transition = "none";
+    }
+
+    // 立即执行关闭回调，不添加任何额外效果
+    if (removeCallback) {
+      removeCallback();
+    }
+  });
 
   dragHandle.addEventListener("mouseenter", () => {
-    closeButton.style.display = "block";
+    closeButton.style.display = "flex";
   });
 
   dragHandle.addEventListener("mouseleave", () => {
     closeButton.style.display = "none";
-    closeIcon.src = chrome.runtime.getURL("icons/close.svg");
-    closeButton.style.transform = "translateY(-50%) scale(1)";
   });
 
-  closeButton.addEventListener("mouseenter", () => {
-    closeIcon.src = chrome.runtime.getURL("icons/closeClicked.svg");
-    closeButton.style.transform = "translateY(-50%) scale(1.1)";
-  });
+  dragHandle.appendChild(titleContainer);
+  dragHandle.appendChild(closeButton);
 
-  closeButton.addEventListener("mouseleave", () => {
-    closeIcon.src = chrome.runtime.getURL("icons/close.svg");
-    closeButton.style.transform = "translateY(-50%) scale(1)";
-  });
-
-  closeButton.addEventListener("click", (event) => {
-    event.stopPropagation();
-    if (typeof removeCallback === 'function') {
+  // 添加徽标，表示扩展的身份
+  dragHandle.addEventListener("dblclick", (e) => {
+    e.stopPropagation();
+    if (removeCallback) {
+      // 双击标题栏也可以关闭
       removeCallback();
     }
   });

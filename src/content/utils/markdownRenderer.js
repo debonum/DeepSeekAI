@@ -174,7 +174,7 @@ md.renderer.rules.fence = (() => {
       <div class="code-block-wrapper">
         <pre class="code-wrap">${rawHtml}</pre>
         <button class="copy-button" data-code="${encodeURIComponent(code)}">
-          <img src="${chrome.runtime.getURL("icons/copy.svg")}" alt="Copy" />
+          <img src="${chrome.runtime.getURL("icons/copy.svg")}" alt="Copy" class="copy-icon" />
         </button>
       </div>
     `.trim();
@@ -193,6 +193,23 @@ document.addEventListener('click', async function(event) {
   if (code) {
     try {
       await navigator.clipboard.writeText(code);
+
+      // 复制成功的视觉反馈
+      copyButton.classList.add('copied');
+
+      // 更新复制按钮文本/图标
+      const copyIcon = copyButton.querySelector('.copy-icon');
+      if (copyIcon) {
+        // 使用check.svg图标
+        copyButton.innerHTML = `<img src="${chrome.runtime.getURL("icons/check.svg")}" alt="Copied" class="copy-icon copied-icon" />`;
+      }
+
+      // 2秒后恢复原始状态
+      setTimeout(() => {
+        copyButton.classList.remove('copied');
+        copyButton.innerHTML = `<img src="${chrome.runtime.getURL("icons/copy.svg")}" alt="Copy" class="copy-icon" />`;
+      }, 2000);
+
     } catch (error) {
       console.error('Failed to copy:', error);
     }
@@ -200,4 +217,64 @@ document.addEventListener('click', async function(event) {
     console.warn('No code text found to copy');
   }
 }, true);
+
+// 添加全局处理函数，在AI响应完成后才显示复制按钮
+export function initCopyButtonsVisibility() {
+  // 监听DOM变化，处理流式响应过程中的代码块
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach(mutation => {
+      if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+        mutation.addedNodes.forEach(node => {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            // 查找新添加的代码块
+            const codeBlocks = node.querySelectorAll ? node.querySelectorAll('.code-block-wrapper') : [];
+            codeBlocks.forEach(block => {
+              // 隐藏复制按钮直到代码完成加载
+              const button = block.querySelector('.copy-button');
+              if (button) {
+                button.style.display = 'none';
+              }
+            });
+          }
+        });
+      }
+    });
+  });
+
+  // 观察AI响应容器
+  const aiResponseContainer = document.getElementById('ai-response');
+  if (aiResponseContainer) {
+    observer.observe(aiResponseContainer, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  return observer;
+}
+
+// 检查代码块是否已完成渲染（在AI响应完成后调用）
+export function showCodeCopyButtons() {
+  const aiResponseContainer = document.getElementById('ai-response');
+  if (!aiResponseContainer) return;
+
+  // 查找所有代码块中的复制按钮
+  const copyButtons = aiResponseContainer.querySelectorAll('.code-block-wrapper .copy-button');
+
+  // 显示所有复制按钮
+  copyButtons.forEach(button => {
+    if (button.style.display === 'none') {
+      // 先保持透明并逐渐淡入，避免突然出现
+      button.style.opacity = '0';
+      button.style.display = '';
+
+      // 使用requestAnimationFrame确保样式变化已经应用
+      requestAnimationFrame(() => {
+        button.style.transition = 'opacity 0.3s ease';
+        button.style.opacity = '';
+      });
+    }
+  });
+}
+
 export { md };

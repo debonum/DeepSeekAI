@@ -9,17 +9,33 @@ import { createScrollManager, getAllowAutoScroll, setAllowAutoScroll, updateAllo
 import { isDarkMode, watchThemeChanges, applyTheme } from './utils/themeManager';
 import { STYLE_CONSTANTS } from './utils/constants';
 import { popupStateManager } from './utils/popupStateManager';
+import { initCopyButtonsVisibility } from "./utils/markdownRenderer";
 
 // 将aiResponseContainer移动到window对象上
 window.aiResponseContainer = null;
 
-// 新增：定义全局滚动相关的常量
+// 定义全局滚动相关的常量
 const SCROLL_CONSTANTS = {
   SCROLL_THRESHOLD: 30,          // 滚动触发阈值
   COOLDOWN_DURATION: 150,        // 滚动冷却时间（毫秒）
   ANIMATION_DURATION: 300,       // 动画持续时间（毫秒）
   VELOCITY_THRESHOLD: 0.5,       // 速度阈值
   MAX_MOMENTUM_SAMPLES: 5        // 最大动量采样数
+};
+
+// 新增：动画相关常量
+const ANIMATION_CONSTANTS = {
+  POPUP_APPEAR_DURATION: 280,    // 弹出动画持续时间
+  POPUP_CLOSE_DURATION: 250,     // 关闭动画持续时间
+  SPRING_STIFFNESS: 0.3,         // 弹簧刚度系数
+  SPRING_DAMPING: 0.7            // 弹簧阻尼系数
+};
+
+// 触觉反馈函数
+const provideTactileFeedback = (intensity = 8) => {
+  if ('vibrate' in navigator) {
+    navigator.vibrate(intensity); // 触感反馈，默认8毫秒
+  }
 };
 
 const adjustPopupPosition = (rect) => {
@@ -42,7 +58,7 @@ const adjustPopupPosition = (rect) => {
   return { left: `${adjustedX}px`, top: `${adjustedY}px` };
 };
 
-// 添加 getPopupInitialStyle 函数
+// 获取弹窗初始样式，添加动画相关属性
 const getPopupInitialStyle = (rect) => ({
   position: 'fixed',
   width: STYLE_CONSTANTS.DEFAULT_POPUP_WIDTH,
@@ -57,11 +73,13 @@ const getPopupInitialStyle = (rect) => ({
   overflow: 'hidden',
   userSelect: 'none',
   border: '1px solid var(--border-color)',
-  transition: 'transform 0.05s cubic-bezier(0.4, 0, 0.2, 1)',
-  willChange: 'transform, width, height',
+  willChange: 'transform, opacity, width, height',
   backfaceVisibility: 'hidden',
   perspective: '1000px',
   transformStyle: 'preserve-3d',
+  animation: 'popup-appear-spring 380ms cubic-bezier(0.22, 1, 0.36, 1)',
+  opacity: '0',
+  transform: 'translateY(8px) scale(0.98)',
   ...adjustPopupPosition(rect)
 });
 
@@ -81,6 +99,12 @@ export function createPopup(selectedText, rect, hideQuestion = false, removeCall
 
   Object.assign(popup.style, getPopupInitialStyle(rect));
 
+  // 在下一帧显示弹窗，触发动画
+  requestAnimationFrame(() => {
+    popup.style.opacity = '1';
+    popup.style.transform = 'translateY(0) scale(1)';
+  });
+
   const aiResponseElement = document.createElement("div");
   window.aiResponseContainer = document.createElement("div");
   styleResponseContainer(window.aiResponseContainer);
@@ -89,11 +113,55 @@ export function createPopup(selectedText, rect, hideQuestion = false, removeCall
   resizeHandle.className = 'resize-handle';
   popup.appendChild(resizeHandle);
 
+  // 给resize-handle添加工具提示
+  const resizeTooltip = document.createElement('div');
+  resizeTooltip.className = 'tool-tip';
+  resizeTooltip.textContent = '调整大小';
+  resizeTooltip.style.right = '16px';
+  resizeTooltip.style.bottom = '16px';
+  resizeHandle.classList.add('tooltip-trigger');
+  popup.appendChild(resizeTooltip);
+
   aiResponseElement.id = "ai-response";
   aiResponseElement.style.padding = "0px 30px 0";
   aiResponseElement.style.fontSize = "14px";
 
-  if (!hideQuestion) {
+  // 检查消息中是否包含自定义问题
+  if (messages && messages.length > 0 && messages[0].userQuestion) {
+    // 这是自定义问题的情况，我们需要显示选中内容和用户问题
+    if (!hideQuestion) {
+      // 创建一个组合内容的容器
+      const combinedContainer = document.createElement('div');
+      combinedContainer.className = 'user-question combined-content';
+
+      // 添加选中内容
+      const selectedContentDiv = document.createElement('div');
+      selectedContentDiv.className = 'selected-content';
+
+      // 添加选中内容文本
+      const selectedContentP = document.createElement('p');
+      selectedContentP.textContent = messages[0].content;
+      selectedContentDiv.appendChild(selectedContentP);
+
+      // 添加用户问题
+      const userQuestionDiv = document.createElement('div');
+      userQuestionDiv.className = 'user-prompt';
+
+      // 添加问题文本
+      const userQuestionP = document.createElement('p');
+      userQuestionP.textContent = messages[0].userQuestion;
+      userQuestionDiv.appendChild(userQuestionP);
+
+      // 将选中内容和用户问题添加到组合容器
+      combinedContainer.appendChild(selectedContentDiv);
+      combinedContainer.appendChild(userQuestionDiv);
+
+      // 添加按钮并附加到响应元素
+      addIconsToElement(combinedContainer);
+      aiResponseElement.appendChild(combinedContainer);
+    }
+  } else if (!hideQuestion) {
+    // 原有的单条消息显示逻辑
     const userQuestionDiv = document.createElement('div');
     userQuestionDiv.className = 'user-question';
     const userQuestionP = document.createElement('p');
@@ -106,6 +174,8 @@ export function createPopup(selectedText, rect, hideQuestion = false, removeCall
   const initialAnswerElement = document.createElement("div");
   initialAnswerElement.className = "ai-answer";
   initialAnswerElement.textContent = "";
+  // 添加生成中的类，用于显示进度动画
+  initialAnswerElement.classList.add('generating');
   addIconsToElement(initialAnswerElement);
   aiResponseElement.appendChild(initialAnswerElement);
 
@@ -146,11 +216,49 @@ export function createPopup(selectedText, rect, hideQuestion = false, removeCall
   // 保存主题监听器清理函数到 popup 对象
   popup._removeThemeListener = removeThemeListener;
 
+  // 自定义关闭回调，添加关闭动画
+  const enhancedRemoveCallback = () => {
+    // 提供关闭前的触觉反馈
+    provideTactileFeedback(10);
+
+    // 立即调用关闭回调，不使用动画或延迟
+    if (removeCallback) removeCallback();
+  };
+
   document.body.appendChild(popup);
 
   let abortController = new AbortController();
+  // 增加回调函数，在生成完成时移除generating类
+  const onGenerationComplete = () => {
+    if (initialAnswerElement) {
+      initialAnswerElement.classList.remove('generating');
+      // 添加一个短暂的高亮效果，表示生成完成
+      initialAnswerElement.style.transition = 'background-color 0.5s ease';
+      const originalColor = getComputedStyle(initialAnswerElement).backgroundColor;
+      initialAnswerElement.style.backgroundColor = 'var(--success-color-alpha, rgba(52, 199, 89, 0.1))';
+      setTimeout(() => {
+        initialAnswerElement.style.backgroundColor = originalColor;
+      }, 1000);
+    }
+  };
+
+  // 增加错误处理回调
+  const onGenerationError = () => {
+    if (initialAnswerElement) {
+      initialAnswerElement.classList.remove('generating');
+      initialAnswerElement.classList.add('error');
+    }
+  };
+
+  // 如果有自定义问题，需要修改发送到API的内容
+  let contentToSend = selectedText;
+  if (messages && messages.length > 0 && messages[0].userQuestion) {
+    // 合并选中内容和用户问题为一条消息
+    contentToSend = `我有如下内容：\n\n${messages[0].content}\n\n我的问题是：${messages[0].userQuestion}`;
+  }
+
   getAIResponse(
-    selectedText,
+    contentToSend,
     initialAnswerElement,
     { controller: abortController },
     ps,
@@ -159,16 +267,41 @@ export function createPopup(selectedText, rect, hideQuestion = false, removeCall
     false,
     null,
     false,
-    quickActionPrompt
+    quickActionPrompt,
+    onGenerationComplete, // 新增完成回调
+    onGenerationError     // 新增错误回调
   );
 
-  const dragHandle = createDragHandle(removeCallback);
+  const dragHandle = createDragHandle(enhancedRemoveCallback);
   popup.appendChild(dragHandle);
 
   setupInteractions(popup, dragHandle, window.aiResponseContainer);
 
   const questionInputContainer = createQuestionInputContainer(window.aiResponseContainer);
   popup.appendChild(questionInputContainer);
+
+  initCopyButtonsVisibility(window.aiResponseContainer);
+
+  // 添加窗口初始化动画完成事件
+  popup.addEventListener('animationend', (e) => {
+    if (e.animationName === 'popup-appear-spring') {
+      // 窗口出现动画完成后，为输入框增加轻微的聚焦动画
+      const textarea = popup.querySelector('.expandable-textarea');
+      if (textarea) {
+        textarea.style.animation = 'input-attention 0.5s ease-out';
+      }
+      // 添加轻微的弹跳效果，提升确定感
+      popup.classList.add('popup-ready');
+    }
+  });
+
+  // 监听点击事件添加触觉和视觉反馈
+  popup.addEventListener('mousedown', (e) => {
+    if (e.target.closest('.send-icon') || e.target.closest('.expandable-textarea') ||
+        e.target.closest('.close-button') || e.target.closest('.icon-wrapper')) {
+      provideTactileFeedback();
+    }
+  });
 
   return popup;
 }
@@ -209,12 +342,26 @@ function setupInteractions(popup, dragHandle, aiResponseContainer) {
 
           updateInputContainer(popup);
           prevCleanup = cleanup;
+
+          // 新增：调整大小时提供触觉反馈
+          if (event.deltaRect.width !== 0 || event.deltaRect.height !== 0) {
+            // 限制反馈频率以避免过度震动
+            if (!popup._lastFeedbackTime || Date.now() - popup._lastFeedbackTime > 100) {
+              provideTactileFeedback();
+              popup._lastFeedbackTime = Date.now();
+            }
+          }
         },
         end: () => {
           if (prevCleanup) {
             prevCleanup();
             prevCleanup = null;
           }
+          // 新增：调整大小结束时的视觉反馈
+          popup.classList.add('resize-complete');
+          setTimeout(() => {
+            popup.classList.remove('resize-complete');
+          }, 300);
         }
       },
       autoScroll: false
@@ -298,6 +445,8 @@ function sendQuestionToAI(question) {
   const answerElement = document.createElement("div");
   answerElement.className = "ai-answer";
   answerElement.textContent = "";
+  // 添加生成中类，显示进度动画
+  answerElement.classList.add('generating');
   addIconsToElement(answerElement);
   aiResponseElement.appendChild(answerElement);
 
@@ -312,13 +461,41 @@ function sendQuestionToAI(question) {
   }
 
   const abortController = new AbortController();
+
+  // 添加回调函数处理生成完成和错误情况
+  const onGenerationComplete = () => {
+    if (answerElement) {
+      answerElement.classList.remove('generating');
+      // 添加一个短暂的高亮效果，表示生成完成
+      answerElement.style.transition = 'background-color 0.5s ease';
+      const originalColor = getComputedStyle(answerElement).backgroundColor;
+      answerElement.style.backgroundColor = 'var(--success-color-alpha, rgba(52, 199, 89, 0.1))';
+      setTimeout(() => {
+        answerElement.style.backgroundColor = originalColor;
+      }, 1000);
+    }
+  };
+
+  const onGenerationError = () => {
+    if (answerElement) {
+      answerElement.classList.remove('generating');
+      answerElement.classList.add('error');
+    }
+  };
+
   getAIResponse(
     question,
     answerElement,
-    abortController.signal,
+    { controller: abortController },
     ps,
     null,
-    aiResponseContainer
+    aiResponseContainer,
+    false,
+    null,
+    false,
+    '',
+    onGenerationComplete,
+    onGenerationError
   );
 }
 
@@ -329,19 +506,19 @@ export function stylePopup(popup, rect) {
   // 添加主题相关的样式类
   popup.classList.add('theme-adaptive');
 
-  // 添加事件监听器来防止文本选择
+  // 只在调整大小时阻止文本选择
   popup.addEventListener('mousedown', function(e) {
-    if (e.target.closest('.resizable')) {
+    if (e.target.closest('.resize-handle') || e.target.closest('.drag-handle')) {
       e.preventDefault();
     }
   });
 
-  // 添加mouseout事件处理器来阻止文本选择扩展到弹窗外部
-  popup.addEventListener('mouseout', function(e) {
+  // 只在鼠标离开弹窗时清除选择
+  popup.addEventListener('mouseleave', function(e) {
     // 检查鼠标是否真的离开了弹窗（不是移动到子元素）
     if (!e.relatedTarget || !popup.contains(e.relatedTarget)) {
-      // 清除当前选择
-      window.getSelection().removeAllRanges();
+      // 不要清除选择，让用户自己决定是否保留选择
+      // window.getSelection().removeAllRanges();
     }
   });
 
@@ -395,3 +572,78 @@ export function stylePopup(popup, rect) {
     }
   }, { passive: true });
 }
+
+// 在文档中添加输入框动画和弹窗动画样式
+document.addEventListener('DOMContentLoaded', () => {
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes input-attention {
+      0% { box-shadow: 0 0 0 0px var(--focus-state); }
+      50% { box-shadow: 0 0 0 3px var(--focus-state); }
+      100% { box-shadow: 0 0 0 0px transparent; }
+    }
+
+    .resize-complete {
+      animation: resize-complete 0.3s ease-out;
+    }
+
+    @keyframes resize-complete {
+      0% { box-shadow: 0 0 0 3px var(--focus-state); }
+      100% { box-shadow: 0 0 0 0px rgba(0, 0, 0, 0.05), 0 2px 8px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.08); }
+    }
+
+    /* 新增弹簧动画效果 */
+    @keyframes popup-appear-spring {
+      0% {
+        opacity: 0;
+        transform: translateY(12px) scale(0.96);
+      }
+      40% {
+        opacity: 1;
+        transform: translateY(-5px) scale(1.01);
+      }
+      70% {
+        transform: translateY(2px) scale(0.99);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    /* 关闭动画 */
+    @keyframes popup-close {
+      0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(8px) scale(0.96);
+      }
+    }
+
+    /* 准备就绪的轻微弹跳效果 */
+    .popup-ready {
+      animation: popup-ready 0.4s ease-out;
+    }
+
+    @keyframes popup-ready {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.01); }
+      100% { transform: scale(1); }
+    }
+
+    /* 拖拽放置时的动画增强 */
+    .theme-adaptive #ai-popup.drag-placed {
+      animation: drag-placed 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes drag-placed {
+      0% { transform: scale(1.03); }
+      50% { transform: scale(0.98); }
+      100% { transform: scale(1); }
+    }
+  `;
+  document.head.appendChild(style);
+});

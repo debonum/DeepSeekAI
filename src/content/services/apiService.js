@@ -1,5 +1,5 @@
 import { getAllowAutoScroll, scrollToBottom } from "../utils/scrollManager";
-import { md } from "../utils/markdownRenderer";
+import { md, showCodeCopyButtons } from "../utils/markdownRenderer";
 
 // 全局变量用于存储对话历史
 let messages = [];
@@ -103,7 +103,9 @@ export async function getAIResponse(
   isRefresh = false,
   onComplete,
   isGreeting = false,
-  quickActionPrompt = ''
+  quickActionPrompt = '',
+  onGenerationComplete = null,
+  onGenerationError = null
 ) {
   if (!text) return;
 
@@ -139,28 +141,91 @@ export async function getAIResponse(
     });
 
     const provider = settings.provider || 'deepseek';
-    const apiKey = provider === 'siliconflow' ? settings.siliconflowApiKey :
-                  provider === 'openrouter' ? settings.openrouterApiKey :
-                  provider === 'volcengine' ? settings.volcengineApiKey :
-                  provider === 'tencentcloud' ? settings.tencentcloudApiKey :
-                  provider === 'iflytekstar' ? settings.iflytekstarApiKey :
-                  provider === 'baiducloud' ? settings.baiducloudApiKey :
-                  provider === 'aliyun' ? settings.aliyunApiKey :
-                  provider === 'aihubmix' ? settings.aihubmixApiKey :
-                  settings.deepseekApiKey;
+    let apiKey = '';
+
+    // 根据provider选择Api Key
+    if (provider.startsWith('custom_')) {
+      // 对于自定义服务商，API key可能来自两个地方
+      // 1. settings.customApiKey (background.js已经处理过)
+      // 2. 如果customApiKey为空，尝试从customProviders数组中获取
+      apiKey = settings.customApiKey;
+
+      // 如果从background获取的customApiKey为空，尝试从customProviders中获取
+      if (!apiKey && settings.customProviders) {
+        const customProvider = settings.customProviders.find(p => p.id === provider);
+        if (customProvider && customProvider.apiKey) {
+          apiKey = customProvider.apiKey;
+        }
+      }
+    } else {
+      apiKey = provider === 'siliconflow' ? settings.siliconflowApiKey :
+              provider === 'openrouter' ? settings.openrouterApiKey :
+              provider === 'volcengine' ? settings.volcengineApiKey :
+              provider === 'tencentcloud' ? settings.tencentcloudApiKey :
+              provider === 'iflytekstar' ? settings.iflytekstarApiKey :
+              provider === 'baiducloud' ? settings.baiducloudApiKey :
+              provider === 'aliyun' ? settings.aliyunApiKey :
+              provider === 'aihubmix' ? settings.aihubmixApiKey :
+              settings.deepseekApiKey;
+    }
+
     const language = settings.language;
-    const model = settings.model;
+    let model = settings.model;
+
+    // 获取服务商和模型的显示名称
+    let providerDisplayName = provider;
+    let modelDisplayName = model;
+
+    // 如果是自定义Provider，获取显示名称
+    if (provider.startsWith('custom_') && settings.customProviders) {
+      const customProvider = settings.customProviders.find(p => p.id === provider);
+      if (customProvider) {
+        // 获取显示名称
+        providerDisplayName = customProvider.name || provider;
+
+        // 如果需要，从自定义服务商中获取模型名称
+        if (customProvider.modelName && !model) {
+          model = customProvider.modelName;
+        }
+      }
+    }
+
+    // 异步获取模型显示名称
+    if (provider.startsWith('custom_') && model) {
+      // 尝试从storage获取模型列表
+      const modelStorageKey = `${provider}Models`;
+      const modelData = await new Promise(resolve => {
+        chrome.storage.sync.get(modelStorageKey, resolve);
+      });
+
+      if (modelData && modelData[modelStorageKey]) {
+        const models = modelData[modelStorageKey];
+        const foundModel = models.find(m => m.value === model);
+        if (foundModel && foundModel.label) {
+          modelDisplayName = foundModel.label;
+        }
+      }
+    }
+
+    // 自定义模型优先级处理
+    // console.log(`🔍 使用模型: ${modelDisplayName}, Provider: ${providerDisplayName}`);
 
     // 获取自定义API URL
-    const customApiUrl = provider === 'siliconflow' ? settings.siliconflowCustomApiUrl :
-                        provider === 'openrouter' ? settings.openrouterCustomApiUrl :
-                        provider === 'volcengine' ? settings.volcengineCustomApiUrl :
-                        provider === 'tencentcloud' ? settings.tencentcloudCustomApiUrl :
-                        provider === 'iflytekstar' ? settings.iflytekstarCustomApiUrl :
-                        provider === 'baiducloud' ? settings.baiducloudCustomApiUrl :
-                        provider === 'aliyun' ? settings.aliyunCustomApiUrl :
-                        provider === 'aihubmix' ? settings.aihubmixCustomApiUrl :
-                        settings.deepseekCustomApiUrl;
+    let customApiUrl = '';
+
+    if (provider.startsWith('custom_')) {
+      customApiUrl = settings.customApiUrl;
+    } else {
+      customApiUrl = provider === 'siliconflow' ? settings.siliconflowCustomApiUrl :
+                    provider === 'openrouter' ? settings.openrouterCustomApiUrl :
+                    provider === 'volcengine' ? settings.volcengineCustomApiUrl :
+                    provider === 'tencentcloud' ? settings.tencentcloudCustomApiUrl :
+                    provider === 'iflytekstar' ? settings.iflytekstarCustomApiUrl :
+                    provider === 'baiducloud' ? settings.baiducloudCustomApiUrl :
+                    provider === 'aliyun' ? settings.aliyunCustomApiUrl :
+                    provider === 'aihubmix' ? settings.aihubmixCustomApiUrl :
+                    settings.deepseekCustomApiUrl;
+    }
 
     if (!apiKey) {
       const linkElement = document.createElement("a");
@@ -188,7 +253,9 @@ export async function getAIResponse(
 
     // 使用自定义API URL或默认URL
     const apiUrl = customApiUrl || (
-      provider === 'siliconflow'
+      provider.startsWith('custom_')
+        ? settings.customApiUrl // 自定义Provider直接使用其绑定的URL
+        : provider === 'siliconflow'
         ? 'https://api.siliconflow.cn/v1/chat/completions'
         : provider === 'openrouter'
         ? 'https://openrouter.ai/api/v1/chat/completions'
@@ -208,6 +275,10 @@ export async function getAIResponse(
     );
 
     const modelName = isGreeting ? "deepseek-chat" : model;
+    const modelDisplayNameForApi = isGreeting ? "deepseek-chat" : modelDisplayName;
+
+    // 确保每次请求都使用正确的模型名称
+    // console.log(`📦 调用API - 使用模型: ${modelDisplayNameForApi}`);
 
     const systemPrompt = quickActionPrompt && quickActionPrompt.includes('You are a professional multilingual translation engine')
       ? quickActionPrompt
@@ -229,12 +300,17 @@ export async function getAIResponse(
         if (aborted) return;
 
         if (chrome.runtime.lastError) {
-          reject(chrome.runtime.lastError);
+          const error = new Error(chrome.runtime.lastError.message || 'Chrome runtime error');
+          error.originalError = chrome.runtime.lastError;
+          reject(error);
           return;
         }
 
         if (!response.ok) {
-          reject(new Error(response.error || 'Request failed'));
+          const error = new Error(response.error || 'Request failed');
+          error.status = response.status;
+          error.originalResponse = response;
+          reject(error);
           return;
         }
 
@@ -300,6 +376,9 @@ export async function getAIResponse(
 
       chrome.runtime.onMessage.addListener(messageListener);
 
+      // console.log(`🚀 发送请求 - 服务商: ${providerDisplayName}, 模型: ${modelDisplayNameForApi},请求体:${apiUrl}`);
+
+      // 确保请求中包含正确的模型名称
       const requestBody = {
         model: modelName,
         messages: [
@@ -310,7 +389,7 @@ export async function getAIResponse(
         ...(provider === 'openrouter' && { include_reasoning: true })
       };
 
-      console.log(`🚀 发送请求 - 服务商: ${provider}, 模型: ${modelName}`);
+      // console.log(`📦 请求数据 - 模型: ${modelDisplayNameForApi}`);
 
       chrome.runtime.sendMessage({
         action: "proxyRequest",
@@ -366,33 +445,67 @@ export async function getAIResponse(
     if (onComplete) {
       requestIdleCallback(() => onComplete(), { timeout: 1000 });
     }
+
+    if (onGenerationComplete) {
+      onGenerationComplete();
+    }
   } catch (error) {
     console.error("Error:", error);
+
     if (error.name !== 'AbortError') {
-      const textNode = document.createTextNode("Request failed. Please try again later.");
-      responseElement.textContent = "";
-      responseElement.appendChild(textNode);
-      if (existingIconContainer) {
-        responseElement.appendChild(existingIconContainer);
-      }
+      // 使用handleError函数处理错误，传递原始错误信息
+      const errorData = error.originalResponse || error.originalError || error;
+      const errorStatus = error.status || (error.originalResponse?.status) || 500;
+      handleError(errorStatus, responseElement, errorData, onGenerationError);
     }
   } finally {
     isGenerating = false;
     window.currentAbortController = null;
+
+    // 显示代码块复制按钮
+    requestAnimationFrame(() => {
+      showCodeCopyButtons();
+    });
   }
 }
 
-function handleError(status, responseElement) {
-  const errorMessages = {
-    400: "Request body format error, please check and modify.",
-    401: "API key error, authentication failed.",
-    402: "Insufficient account balance, please recharge.",
-    422: "Request body parameter error, please check and modify.",
-    429: "Request rate limit reached, please try again later.",
-    500: "Internal server error, please try again later.",
-    503: "Server overload, please try again later."
-  };
-  const textNode = document.createTextNode(errorMessages[status] || "Request failed, please try again later.");
-  responseElement.textContent = "";
-  responseElement.appendChild(textNode);
+function handleError(status, responseElement, errorInfo, onGenerationError) {
+  isGenerating = false;
+  renderQueue = [];
+
+  // 优先使用API返回的原始错误信息
+  let errorMessage = "Failed to connect to AI service.";
+
+  if (errorInfo && typeof errorInfo === 'object') {
+    // 如果有API返回的详细错误信息，优先使用
+    if (errorInfo.message) {
+      errorMessage = errorInfo.message;
+    } else if (errorInfo.error && errorInfo.error.message) {
+      errorMessage = errorInfo.error.message;
+    } else if (typeof errorInfo.error === 'string') {
+      errorMessage = errorInfo.error;
+    }
+  } else if (errorInfo && typeof errorInfo === 'string') {
+    // 如果错误信息是字符串，直接使用
+    errorMessage = errorInfo;
+  } else {
+    // 只有在没有原始错误信息时才使用基于状态码的通用消息
+    if (status === 401) {
+      errorMessage = "API key is invalid or expired.";
+    } else if (status === 429) {
+      errorMessage = "Too many requests. Please slow down.";
+    } else if (status === 500) {
+      errorMessage = "AI service internal error. Please try again later.";
+    } else if (status === 0) {
+      errorMessage = "The request was cancelled or timed out.";
+    }
+  }
+
+  responseElement.textContent = errorMessage;
+  responseElement.classList.add('error'); // 添加错误状态类
+
+  // 调用错误回调
+  if (typeof onGenerationError === 'function') {
+    onGenerationError(errorMessage);
+  }
 }
