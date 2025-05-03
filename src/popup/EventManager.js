@@ -11,10 +11,28 @@ export class EventManager {
       () => this.managers.uiManager.toggleApiKeyVisibility()
     );
 
-    // API Key validation
+    // API Key focus event - 确保在输入时可见
+    this.managers.uiManager.elements.apiKeyInput.addEventListener(
+      "focus",
+      () => {
+        // 确保当获得焦点时内容可见
+        this.managers.uiManager.elements.apiKeyInput.type = "text";
+        this.managers.uiManager.elements.iconSwitch.src = "../icons/hiddle.svg";
+      }
+    );
+
+    // API Key validation and hiding on blur
     this.managers.uiManager.elements.apiKeyInput.addEventListener(
       "blur",
-      () => this.managers.apiKeyManager.handleApiKeyValidation()
+      () => {
+        // 当有内容时，失去焦点时隐藏内容
+        if (this.managers.uiManager.getApiKeyValue()) {
+          this.managers.uiManager.elements.apiKeyInput.type = "password";
+          this.managers.uiManager.elements.iconSwitch.src = "../icons/show.svg";
+        }
+        // 执行API验证
+        this.managers.apiKeyManager.handleApiKeyValidation();
+      }
     );
 
     // 服务商切换事件
@@ -64,6 +82,26 @@ export class EventManager {
     this.managers.uiManager.elements.saveModelButton?.addEventListener(
       "click",
       () => this.managers.modelManager.handleSaveModel()
+    );
+
+    // 自定义服务商API Key focus事件
+    this.managers.uiManager.elements.customProviderApiKey?.addEventListener(
+      "focus",
+      () => {
+        // 确保当获得焦点时内容可见
+        this.managers.uiManager.elements.customProviderApiKey.type = "text";
+      }
+    );
+
+    // 自定义服务商API Key blur事件
+    this.managers.uiManager.elements.customProviderApiKey?.addEventListener(
+      "blur",
+      () => {
+        // 当有内容时，失去焦点时隐藏内容
+        if (this.managers.uiManager.getCustomProviderApiKey()) {
+          this.managers.uiManager.elements.customProviderApiKey.type = "password";
+        }
+      }
     );
 
     // 关闭自定义服务商弹窗按钮
