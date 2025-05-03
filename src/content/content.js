@@ -13,6 +13,9 @@ let selectedText = "";
 let currentPopup = null; // 新增：跟踪当前弹窗
 let isRememberWindowSize = false; // 默认不记住窗口大小
 let currentUnderlines = []; // 使用数组保存所有下划线元素的引用
+let lastSelectionText = "";
+let lastSelectionTime = 0;
+const SELECTION_TIMEOUT = 1000; // 0.5秒超时
 
 const link = document.createElement("link");
 link.rel = "stylesheet";
@@ -98,6 +101,7 @@ function removeUnderlines() {
     }
   });
   currentUnderlines = [];
+  // 注意：我们不再在这里清除selectedText变量
 }
 
 // 更新安全的弹窗移除函数
@@ -363,10 +367,13 @@ document.addEventListener("mousedown", function(e) {
     return;
   }
 
-  // 只有点击在快捷按钮容器外时才移除快捷按钮和清除选择
+  // 只有点击在快捷按钮容器外时才移除快捷按钮
   if (!isClickOnButtons) {
     removeIcon();
     removeQuickActions(); // 这里会调用removeUnderlines
+
+    // 注意：我们不再在这里清除selectedText变量，
+    // 而是依赖新的超时机制来处理选中文本的生命周期
   }
 }, { capture: true, passive: false }); // 使用capture确保在冒泡前捕获，非被动模式允许preventDefault
 
@@ -406,6 +413,28 @@ document.addEventListener('click', (event) => {
   }
 }, true);
 
+// 添加更可靠的选中文本获取函数
+function getReliableSelectedText() {
+  // 首先尝试使用当前选中状态
+  const selection = window.getSelection();
+  if (selection && selection.toString && selection.toString().trim()) {
+    const text = selection.toString().trim();
+    // 更新最后选中的文本和时间
+    lastSelectionText = text;
+    lastSelectionTime = Date.now();
+    return text;
+  }
+
+  // 如果当前没有选中文本，但是最近有选中过（5秒内），使用上一次选中的文本
+  if (lastSelectionText && (Date.now() - lastSelectionTime) < SELECTION_TIMEOUT) {
+    console.log("使用最近选中的文本:", lastSelectionText);
+    return lastSelectionText;
+  }
+
+  // 如果都没有，返回空字符串
+  return "";
+}
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "toggleChat") {
     try {
@@ -415,17 +444,31 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return;
       }
 
-      // 获取当前页面的选中内容
-      const selection = window.getSelection();
-      const selectedTextContent = selection.toString().trim();
-      let rect;
+      // 获取当前页面的选中内容，使用更可靠的方法
+      let selectedTextContent = "";
 
+      // 优先使用后台传递的选中文本
+      if (request.selectedText) {
+        selectedTextContent = request.selectedText;
+        // 更新最后选中文本
+        lastSelectionText = selectedTextContent;
+        lastSelectionTime = Date.now();
+      } else {
+        // 使用更可靠的方法获取选中文本
+        selectedTextContent = getReliableSelectedText();
+      }
+
+      // 最终使用的选中文本
+      const finalSelectedText = selectedTextContent;
+
+      let rect;
       // 确定矩形区域
-      if (selection.rangeCount > 0 && selectedTextContent) {
-        // 如果有选中内容，使用选中内容的区域
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0 && selection.toString().trim()) {
+        // 如果页面上有选中内容，使用选中内容的区域
         rect = selection.getRangeAt(0).getBoundingClientRect();
       } else {
-        // 无选中内容，使用默认位置
+        // 无选中内容，使用默认位置（页面中央）
         rect = {
           left: window.innerWidth / 2,
           top: window.innerHeight / 2 - 190,
@@ -435,14 +478,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       }
 
       // 确定要使用的文本和是否隐藏问题
-      const textToUse = selectedTextContent || request.useGreeting;
+      const textToUse = finalSelectedText || request.useGreeting;
       // 如果没有选中文本，则使用问候语模式（隐藏问题框）
-      const hideQuestion = !selectedTextContent;
+      const hideQuestion = !finalSelectedText;
 
       console.log("处理toggleChat消息:", {
         selectedTextContent,
+        finalSelectedText,
         textToUse,
-        hideQuestion
+        hideQuestion,
+        hasLastSelection: Boolean(lastSelectionText),
+        lastSelectionAge: lastSelectionText ? (Date.now() - lastSelectionTime) : null
       });
 
       // 显示弹窗
@@ -459,7 +505,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       let selectedTextContent = request.selectedText;
       if (!selectedTextContent) {
         const selection = window.getSelection();
-        selectedTextContent = selection.toString().trim();
+        selectedTextContent = selection && selection.toString ? selection.toString().trim() : "";
       }
 
       console.log("处理createPopup消息:", {
@@ -470,9 +516,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       // 准备弹窗位置
       let rect;
       const selection = window.getSelection();
-      if (selection.rangeCount > 0 && selectedTextContent) {
+      if (selection && selection.rangeCount > 0 && selection.toString().trim()) {
+        // 只有当页面上有选中内容时，才使用选中区域
         rect = selection.getRangeAt(0).getBoundingClientRect();
       } else {
+        // 无选中内容或选中为空，使用默认位置
         rect = {
           left: window.innerWidth / 2,
           top: window.innerHeight / 2 - 190,
@@ -492,7 +540,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       safeRemovePopup();
     }
   } else if (request.action === "getSelectedText") {
-    sendResponse({ selectedText });
+    // 使用更可靠的方法获取选中文本
+    sendResponse({ selectedText: getReliableSelectedText() });
   } else if (request.action === "closeChat") {
     safeRemovePopup();
   }
@@ -558,6 +607,10 @@ async function updateSelectionUI(selection) {
   if (!selectedText) {
     return;
   }
+
+  // 保存最后选中的文本和时间
+  lastSelectionText = selectedText;
+  lastSelectionTime = Date.now();
 
   // 添加下划线到所有选中文本
   addUnderlineToSelection(selection);

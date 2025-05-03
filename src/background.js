@@ -283,23 +283,48 @@ chrome.commands.onCommand.addListener(async (command) => {
     }
 
     try {
-      // 使用executeScript获取选中文本
+      // 使用更可靠的方式获取选中文本
       const [{result}] = await chrome.scripting.executeScript({
         target: { tabId: tab.id },
-        func: () => window.getSelection().toString().trim()
+        func: () => {
+          // 首先尝试使用window.getSelection()
+          const selection = window.getSelection();
+          if (selection && selection.toString && selection.toString().trim()) {
+            return selection.toString().trim();
+          }
+
+          // 如果没有选中文本，尝试检查页面上可能的选中元素
+          // 某些网站可能使用自定义选择或点击交互会清除选择
+          // 检查是否有具有特定CSS样式的元素表明它们被选中
+          const selectedElements = document.querySelectorAll(
+            '.selected, .highlight, .highlighted, [aria-selected="true"], ::-moz-selection, ::selection'
+          );
+
+          for (const el of selectedElements) {
+            if (el.textContent && el.textContent.trim()) {
+              return el.textContent.trim();
+            }
+          }
+
+          // 如果上述都失败，返回空字符串
+          return '';
+        }
       });
+
+      console.log('快捷键获取到的选中文本:', result);
 
       // 发送toggleChat消息以实现真正的切换功能
       chrome.tabs.sendMessage(tab.id, {
         action: "toggleChat",
-        selectedText: result || null,
+        selectedText: result, // 发送选中的文本，如果为空则使用问候语
         useGreeting: getGreeting()
       });
     } catch (error) {
       console.error("获取选中文本出错:", error);
+      // 即使出错，也发送消息以打开聊天窗口，只是不带选中文本
       chrome.tabs.sendMessage(tab.id, {
         action: "toggleChat",
-        selectedText: null,
+        selectedText: "",
         useGreeting: getGreeting()
       });
     }
