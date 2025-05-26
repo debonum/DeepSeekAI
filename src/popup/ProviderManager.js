@@ -85,7 +85,6 @@ export class ProviderManager {
       // 加载隐藏服务商
       this.hiddenProviders = await this.loadHiddenProviders();
 
-      console.log("ProviderManager初始化完成");
     } catch (error) {
       console.error("ProviderManager初始化错误:", error);
     }
@@ -127,7 +126,6 @@ export class ProviderManager {
       return new Promise((resolve) => {
         chrome.storage.sync.get("customProviders", (data) => {
           const customProviders = data.customProviders || [];
-          console.log(`加载了${customProviders.length}个自定义服务商`);
           resolve(customProviders);
         });
       });
@@ -143,7 +141,6 @@ export class ProviderManager {
       return new Promise((resolve) => {
         chrome.storage.sync.get("hiddenProviders", (data) => {
           const hiddenProviders = data.hiddenProviders || [];
-          console.log(`加载了${hiddenProviders.length}个隐藏服务商`);
           resolve(hiddenProviders);
         });
       });
@@ -451,7 +448,6 @@ export class ProviderManager {
       return customProvider.apiUrl;
     }
 
-    console.log(`未找到${providerId}的默认API URL`);
     return "";
   }
 
@@ -476,7 +472,6 @@ export class ProviderManager {
 
       // 获取服务商信息
       const provider = await this.getProviderById(providerId);
-      console.log(`📌 服务商信息:`, provider);
       if (!provider) {
         console.error(`❌ 未找到服务商信息: ${providerId}`);
         return false;
@@ -496,15 +491,9 @@ export class ProviderManager {
         messages: [{ role: "user", content: "test" }],
         stream: false,
       };
-      console.log(`📤 请求体:`, requestBody);
 
       // 发送验证请求
-      console.log(`🚀 发送验证请求到: ${apiUrl}`);
-      console.log(
-        `🔑 使用API密钥: ${apiKey.substring(0, 5)}...${apiKey.substring(
-          apiKey.length - 5
-        )}`
-      );
+
 
       const response = await new Promise((resolve) => {
         chrome.runtime.sendMessage(
@@ -519,7 +508,6 @@ export class ProviderManager {
             body: JSON.stringify(requestBody),
           },
           (result) => {
-            console.log(`📥 验证响应:`, result);
             resolve(result);
           }
         );
@@ -527,7 +515,6 @@ export class ProviderManager {
 
       if (response?.status === 200) {
         // 验证成功，保存API密钥
-        console.log(`✅ API密钥验证成功`);
         await this.saveApiKey(providerId, apiKey);
         return true;
       }

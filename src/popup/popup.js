@@ -68,13 +68,11 @@ class PopupManager {
 
   async loadInitialState() {
     try {
-      console.log('开始加载初始状态...');
 
       // 获取设置
       const settings = await this.storageManager.getSettings();
       const currentProvider = settings.provider || 'deepseek';
 
-      console.log(`初始服务商: ${currentProvider}`);
 
       // 加载所有可见的服务商到下拉菜单
       const visibleProviders = await this.providerManager.getAllVisibleProviders();
@@ -124,7 +122,6 @@ class PopupManager {
       // 再次更新国际化标签，确保所有动态生成的元素也应用了正确的语言
       this.i18nManager.updateLabels();
 
-      console.log('初始状态加载完成');
     } catch (error) {
       console.error('初始化错误:', error);
     }

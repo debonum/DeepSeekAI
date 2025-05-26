@@ -5,6 +5,129 @@ import { createPopup } from "./popup";
 import "perfect-scrollbar/css/perfect-scrollbar.css";
 import { popupStateManager } from './utils/popupStateManager';
 
+// 选区保持管理器
+class SelectionPreservationManager {
+  constructor() {
+    this.savedRange = null;
+    this.savedText = "";
+    this.isPreserving = false;
+    this.restoreTimeout = null;
+  }
+
+  // 保存当前选区
+  saveSelection() {
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0 && !selection.isCollapsed) {
+      this.savedRange = selection.getRangeAt(0).cloneRange();
+      this.savedText = selection.toString().trim();
+      this.isPreserving = true;
+      return true;
+    }
+    return false;
+  }
+
+  // 恢复选区
+  restoreSelection(force = false) {
+    const activeElement = document.activeElement;
+    if (activeElement &&
+        (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA') &&
+        activeElement.closest && activeElement.closest('.quick-action-buttons')) {
+      if (!force) { // 非强制恢复时，如果焦点在QAB输入框，则不打扰
+        return false;
+      }
+      // 如果是强制恢复(force=true)，目前逻辑会继续。这在某些情况是必要的（如QAB初次显示后）
+      // 但在其他强制恢复场景下，如果焦点恰好在输入框，仍可能产生冲突。需要调用处谨慎使用force=true。
+    }
+
+    if (!this.savedRange) return false; // 如果没有保存的range，直接返回
+    // isPreserving的检查移到后面，因为force=true时也可能需要恢复一个不再isPreserving的选区
+
+    try {
+      const selection = window.getSelection();
+      if (!this.isRangeValid(this.savedRange)) {
+        this.clear();
+        return false;
+      }
+
+      // 只有在force=true，或者当前没有选区，或者当前选区和保存的选区文本不同时，才进行恢复
+      // 目的是减少不必要的DOM操作和事件触发
+      let shouldRestore = force;
+      if (!shouldRestore) {
+          if (selection.rangeCount === 0 || selection.isCollapsed) {
+              shouldRestore = true;
+          } else if (selection.toString().trim() !== this.savedText) {
+              shouldRestore = true;
+          }
+      }
+      // 如果isPreserving为false，但force为true，也应该恢复
+      if(!this.isPreserving && !force && !shouldRestore) return false;
+
+
+      if (shouldRestore || force) {
+          selection.removeAllRanges();
+          selection.addRange(this.savedRange.cloneRange());
+      }
+      return true;
+    } catch (error) {
+      console.error("恢复选区失败:", error);
+      this.clear(); // 出错时清理，避免后续使用无效选区
+      return false;
+    }
+  }
+
+  // 验证 range 是否有效
+  isRangeValid(range) {
+    try {
+      if (!range || !range.startContainer || !range.endContainer) return false;
+      return document.contains(range.startContainer) &&
+             document.contains(range.endContainer);
+    } catch (error) {
+      return false;
+    }
+  }
+
+  // 延迟恢复选区
+  scheduleRestore(delay = 10, force = false) {
+    if (this.restoreTimeout) {
+      clearTimeout(this.restoreTimeout);
+    }
+
+    this.restoreTimeout = setTimeout(() => {
+      this.restoreSelection(force);
+      this.restoreTimeout = null;
+    }, delay);
+  }
+
+  // 获取保存的文本
+  getSavedText() {
+    return this.savedText;
+  }
+
+  // 检查是否有保存的选区
+  hasSelection() {
+    return this.savedRange !== null && this.savedText.length > 0;
+  }
+
+  // 清除保存的选区
+  clear() {
+    this.savedRange = null;
+    this.savedText = "";
+    this.isPreserving = false;
+    if (this.restoreTimeout) {
+      clearTimeout(this.restoreTimeout);
+      this.restoreTimeout = null;
+    }
+  }
+
+  // 设置保持状态
+  setPreserving(state) {
+    this.isPreserving = state;
+  }
+}
+
+// 创建全局实例
+const selectionManager = new SelectionPreservationManager();
+
 let currentIcon = null;
 let currentQuickActions = null;
 let isHandlingIconClick = false;
@@ -12,10 +135,18 @@ let isSelectionEnabled = true; // 默认启用
 let selectedText = "";
 let currentPopup = null; // 新增：跟踪当前弹窗
 let isRememberWindowSize = false; // 默认不记住窗口大小
-let currentUnderlines = []; // 使用数组保存所有下划线元素的引用
 let lastSelectionText = "";
 let lastSelectionTime = 0;
-const SELECTION_TIMEOUT = 1000; // 0.5秒超时
+const SELECTION_TIMEOUT = 1000; // 1秒超时
+
+// 添加跟踪鼠标状态的变量
+let isMouseDown = false;
+let mouseDownPosition = { x: 0, y: 0 };
+let hasMovedEnough = false;
+let selectionChangeTimeout = null;
+let lastSelectionLength = 0;
+
+let quickActionsVisibleBeforeContextMenu = false; // 新增全局变量跟踪状态
 
 const link = document.createElement("link");
 link.rel = "stylesheet";
@@ -52,62 +183,28 @@ function removeIcon() {
   // 保留这个函数是为了兼容性，但它现在什么都不做
 }
 
-// 添加下划线到选中文本
+// 添加下划线到选中文本 - 现在是空函数，不再添加任何下划线
 function addUnderlineToSelection(selection) {
-  // 先移除已有的下划线
-  removeUnderlines();
-
-  // 遍历所有选区范围
-  for (let i = 0; i < selection.rangeCount; i++) {
-    const range = selection.getRangeAt(i);
-
-    // 获取范围的客户端矩形集合
-    const rects = range.getClientRects();
-
-    // 为每个矩形创建下划线
-    for (let j = 0; j < rects.length; j++) {
-      const rect = rects[j];
-
-      // 创建下划线元素
-      const underline = document.createElement('div');
-      underline.className = 'ds-selection-underline';
-
-      // 设置样式
-      Object.assign(underline.style, {
-        position: 'absolute',
-        left: `${rect.left + window.scrollX}px`,
-        top: `${rect.bottom + window.scrollY}px`,
-        width: `${rect.width}px`,
-        height: '2px',
-        backgroundColor: '#4285f4',
-        zIndex: '2147483646', // 比按钮容器低一级
-        pointerEvents: 'none', // 避免影响鼠标事件
-      });
-
-      // 添加到DOM
-      document.body.appendChild(underline);
-
-      // 保存引用
-      currentUnderlines.push(underline);
+  // 功能已移除，仅保留函数供其他地方调用
+  // 只保存选中文本信息，不实际添加下划线
+  if (selection && selection.toString) {
+    selectedText = selection.toString().trim();
+    if (selectedText) {
+      lastSelectionText = selectedText;
+      lastSelectionTime = Date.now();
     }
   }
 }
 
-// 移除所有下划线
+// 移除所有下划线 - 现在是空函数
 function removeUnderlines() {
-  currentUnderlines.forEach(underline => {
-    if (underline && document.body.contains(underline)) {
-      document.body.removeChild(underline);
-    }
-  });
-  currentUnderlines = [];
-  // 注意：我们不再在这里清除selectedText变量
+  // 功能已移除，仅保留函数供其他地方调用
+  // 不清除selectedText变量，确保保留选中文本的引用
 }
 
 // 更新安全的弹窗移除函数
 function safeRemovePopup() {
-  // 移除下划线
-  removeUnderlines();
+  // 不再调用 removeUnderlines()，避免影响选中状态
 
   // 立即重置所有状态
   popupStateManager.reset();
@@ -287,95 +384,245 @@ function handleIconClick(e, selectedText, rect) {
   }
 }
 
-document.addEventListener("mouseup", function (event) {
-  if (!isSelectionEnabled || popupStateManager.isCreating() || isHandlingIconClick) return;
+// 当鼠标按下时记录状态
+document.addEventListener("mousedown", function(e) {
+  // 只处理左键点击
+  if (e.button !== 0) return;
 
-  const selection = window.getSelection();
+  isMouseDown = true;
+  hasMovedEnough = false;
+  mouseDownPosition = { x: e.clientX, y: e.clientY };
 
-  // 使用updateSelectionUI来处理所有UI更新
-  if (selection && selection.rangeCount > 0 && event.button === 0) {
-    const text = selection.toString().trim();
-    if (text) {
-      // 保存选择状态，以便后续恢复
-      const savedRange = selection.getRangeAt(0).cloneRange();
+  // 清除可能存在的超时
+  if (selectionChangeTimeout) {
+    clearTimeout(selectionChangeTimeout);
+    selectionChangeTimeout = null;
+  }
 
-      updateSelectionUI(selection).catch(error => {
-        console.error('Error updating selection UI:', error);
-      }).finally(() => {
-        // 无论成功或失败，都尝试恢复选择状态
-        if (savedRange) {
-          setTimeout(() => {
-            try {
-              // 重新获取选择对象，防止引用已经变更
-              const currentSelection = window.getSelection();
-              currentSelection.removeAllRanges();
-              currentSelection.addRange(savedRange);
-            } catch (err) {
-              console.error("Error restoring selection after mouseup:", err);
-            }
-          }, 0);
+  // 清除现有快捷按钮
+  if (!e.target.closest('.quick-action-buttons') &&
+      !e.target.closest('.custom-prompt-input')) {
+    removeQuickActions();
+  }
+}, { passive: true });
+
+// 使用mousemove来检测用户是否正在选择文本
+document.addEventListener("mousemove", function(e) {
+  if (!isMouseDown || !isSelectionEnabled || popupStateManager.isCreating()) return;
+
+  // 计算鼠标移动距离，确保不是意外抖动
+  const dx = e.clientX - mouseDownPosition.x;
+  const dy = e.clientY - mouseDownPosition.y;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+
+  // 移动距离足够大，可能是正在选择文本
+  if (distance > 5) {
+    hasMovedEnough = true;
+
+    // 获取当前选择
+    const selection = window.getSelection();
+    const selectionLength = selection ? selection.toString().trim().length : 0;
+
+    // 只有在选择长度变化且大于0时才更新UI
+    if (selectionLength > 0 && selectionLength !== lastSelectionLength) {
+      lastSelectionLength = selectionLength;
+
+      // 使用延迟更新UI，避免频繁更新
+      if (selectionChangeTimeout) {
+        clearTimeout(selectionChangeTimeout);
+      }
+
+      // 延迟50ms更新UI，在用户仍在选择过程中不显示UI
+      selectionChangeTimeout = setTimeout(() => {
+        // 仍在按下状态且有选中内容时准备UI
+        if (isMouseDown && selectionLength > 0) {
+          // 准备UI但不显示，等待mouseup事件
+          prepareSelectionUI(selection);
         }
-      });
+      }, 50);
     }
   }
-}, { passive: false }); // 改为非被动模式
+}, { passive: true });
 
-// 修改捕获阶段为true，确保在事件冒泡前处理
+// 只准备UI但不显示
+function prepareSelectionUI(selection) {
+  if (!selection || selection.isCollapsed) return;
+
+  const selectedText = selection.toString().trim();
+  if (!selectedText) return;
+
+  // 保存文本信息
+  lastSelectionText = selectedText;
+  lastSelectionTime = Date.now();
+}
+
+// 修改mouseup事件处理函数
+document.addEventListener("mouseup", function(e) {
+  isMouseDown = false;
+  if (e.button === 2) return;
+  if (!isSelectionEnabled || popupStateManager.isCreating() || isHandlingIconClick) return;
+  const selection = window.getSelection();
+  if (!selection || selection.isCollapsed) return;
+  const text = selection.toString().trim();
+  if (!text || text.length === 0) return;
+  selectionManager.saveSelection();
+  selectedText = text;
+  lastSelectionText = text;
+  lastSelectionTime = Date.now();
+  setTimeout(() => {
+    if (!selectionManager.hasSelection()) return;
+    showQuickActionsForSelection(selection);
+  }, 10);
+}, { passive: true });
+
+// 修改showQuickActionsForSelection函数
+function showQuickActionsForSelection(selection) {
+  try {
+    selectionManager.saveSelection();
+    let container = document.getElementById('fixed-quick-actions-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'fixed-quick-actions-container';
+      Object.assign(container.style, {
+        position: 'fixed',
+        pointerEvents: 'none',
+        top: '0',
+        left: '0',
+        width: '100%',
+        height: '100%',
+        zIndex: '2147483646',
+        opacity: '0',
+        transition: 'opacity 0.2s ease'
+      });
+      document.body.appendChild(container);
+      currentQuickActions = container;
+    }
+    const range = selectionManager.savedRange;
+    if (!range) return;
+    const rect = range.getBoundingClientRect();
+    const text = selectionManager.getSavedText();
+    container.innerHTML = '';
+
+    createQuickActionButtons(text, handleQuickAction, handleIconClick, handleCopyAction)
+      .then(buttonsContainer => {
+        if (!buttonsContainer) return;
+        Object.assign(buttonsContainer.style, {
+          position: 'fixed',
+          left: `${rect.left}px`,
+          top: `${rect.bottom + 5}px`,
+          zIndex: '2147483647'
+        });
+        container.appendChild(buttonsContainer);
+        container.style.opacity = '1';
+        container.style.pointerEvents = 'auto';
+        selectionManager.scheduleRestore(75, true);
+      })
+      .catch(err => {
+        console.error('创建快捷按钮出错:', err);
+        if (selectionManager.hasSelection()) {
+            selectionManager.scheduleRestore(75, true);
+        }
+      });
+  } catch (error) {
+    console.error('显示快捷按钮时出错:', error);
+    if (selectionManager.hasSelection()) {
+        selectionManager.scheduleRestore(75, true);
+    }
+  }
+}
+
+// 修改handleQuickAction函数
+function handleQuickAction(action, text) {
+  selectionManager.saveSelection();
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) return;
+  const rect = selection.getRangeAt(0).getBoundingClientRect();
+  const messages = [ { role: "user", content: text, } ];
+  removeQuickActions();
+  let prompt = action.prompt;
+  if (action.id === 'translate' && !prompt.includes('简体中文')) {
+    prompt = action.prompt.replace('{language}', '简体中文');
+  }
+  if (action.id === 'custom') {
+    messages[0].userQuestion = action.prompt;
+    prompt = "你是一个帮助用户理解和分析内容的AI助手。用户会提供一段内容以及他们的问题。请基于用户提供的内容回答用户问题。";
+  }
+  handlePopupCreation(text, rect, false, messages, prompt);
+  selectionManager.scheduleRestore(50, false);
+}
+
+// 修改原有的updateSelectionUI为空函数，因为我们不再使用它
+function updateSelectionUI() {
+  // 这个函数被替换，不再使用
+}
+
+// 专门处理右键菜单事件
+document.addEventListener("contextmenu", function(event) {
+  const targetElement = event.target;
+  const isOnQuickActions = targetElement.closest && targetElement.closest('.quick-action-buttons');
+  if (isOnQuickActions) {
+    return; // QAB内部右键，由浏览器处理
+  }
+  // 外部右键，不再尝试影响原生菜单的选区
+}, { capture: true });
+
+// 修改捕获阶段的mousedown事件处理
 document.addEventListener("mousedown", function(e) {
   if (isHandlingIconClick) return;
+  const targetElement = e.target;
+  const isOnQuickActions = targetElement.closest && targetElement.closest('.quick-action-buttons');
+  const isOnInput = targetElement.closest && (targetElement.tagName === 'INPUT' || targetElement.tagName === 'TEXTAREA') && isOnQuickActions;
 
-  // 检查点击是否在快捷按钮容器或其子元素上
-  const isClickOnButtons = currentQuickActions && (
-    currentQuickActions.contains(e.target) ||
-    e.target.closest('.custom-prompt-input') ||
-    e.target.closest('.custom-prompt-send')
-  );
-
-  // 如果点击在快捷按钮容器或其子元素上
-  if (isClickOnButtons) {
-    // 如果点击的是输入框，不要阻止默认行为，让它能获得焦点
-    const isClickOnInput = e.target.closest('.custom-prompt-input');
-    if (!isClickOnInput) {
-      e.preventDefault(); // 只有不是点击输入框时才阻止默认行为
+  if (isOnQuickActions) {
+    if (e.button === 2) { return; } // QAB内部右键，浏览器处理
+    // 左键点击QAB内部
+    if (isOnInput) {
+      selectionManager.saveSelection(); // 保存页面选区，以防用户改变主意
+    } else {
+      // 对于其他按钮（包括新的复制按钮），其自身的click事件会处理主要逻辑。
+      // 这里可以保存选区，并阻止冒泡。
+      selectionManager.saveSelection();
     }
-
-    e.stopPropagation(); // 阻止冒泡
-
-    // 保存当前选择状态，以便能在事件处理后恢复
-    const selection = window.getSelection();
-    let savedRange = null;
-    if (selection && selection.rangeCount > 0) {
-      savedRange = selection.getRangeAt(0).cloneRange();
-    }
-
-    // 如果有已保存的范围，在事件执行后尝试恢复
-    if (savedRange) {
-      // 使用setTimeout确保在浏览器处理完mousedown默认行为后执行
-      setTimeout(() => {
-        try {
-          // 只有不是点击输入框时才恢复选择状态
-          if (!isClickOnInput) {
-            const selection = window.getSelection();
-            selection.removeAllRanges();
-            selection.addRange(savedRange);
-          }
-        } catch (err) {
-          console.error("恢复选择状态时出错:", err);
-        }
-      }, 0);
-    }
+    e.stopPropagation();
     return;
   }
 
-  // 只有点击在快捷按钮容器外时才移除快捷按钮
-  if (!isClickOnButtons) {
-    removeIcon();
-    removeQuickActions(); // 这里会调用removeUnderlines
-
-    // 注意：我们不再在这里清除selectedText变量，
-    // 而是依赖新的超时机制来处理选中文本的生命周期
+  // 点击在QAB外部
+  if (e.button === 2) { // 右键外部
+    // 不再尝试恢复选区来影响原生菜单
+    return; // 交给浏览器和contextmenu事件处理
   }
-}, { capture: true, passive: false }); // 使用capture确保在冒泡前捕获，非被动模式允许preventDefault
+
+  if (e.button === 0) { // 左键外部
+    removeQuickActions();
+    if (selectionManager.hasSelection()) {
+      selectionManager.clear();
+      try { window.getSelection().removeAllRanges(); } catch (err) { /* मौन */ }
+    }
+  }
+
+  if (selectionManager.savedRange) {
+    const commonAncestor = selectionManager.savedRange.commonAncestorContainer;
+    let focusableElement = commonAncestor;
+    if (commonAncestor.nodeType === Node.TEXT_NODE) {
+        focusableElement = commonAncestor.parentElement;
+    }
+    if (focusableElement && typeof focusableElement.focus === 'function') {
+        // 保存当前焦点
+        const currentActiveElement = document.activeElement;
+        // 赋予临时焦点
+        focusableElement.setAttribute('tabindex', '-1'); // 确保它可以被聚焦
+        focusableElement.focus();
+        // 计划在contextmenu之后或极短延迟后恢复焦点
+        setTimeout(() => {
+            if (currentActiveElement && typeof currentActiveElement.focus === 'function') {
+                currentActiveElement.focus();
+            }
+            focusableElement.removeAttribute('tabindex');
+        }, 50); // 延迟要非常小心
+    }
+  }
+}, { capture: true, passive: false });
 
 // 添加全局点击事件监听
 document.addEventListener('mousedown', async (event) => {
@@ -427,7 +674,6 @@ function getReliableSelectedText() {
 
   // 如果当前没有选中文本，但是最近有选中过（5秒内），使用上一次选中的文本
   if (lastSelectionText && (Date.now() - lastSelectionTime) < SELECTION_TIMEOUT) {
-    console.log("使用最近选中的文本:", lastSelectionText);
     return lastSelectionText;
   }
 
@@ -482,14 +728,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       // 如果没有选中文本，则使用问候语模式（隐藏问题框）
       const hideQuestion = !finalSelectedText;
 
-      console.log("处理toggleChat消息:", {
-        selectedTextContent,
-        finalSelectedText,
-        textToUse,
-        hideQuestion,
-        hasLastSelection: Boolean(lastSelectionText),
-        lastSelectionAge: lastSelectionText ? (Date.now() - lastSelectionTime) : null
-      });
 
       // 显示弹窗
       handlePopupCreation(textToUse, rect, hideQuestion);
@@ -508,10 +746,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         selectedTextContent = selection && selection.toString ? selection.toString().trim() : "";
       }
 
-      console.log("处理createPopup消息:", {
-        selectedText: selectedTextContent,
-        message: request.message
-      });
+
 
       // 准备弹窗位置
       let rect;
@@ -547,115 +782,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
-function handleQuickAction(action, text) {
-  // 保存当前的选中范围，以备后用
-  const selection = window.getSelection();
-  let range;
+// 隐藏快捷按钮
+function hideQuickActions() {
+  const container = document.getElementById('fixed-quick-actions-container');
+  if (container) {
+    // 隐藏容器
+    container.style.opacity = '0';
+    container.style.pointerEvents = 'none';
 
-  if (selection && selection.rangeCount > 0) {
-    range = selection.getRangeAt(0);
-  }
-
-  const rect = range ? range.getBoundingClientRect() : {
-    left: window.innerWidth / 2,
-    top: window.innerHeight / 2 - 190,
-    width: 0,
-    height: 0
-  };
-
-  const messages = [
-    {
-      role: "user",
-      content: text,
-    }
-  ];
-
-  // 移除按钮容器
-  removeQuickActions();
-
-  // 对于翻译操作，如果没有指定语言，默认使用中文
-  let prompt = action.prompt;
-  if (action.id === 'translate' && !prompt.includes('简体中文')) {
-    prompt = action.prompt.replace('{language}', '简体中文');
-  }
-
-  // 对于自定义操作，确保提示信息正确
-  if (action.id === 'custom') {
-    const userQuestion = action.prompt;
-
-    // 将用户问题和选中内容合并为一条消息，但记录用户问题以便在UI上区分显示
-    messages[0].content = text;
-    messages[0].userQuestion = userQuestion; // 添加用户问题，但保持单条消息
-
-    // 使用通用提示引导AI理解用户在针对选中内容提问
-    prompt = "你是一个帮助用户理解和分析内容的AI助手。用户会提供一段内容以及他们的问题。请基于用户提供的内容回答用户问题。";
-  }
-
-  // 显示弹窗
-  handlePopupCreation(text, rect, false, messages, prompt);
-}
-
-async function updateSelectionUI(selection) {
-  if (!isSelectionEnabled || !selection || selection.isCollapsed) {
-    return;
-  }
-
-  const range = selection.getRangeAt(0);
-  const rect = range.getBoundingClientRect();
-  selectedText = selection.toString().trim();
-
-  if (!selectedText) {
-    return;
-  }
-
-  // 保存最后选中的文本和时间
-  lastSelectionText = selectedText;
-  lastSelectionTime = Date.now();
-
-  // 添加下划线到所有选中文本
-  addUnderlineToSelection(selection);
-
-  // 计算按钮容器位置 - 在选中文本下方
-  const containerX = rect.left + window.scrollX;
-  const containerY = rect.bottom + window.scrollY + 5; // 在文本下方5px的位置
-
-  // 如果已经存在快捷按钮容器，则只更新位置
-  if (currentQuickActions) {
-    Object.assign(currentQuickActions.style, {
-      position: 'absolute',
-      left: `${containerX}px`,
-      top: `${containerY}px`,
-    });
-    return;
-  }
-
-  // 创建按钮容器
-  currentQuickActions = await createQuickActionButtons(
-    selectedText,
-    handleQuickAction,
-    handleIconClick
-  );
-
-  // 设置容器位置
-  Object.assign(currentQuickActions.style, {
-    position: 'absolute',
-    left: `${containerX}px`,
-    top: `${containerY}px`,
-    zIndex: '2147483647',
-  });
-
-  // 直接添加到DOM
-  document.body.appendChild(currentQuickActions);
-}
-
-function removeQuickActions() {
-  // 移除下划线
-  removeUnderlines();
-
-  // 移除按钮容器
-  if (currentQuickActions && document.body.contains(currentQuickActions)) {
-    document.body.removeChild(currentQuickActions);
-    currentQuickActions = null;
+    // 延迟清空内容，确保过渡效果完成
+    setTimeout(() => {
+      container.innerHTML = '';
+    }, 200);
   }
 }
 
@@ -721,4 +859,72 @@ function setupResizeObserver(popup) {
 
   // 开始观察
   popup._resizeObserver.observe(popup);
+}
+
+// 立即初始化固定容器
+document.addEventListener('DOMContentLoaded', () => {
+  // 检查容器是否已存在
+  if (!document.getElementById('fixed-quick-actions-container')) {
+    const container = document.createElement('div');
+    container.id = 'fixed-quick-actions-container';
+    Object.assign(container.style, {
+      position: 'absolute',
+      pointerEvents: 'none',
+      top: '0',
+      left: '0',
+      width: '100%',
+      height: '100%',
+      zIndex: '2147483646',
+      opacity: '0',
+      transition: 'opacity 0.2s ease'
+    });
+    document.body.appendChild(container);
+    currentQuickActions = container;
+  }
+});
+
+// 如果DOMContentLoaded已触发，立即初始化
+if (document.readyState === 'interactive' || document.readyState === 'complete') {
+  if (!document.getElementById('fixed-quick-actions-container')) {
+    const container = document.createElement('div');
+    container.id = 'fixed-quick-actions-container';
+    Object.assign(container.style, {
+      position: 'absolute',
+      pointerEvents: 'none',
+      top: '0',
+      left: '0',
+      width: '100%',
+      height: '100%',
+      zIndex: '2147483646',
+      opacity: '0',
+      transition: 'opacity 0.2s ease'
+    });
+    document.body.appendChild(container);
+    currentQuickActions = container;
+  }
+}
+
+// 修改原始的removeQuickActions函数实现
+function removeQuickActions() {
+  hideQuickActions();
+}
+
+async function handleCopyAction() {
+  if (selectionManager.hasSelection()) {
+    const textToCopy = selectionManager.getSavedText();
+    if (textToCopy) {
+      try {
+        await navigator.clipboard.writeText(textToCopy);
+        removeQuickActions();
+        selectionManager.clear();
+        try {
+          window.getSelection().removeAllRanges();
+        } catch (err) { /* मौन त्रुटि */ }
+      } catch (err) {
+        console.error("复制文本失败:", err);
+      }
+    }
+  } else {
+    console.log("没有选中的文本可以复制");
+  }
 }

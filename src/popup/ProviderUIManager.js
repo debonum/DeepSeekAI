@@ -9,7 +9,6 @@ export class ProviderUIManager {
 
   // 更新服务商UI
   async updateProviderUI(provider) {
-    console.log(`开始更新服务商UI: ${provider}`);
 
     // 显示/隐藏特定的UI元素
     const isDeepseek = provider === 'deepseek';
@@ -54,7 +53,6 @@ export class ProviderUIManager {
       console.error('设置API URL placeholder出错:', error);
     }
 
-    console.log(`服务商UI更新完成: ${provider}`);
   }
 
   // 加载自定义API URL
@@ -98,7 +96,6 @@ export class ProviderUIManager {
         this.uiManager.setApiKeyValue(apiKey);
       }
 
-      console.log(`加载${provider}的API密钥: ${apiKey ? '已设置' : '未设置'}`);
     } catch (error) {
       console.error('加载API密钥出错:', error);
     }
@@ -564,7 +561,6 @@ export class ProviderUIManager {
 
   // 处理保存自定义服务商
   async handleSaveCustomProvider() {
-    console.log(`🔄 开始处理保存自定义服务商`);
 
     const customProviderNameInput = document.getElementById('customProviderNameInput');
     const customProviderApiKey = document.getElementById('customProviderApiKey');
@@ -587,12 +583,6 @@ export class ProviderUIManager {
     const customModelId = customModelIdInput.value;
     const customModelName = customModelNameInput.value;
 
-    console.log(`📝 表单数据:
-      服务商名称: ${customProviderName}
-      API URL: ${customApiUrl}
-      模型ID: ${customModelId}
-      模型名称: ${customModelName}
-      API密钥: ${apiKey ? apiKey.substring(0, 5) + '...' + apiKey.substring(apiKey.length - 5) : '空'}`);
 
     // 清除之前的验证消息
     customProviderValidationMessage.innerHTML = '';
@@ -648,10 +638,8 @@ export class ProviderUIManager {
         isDefault: false
       };
 
-      console.log(`🔧 创建新服务商对象:`, newProvider);
 
       // 直接验证API密钥，使用自定义URL而不是'custom'
-      console.log(`🔍 开始验证API密钥，使用自定义URL: ${customApiUrl}`);
 
       // 创建临时服务商对象用于验证
       const tempProvider = {
@@ -674,7 +662,6 @@ export class ProviderUIManager {
       saveCustomProviderButton.disabled = false;
 
       if (isValid) {
-        console.log(`✅ API密钥验证成功，保存服务商: ${newProvider.name}`);
 
         // 添加apiKey到服务商对象，确保在对象内部也存储apiKey
         newProvider.apiKey = apiKey;
@@ -694,11 +681,9 @@ export class ProviderUIManager {
           label: customModelName
         };
 
-        console.log(`📚 添加模型到服务商:`, model);
         await this.providerManager.addModel(newProvider.id, model);
 
         // 保存并切换到新添加的服务商
-        console.log(`🔄 切换到新服务商: ${newProvider.id}`);
         await this.storageManager.saveProvider(newProvider.id);
         await this.storageManager.saveModel(customModelId);
 
@@ -734,7 +719,6 @@ export class ProviderUIManager {
             customProviderModal.classList.remove('show');
           }
 
-          console.log(`🔄 重新加载页面以应用更改`);
           // 触发页面重新加载
           window.location.reload();
         }, 1500);

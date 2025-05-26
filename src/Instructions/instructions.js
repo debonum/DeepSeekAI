@@ -123,9 +123,7 @@ let currentLang = "en";
 
 const toggleLanguage = () => {
   // 移除console.log("toggleLanguage")这种简单的日志
-  console.log("Current language:", currentLang);
   currentLang = currentLang === "zh" ? "en" : "zh";
-  console.log("Switching to:", currentLang);
 
   // 确保translations对象中有对应的语言数据
   const langData = translations[currentLang];
@@ -136,7 +134,6 @@ const toggleLanguage = () => {
 
   try {
     updateContent();
-    console.log("Language switch completed");
   } catch (err) {
     console.error("Error updating content:", err);
   }
@@ -223,10 +220,8 @@ document.addEventListener("DOMContentLoaded", () => {
   if (langToggleBtn) {
     langToggleBtn.addEventListener("click", (e) => {
       e.preventDefault(); // 防止可能的默认行为
-      console.log("Language toggle button clicked");
       toggleLanguage();
     });
-    console.log("Language toggle button listener attached");
   } else {
     console.error("Language toggle button not found");
   }

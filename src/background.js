@@ -87,10 +87,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 
   if (request.action === "proxyRequest") {
-    console.log(`🔄 收到代理请求: ${request.url}`);
-    console.log(`📤 请求方法: ${request.method}`);
-    console.log(`🔑 请求头:`, request.headers);
-    console.log(`📦 请求体:`, request.body ? request.body.substring(0, 200) + (request.body.length > 200 ? '...' : '') : '无');
+
 
     const controller = new AbortController();
     const signal = controller.signal;
@@ -102,8 +99,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
     // 修复: 确保模型参数被正确添加到请求中
     const processRequest = (requestBody) => {
-      console.log(`🚀 发送请求到: ${request.url}`);
-      console.log(`📤 完整请求体:`, requestBody);
+
 
       fetch(request.url, {
         method: request.method,
@@ -112,14 +108,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         signal
       })
       .then(async response => {
-        console.log(`📥 收到响应 - 状态码: ${response.status}, OK: ${response.ok}`);
+
 
         // 如果不是流式响应，直接返回状态
         if (!requestBody.includes('"stream":true')) {
           // 尝试读取响应内容以获取更多错误信息
           try {
             const responseText = await response.text();
-            console.log(`📄 响应内容:`, responseText.substring(0, 500) + (responseText.length > 500 ? '...' : ''));
+
 
             let responseData = null;
             try {
@@ -231,7 +227,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       });
     } else {
       // 请求体已经包含model参数，直接处理
-      console.log(`✅ 请求已包含模型参数，直接处理: ${request.body.substring(0, 100)}...`);
+
       processRequest(request.body);
     }
 
@@ -311,7 +307,6 @@ chrome.commands.onCommand.addListener(async (command) => {
         }
       });
 
-      console.log('快捷键获取到的选中文本:', result);
 
       // 发送toggleChat消息以实现真正的切换功能
       chrome.tabs.sendMessage(tab.id, {

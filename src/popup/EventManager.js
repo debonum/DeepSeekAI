@@ -40,20 +40,16 @@ export class EventManager {
       "change",
       async (e) => {
         const provider = e.target.value;
-        console.log(`开始切换服务商到: ${provider}`);
 
         try {
           // 保存服务商选择
           await this.managers.storageManager.saveProvider(provider);
-          console.log(`✅ 服务商已保存为: ${provider}`);
 
           // 更新UI（包括API密钥和自定义API URL）
           await this.managers.providerUIManager.updateProviderUI(provider);
-          console.log(`✅ 服务商UI已更新: ${provider}`);
 
           // 更新模型选项
           await this.managers.modelManager.updateModelOptions(provider);
-          console.log(`✅ 模型选项已更新: ${provider}`);
         } catch (error) {
           console.error(`服务商切换错误:`, error);
         }
