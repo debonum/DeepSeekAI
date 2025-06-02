@@ -35,6 +35,16 @@ export class EventManager {
       }
     );
 
+    // API Key input event - 确保在输入时可见
+    this.managers.uiManager.elements.apiKeyInput.addEventListener(
+      "input",
+      () => {
+        // 确保在输入时内容可见
+        this.managers.uiManager.elements.apiKeyInput.type = "text";
+        this.managers.uiManager.elements.iconSwitch.src = "../icons/hiddle.svg";
+      }
+    );
+
     // 服务商切换事件
     this.managers.uiManager.elements.providerSelect.addEventListener(
       "change",
@@ -85,6 +95,15 @@ export class EventManager {
       "focus",
       () => {
         // 确保当获得焦点时内容可见
+        this.managers.uiManager.elements.customProviderApiKey.type = "text";
+      }
+    );
+
+    // 自定义服务商API Key input事件
+    this.managers.uiManager.elements.customProviderApiKey?.addEventListener(
+      "input",
+      () => {
+        // 确保在输入时内容可见
         this.managers.uiManager.elements.customProviderApiKey.type = "text";
       }
     );
