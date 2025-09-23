@@ -580,26 +580,26 @@ export class ProviderManager {
         { value: "Pro/deepseek-ai/DeepSeek-R1", label: "DeepSeek-R1 Pro" },
       ],
       openrouter: [
-        { value: "deepseek/deepseek-v3", label: "DeepSeek-V3" },
-        { value: "deepseek/deepseek-r1", label: "DeepSeek-R1" },
-        { value: "deepseek/deepseek-chat:free", label: "DeepSeek-V3 free" },
-        { value: "deepseek/deepseek-r1:free", label: "DeepSeek-R1 free" },
+        { value: "deepseek/deepseek-chat-v3-0324", label: "DeepSeek-V3" },
+        { value: "deepseek/deepseek-r1-0528", label: "DeepSeek-R1" },
+        { value: "deepseek/deepseek-chat-v3-0324:free", label: "DeepSeek-V3 free" },
+        { value: "deepseek/deepseek-r1-0528:free", label: "DeepSeek-R1 free" },
       ],
       tencentcloud: [
         { value: "deepseek-v3", label: "DeepSeek-V3" },
         { value: "deepseek-r1", label: "DeepSeek-R1" },
       ],
       volcengine: [
-        { value: "deepseek-v3-241226", label: "DeepSeek-V3" },
-        { value: "deepseek-r1-241226", label: "DeepSeek-R1" },
+        { value: "deepseek-v3-250324", label: "DeepSeek-V3" },
+        { value: "deepseek-r1-250528", label: "DeepSeek-R1" },
       ],
       iflytekstar: [
-        { value: "deepseek-v3-241226", label: "DeepSeek-V3" },
-        { value: "deepseek-r1-250120", label: "DeepSeek-R1" },
+        { value: "xdeepseekv3", label: "DeepSeek-V3" },
+        { value: "xdeepseekr1", label: "DeepSeek-R1" },
       ],
       baiducloud: [
         { value: "deepseek-v3", label: "DeepSeek-V3" },
-        { value: "deepseek-r1", label: "DeepSeek-R1" },
+        { value: "deepseek-r1-250528", label: "DeepSeek-R1" },
       ],
       aliyun: [
         { value: "deepseek-v3", label: "DeepSeek-V3" },

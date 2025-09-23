@@ -87,7 +87,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 
   if (request.action === "proxyRequest") {
+    // 添加调试日志
+    console.log(`🌐 代理请求: ${request.url}`);
 
+    // 检查是否是volcengine请求
+    if (request.url.includes('volcengine') || request.url.includes('volces.com')) {
+      console.log(`🔍 Volcengine请求详情:`);
+      console.log(`🔍 完整URL: ${request.url}`);
+      console.log(`🔍 请求头: ${JSON.stringify(request.headers)}`);
+      console.log(`🔍 请求体: ${request.body}`);
+
+      // 尝试解析请求体以获取模型信息
+      try {
+        const requestData = JSON.parse(request.body);
+        console.log(`🔍 Volcengine请求模型: ${requestData.model}`);
+      } catch (e) {
+        console.log(`⚠️ 无法解析请求体JSON`);
+      }
+    }
 
     const controller = new AbortController();
     const signal = controller.signal;
@@ -108,7 +125,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         signal
       })
       .then(async response => {
+        // 添加响应状态日志
+        console.log(`📥 收到响应: 状态码 ${response.status}`);
 
+        // 如果是volcengine请求，添加更详细的日志
+        if (request.url.includes('volcengine') || request.url.includes('volces.com')) {
+          console.log(`🔍 Volcengine响应状态码: ${response.status}`);
+          if (response.status === 404) {
+            console.log(`❌ Volcengine 404错误 - 可能的原因:
+              1. API端点不正确: ${request.url}
+              2. 模型ID格式不正确
+              3. 权限问题`);
+          }
+        }
 
         // 如果不是流式响应，直接返回状态
         if (!requestBody.includes('"stream":true')) {
@@ -116,10 +145,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           try {
             const responseText = await response.text();
 
+            // 添加响应内容日志
+            if (request.url.includes('volcengine') || request.url.includes('volces.com')) {
+              console.log(`🔍 Volcengine响应内容: ${responseText}`);
+            }
 
             let responseData = null;
             try {
               responseData = JSON.parse(responseText);
+
+              // 添加解析后的响应日志
+              if (request.url.includes('volcengine') || request.url.includes('volces.com')) {
+                console.log(`🔍 Volcengine解析后的响应: ${JSON.stringify(responseData)}`);
+              }
             } catch (e) {
               console.log(`⚠️ 响应不是有效的JSON`);
             }
@@ -203,6 +241,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       })
       .catch(error => {
         console.error('请求错误:', error);
+
+        // 添加更详细的错误日志
+        if (request.url.includes('volcengine') || request.url.includes('volces.com')) {
+          console.log(`❌ Volcengine请求失败: ${error.message}`);
+          console.log(`❌ 请求URL: ${request.url}`);
+          console.log(`❌ 请求模型: ${JSON.parse(request.body || '{}').model || '未知'}`);
+        }
+
         sendResponse({
           ok: false,
           error: error.message
