@@ -820,7 +820,7 @@
 
       .modal-content {
         background-color: var(--background-primary);
-        width: 300px;
+        width: 350px;
         border-radius: 16px;
         box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
         overflow: hidden;
@@ -876,11 +876,19 @@
         color: var(--text-secondary);
       }
 
+      .input-hint {
+        font-size: 11px;
+        color: var(--text-secondary);
+        margin-top: 4px;
+        margin-left: 2px;
+        opacity: 0.8;
+      }
+
       .form-control {
         width: 100%;
-        padding: 12px;
+        padding: 12px 15px;
         border-radius: 10px;
-        font-size: 14px;
+        font-size: 13px;
         background-color: var(--input-background);
         border: 1px solid var(--border-color);
         box-sizing: border-box;
@@ -1379,6 +1387,9 @@
           <span id="closeCustomProviderModal" class="close">&times;</span>
         </div>
         <div class="modal-body">
+          <div class="form-group" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span></span>
+          </div>
           <div class="form-group">
             <label
               id="customProviderNameInputLabel"
@@ -1410,9 +1421,10 @@
             <input
               type="text"
               id="customApiUrlInput"
-              placeholder="例如: https://api.example.com/v1/chat/completions"
+              placeholder="https://api.example.com/v1/chat/completions"
               class="form-control"
             />
+            <div class="input-hint" id="apiUrlHint"></div>
           </div>
           <div class="form-group">
             <label id="customModelIdInputLabel" for="customModelIdInput"
@@ -1460,6 +1472,25 @@
           <span id="closeModelModal" class="close">&times;</span>
         </div>
         <div class="modal-body">
+          <div class="form-group" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span></span>
+            <a
+              href="#"
+              id="addModelApiKeyLink"
+              target="_blank"
+              rel="noopener noreferrer"
+              style="font-size:12px;"
+            >获取API密钥</a>
+          </div>
+          <div class="form-group">
+            <label id="modelApiKeyLabel" for="modelApiKey">API密钥</label>
+            <input
+              type="text"
+              id="modelApiKey"
+              placeholder="请输入API密钥"
+              class="form-control"
+            />
+          </div>
           <div class="form-group">
             <label id="modelIdLabel" for="modelApiId">模型ID</label>
             <input

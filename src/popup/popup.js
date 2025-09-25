@@ -1,4 +1,4 @@
-import { ApiKeyManager } from './ApiKeyManager.js';
+import { ApiKeyManager } from './apiKeyManager.js';
 import { I18nManager } from './i18n.js';
 import { UiManager } from './uiManager.js';
 import { StorageManager } from './storageManager.js';
@@ -6,6 +6,7 @@ import { ProviderManager } from './ProviderManager.js';
 import { ModelManager } from './ModelManager.js';
 import { ProviderUIManager } from './ProviderUIManager.js';
 import { EventManager } from './EventManager.js';
+import { TempStateManager } from './TempStateManager.js';
 
 class PopupManager {
   constructor() {
@@ -14,26 +15,30 @@ class PopupManager {
     this.uiManager = new UiManager();
     this.storageManager = new StorageManager();
     this.providerManager = new ProviderManager();
+    this.tempStateManager = new TempStateManager();
 
     // 初始化依赖其他管理器的管理器
     this.modelManager = new ModelManager(
       this.providerManager,
       this.storageManager,
       this.uiManager,
-      this.i18nManager
+      this.i18nManager,
+      this.tempStateManager
     );
 
     this.providerUIManager = new ProviderUIManager(
       this.providerManager,
       this.storageManager,
       this.uiManager,
-      this.i18nManager
+      this.i18nManager,
+      this.tempStateManager
     );
 
     this.apiKeyManager = new ApiKeyManager(
       this.providerManager,
       this.uiManager,
-      this.i18nManager
+      this.i18nManager,
+      this.modelManager
     );
 
     // 将所有管理器传递给事件管理器
@@ -44,7 +49,8 @@ class PopupManager {
       providerManager: this.providerManager,
       modelManager: this.modelManager,
       providerUIManager: this.providerUIManager,
-      apiKeyManager: this.apiKeyManager
+      apiKeyManager: this.apiKeyManager,
+      tempStateManager: this.tempStateManager
     });
 
     // 初始化
@@ -72,6 +78,9 @@ class PopupManager {
       // 获取设置
       const settings = await this.storageManager.getSettings();
       const currentProvider = settings.provider || 'deepseek';
+
+      // 检查临时状态并决定是否恢复对话框
+      const tempStates = this.tempStateManager.getAllTempStates();
 
 
       // 加载所有可见的服务商到下拉菜单
@@ -112,7 +121,27 @@ class PopupManager {
       await this.providerUIManager.updateProviderUI(currentProvider);
 
       // 更新模型选项
-      await this.modelManager.updateModelOptions(currentProvider);
+      const models = await this.modelManager.updateModelOptions(currentProvider);
+
+      // 根据临时状态决定要恢复哪个对话框（只有在有实际内容时才恢复）
+      if (this.tempStateManager.hasTempStateContent(TempStateManager.TYPES.ADD_PROVIDER)) {
+        console.log('🔄 恢复服务商添加对话框...');
+        setTimeout(() => this.providerUIManager.showCustomProviderDialog(), 100);
+      } else if (this.tempStateManager.hasTempStateContent(TempStateManager.TYPES.ADD_MODEL)) {
+        console.log('🔄 恢复模型添加对话框...');
+        setTimeout(() => this.modelManager.showAddModelDialog(), 100);
+      } else {
+        // 如果没有临时状态，执行正常的模型检查逻辑
+        // 非 deepseek：若无模型，强制弹出添加模型（使用带有Key自动隐藏逻辑的接口）
+        if (currentProvider !== 'deepseek' && (!models || models.length === 0)) {
+          if (this.modelManager && this.modelManager.showAddModelDialog) {
+            this.modelManager.showAddModelDialog();
+          } else if (this.uiManager.showAddModelModal) {
+            // 兜底
+            this.uiManager.showAddModelModal();
+          }
+        }
+      }
 
       // 设置保存的model值
       if (settings.model) {

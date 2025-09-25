@@ -125,6 +125,19 @@ class SelectionPreservationManager {
   }
 }
 
+// 判断点击是否发生在已保存选区矩形内（允许微小边距）
+function isPointInSavedSelection(e, padding = 12) {
+  try {
+    if (!selectionManager.savedRange) return false;
+    const rect = selectionManager.savedRange.getBoundingClientRect();
+    const x = e.clientX, y = e.clientY;
+    return x >= rect.left - padding && x <= rect.right + padding &&
+           y >= rect.top - padding && y <= rect.bottom + padding;
+  } catch (_) {
+    return false;
+  }
+}
+
 // 创建全局实例
 const selectionManager = new SelectionPreservationManager();
 
@@ -147,6 +160,18 @@ let selectionChangeTimeout = null;
 let lastSelectionLength = 0;
 
 let quickActionsVisibleBeforeContextMenu = false; // 新增全局变量跟踪状态
+let quickActionsShownAt = 0; // 记录快捷按钮显示时间，避免双/三击时被立即移除
+const DOUBLE_CLICK_GUARD_MS = 350; // 双击/三击保护时间窗口
+let suppressQuickActionsUntil = 0; // 弹窗创建后在冷却期内禁止再次唤起快捷按钮
+
+// 判断是否为快速的多击（双击/三击）
+function isRapidMultiClick(event) {
+  try {
+    return event && typeof event.detail === 'number' && event.detail >= 2;
+  } catch (_) {
+    return false;
+  }
+}
 
 const link = document.createElement("link");
 link.rel = "stylesheet";
@@ -315,6 +340,14 @@ function handlePopupCreation(selectedText, rect, hideQuestion = false, messages 
     // 先移除快捷按钮
     removeIcon();
     removeQuickActions();
+    // 再兜底清理任何遗留
+    try {
+      const wrapper = document.getElementById('quick-actions-wrapper');
+      if (wrapper && wrapper.parentNode) wrapper.parentNode.removeChild(wrapper);
+      const legacy = document.getElementById('fixed-quick-actions-container');
+      if (legacy) { legacy.style.opacity = '0'; legacy.style.pointerEvents = 'none'; legacy.innerHTML = ''; }
+      document.querySelectorAll('.quick-action-buttons').forEach(n => n.parentNode && n.parentNode.removeChild(n));
+    } catch(_) {}
 
     safeRemovePopup();
     currentPopup = createPopup(selectedText, rect, hideQuestion, safeRemovePopup, messages, quickActionPrompt);
@@ -337,6 +370,8 @@ function handlePopupCreation(selectedText, rect, hideQuestion = false, messages 
 
     document.body.appendChild(currentPopup);
     popupStateManager.setVisible(true);  // 更新状态
+    // 打开弹窗后，短时间抑制快捷按钮再次唤起
+    suppressQuickActionsUntil = Date.now() + 500;
 
     // 设置窗口大小监听
     if (isRememberWindowSize && currentPopup) {
@@ -399,10 +434,13 @@ document.addEventListener("mousedown", function(e) {
     selectionChangeTimeout = null;
   }
 
-  // 清除现有快捷按钮
+  // 清除现有快捷按钮：不移除已显示的按钮，除非明确点击在非选区且超过保护时间
   if (!e.target.closest('.quick-action-buttons') &&
       !e.target.closest('.custom-prompt-input')) {
-    removeQuickActions();
+    const withinGuardWindow = quickActionsShownAt && (Date.now() - quickActionsShownAt < DOUBLE_CLICK_GUARD_MS);
+    if (!isPointInSavedSelection(e) && !withinGuardWindow) {
+      removeQuickActions();
+    }
   }
 }, { passive: true });
 
@@ -456,78 +494,135 @@ function prepareSelectionUI(selection) {
   lastSelectionTime = Date.now();
 }
 
+// 等待点击型选区（双击/三击）稳定：文本在一段时间内不再变化
+function getStableSelection(maxWait = 500, settle = 140) {
+  return new Promise((resolve) => {
+    const start = Date.now();
+    let lastText = '';
+    let lastChange = Date.now();
+
+    const tick = () => {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0 || sel.isCollapsed) {
+        if (Date.now() - start >= maxWait) return resolve(null);
+        return setTimeout(tick, 40);
+      }
+
+      const text = sel.toString().trim();
+      if (text !== lastText) {
+        lastText = text;
+        lastChange = Date.now();
+      }
+
+      if (text && Date.now() - lastChange >= settle) {
+        return resolve(sel);
+      }
+
+      if (Date.now() - start >= maxWait) {
+        return resolve(sel);
+      }
+      setTimeout(tick, 40);
+    };
+    tick();
+  });
+}
+
 // 修改mouseup事件处理函数
 document.addEventListener("mouseup", function(e) {
   isMouseDown = false;
   if (e.button === 2) return;
   if (!isSelectionEnabled || popupStateManager.isCreating() || isHandlingIconClick) return;
-  const selection = window.getSelection();
-  if (!selection || selection.isCollapsed) return;
-  const text = selection.toString().trim();
-  if (!text || text.length === 0) return;
-  selectionManager.saveSelection();
-  selectedText = text;
-  lastSelectionText = text;
-  lastSelectionTime = Date.now();
+  // 对点击型选中（双击/三击）等待“稳定”后再读取，确保拿到最终扩展的选区
+  if (!hasMovedEnough && e.detail >= 2) {
+    getStableSelection(550, 160).then((sel) => {
+      if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+      const textNow = sel.toString().trim();
+      if (!textNow) return;
+      selectionManager.saveSelection();
+      selectedText = textNow;
+      lastSelectionText = textNow;
+      lastSelectionTime = Date.now();
+      if (!selectionManager.hasSelection()) return;
+      showQuickActionsForSelection(sel);
+    });
+    return;
+  }
+
+  // 拖拽型或单击扩展型，轻量延迟
+  const delay = hasMovedEnough ? 10 : 180;
   setTimeout(() => {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+    const textNow = sel.toString().trim();
+    if (!textNow) return;
+    selectionManager.saveSelection();
+    selectedText = textNow;
+    lastSelectionText = textNow;
+    lastSelectionTime = Date.now();
     if (!selectionManager.hasSelection()) return;
-    showQuickActionsForSelection(selection);
-  }, 10);
+    showQuickActionsForSelection(sel);
+  }, delay);
 }, { passive: true });
 
 // 修改showQuickActionsForSelection函数
 function showQuickActionsForSelection(selection) {
   try {
+    // 若在弹窗冷却时间内，禁止唤起快捷栏，避免与弹窗并存/抖动
+    if (Date.now() < suppressQuickActionsUntil) {
+      return;
+    }
+    // 若已有一个实例，先移除，确保同一时刻仅存在一个快捷栏
+    const existed = document.getElementById('quick-actions-wrapper');
+    if (existed && existed.parentNode) {
+      try { existed.parentNode.removeChild(existed); } catch (_) {}
+    }
     selectionManager.saveSelection();
-    let container = document.getElementById('fixed-quick-actions-container');
-    if (!container) {
-      container = document.createElement('div');
-      container.id = 'fixed-quick-actions-container';
-      Object.assign(container.style, {
+    // 使用精确定位的小容器，避免全屏遮罩干扰浏览器三击选区逻辑
+    let wrapper = document.getElementById('quick-actions-wrapper');
+    if (!wrapper) {
+      wrapper = document.createElement('div');
+      wrapper.id = 'quick-actions-wrapper';
+      Object.assign(wrapper.style, {
         position: 'fixed',
-        pointerEvents: 'none',
-        top: '0',
-        left: '0',
-        width: '100%',
-        height: '100%',
-        zIndex: '2147483646',
+        zIndex: '2147483647',
+        pointerEvents: 'auto',
         opacity: '0',
-        transition: 'opacity 0.2s ease'
+        transition: 'opacity 0.15s ease',
       });
-      document.body.appendChild(container);
-      currentQuickActions = container;
+      document.body.appendChild(wrapper);
+      currentQuickActions = wrapper;
     }
     const range = selectionManager.savedRange;
     if (!range) return;
     const rect = range.getBoundingClientRect();
     const text = selectionManager.getSavedText();
-    container.innerHTML = '';
+    wrapper.innerHTML = '';
 
     createQuickActionButtons(text, handleQuickAction, handleIconClick, handleCopyAction)
       .then(buttonsContainer => {
         if (!buttonsContainer) return;
-        Object.assign(buttonsContainer.style, {
-          position: 'fixed',
+        // 将小容器移动到选区处，仅包裹按钮本身，并确保层级低于弹窗
+        Object.assign(wrapper.style, {
           left: `${rect.left}px`,
           top: `${rect.bottom + 5}px`,
-          zIndex: '2147483647'
+          zIndex: '2147483646'
         });
-        container.appendChild(buttonsContainer);
-        container.style.opacity = '1';
-        container.style.pointerEvents = 'auto';
-        selectionManager.scheduleRestore(75, true);
+        // 挂载按钮
+        buttonsContainer.style.position = 'static';
+        wrapper.appendChild(buttonsContainer);
+        // 显示
+        wrapper.style.opacity = '1';
+        // 记录显示时间，防止双击/三击的下一次 mousedown 立即移除
+        quickActionsShownAt = Date.now();
+        // 不再主动恢复选区，严格不干预浏览器的选择状态
       })
       .catch(err => {
         console.error('创建快捷按钮出错:', err);
-        if (selectionManager.hasSelection()) {
-            selectionManager.scheduleRestore(75, true);
-        }
+        // 不做选区恢复，避免影响浏览器三击逻辑
       });
   } catch (error) {
     console.error('显示快捷按钮时出错:', error);
-    if (selectionManager.hasSelection()) {
-        selectionManager.scheduleRestore(75, true);
-    }
+    // 不做选区恢复
   }
 }
 
@@ -594,14 +689,22 @@ document.addEventListener("mousedown", function(e) {
   }
 
   if (e.button === 0) { // 左键外部
-    removeQuickActions();
-    if (selectionManager.hasSelection()) {
-      selectionManager.clear();
-      try { window.getSelection().removeAllRanges(); } catch (err) { /* मौन */ }
+    // 若点击在已保存选区内，不移除快捷按钮，支持双击/三击
+    if (isPointInSavedSelection(e)) {
+      return;
+    }
+    const withinGuardWindow = quickActionsShownAt && (Date.now() - quickActionsShownAt < DOUBLE_CLICK_GUARD_MS);
+    if (!withinGuardWindow) {
+      removeQuickActions();
+      if (selectionManager.hasSelection()) {
+        selectionManager.clear();
+        try { window.getSelection().removeAllRanges(); } catch (err) { /* मौन */ }
+      }
     }
   }
 
-  if (selectionManager.savedRange) {
+  // 仅在右键（上下文菜单）时使用临时聚焦黑客，避免干扰左键双/三击的点击计数与选区扩展
+  if (e.button === 2 && selectionManager.savedRange) {
     const commonAncestor = selectionManager.savedRange.commonAncestorContainer;
     let focusableElement = commonAncestor;
     if (commonAncestor.nodeType === Node.TEXT_NODE) {
@@ -784,16 +887,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 // 隐藏快捷按钮
 function hideQuickActions() {
+  // 兼容旧容器（全屏遮罩）
   const container = document.getElementById('fixed-quick-actions-container');
   if (container) {
-    // 隐藏容器
     container.style.opacity = '0';
     container.style.pointerEvents = 'none';
+    setTimeout(() => { container.innerHTML = ''; }, 200);
+  }
 
-    // 延迟清空内容，确保过渡效果完成
-    setTimeout(() => {
-      container.innerHTML = '';
-    }, 200);
+  // 新容器：精确定位的小包裹器，出现会优先移除
+  const wrapper = document.getElementById('quick-actions-wrapper');
+  if (wrapper && wrapper.parentNode) {
+    try { wrapper.parentNode.removeChild(wrapper); } catch (_) {}
+    if (currentQuickActions === wrapper) currentQuickActions = null;
   }
 }
 
@@ -807,6 +913,16 @@ document.addEventListener('click', (e) => {
     }
   }
 });
+
+// 在快捷按钮栏显示后，点击其外部则关闭（不影响三击选区，因为发生在显示之后）
+document.addEventListener('mousedown', (e) => {
+  const wrapper = document.getElementById('quick-actions-wrapper');
+  if (!wrapper) return;
+  // 点击在按钮内部：忽略
+  if (e.target.closest && e.target.closest('.quick-action-buttons')) return;
+  // 其他任意点击：关闭快捷栏
+  hideQuickActions();
+}, { passive: true });
 
 // 添加全局键盘事件监听，用于ESC键关闭弹窗
 document.addEventListener('keydown', (e) => {

@@ -59,7 +59,37 @@ export class EventManager {
           await this.managers.providerUIManager.updateProviderUI(provider);
 
           // 更新模型选项
-          await this.managers.modelManager.updateModelOptions(provider);
+          const models = await this.managers.modelManager.updateModelOptions(provider);
+
+          // 先检查是否已设置API Key
+          const apiKey = await this.managers.providerManager.getApiKey(provider);
+
+          if (!apiKey) {
+            // 引导先填写API Key，再添加模型
+            this.managers.uiManager.showMessage(
+              this.managers.i18nManager.getTranslation('noApiKey'),
+              false
+            );
+            // 直接弹出“添加模型”弹窗（ModelManager 会根据是否已有 Key 决定是否显示 Key 输入）
+            try { document.body.dataset.requireModelKeyProvider = provider; } catch (e) {}
+            if (this.managers.modelManager?.showAddModelDialog) {
+              this.managers.modelManager.showAddModelDialog();
+            } else {
+              this.managers.uiManager.showAddModelModal?.();
+            }
+            // 优先聚焦弹窗中的 Key 输入框（若显示）
+            this.managers.uiManager.elements.modelApiKey?.focus?.();
+            return;
+          }
+
+          // 非 deepseek：若无模型，强制弹出添加模型（使用带有Key自动隐藏逻辑的接口）
+          if (provider !== 'deepseek' && (!models || models.length === 0)) {
+            if (this.managers.modelManager?.showAddModelDialog) {
+              this.managers.modelManager.showAddModelDialog();
+            } else {
+              this.managers.uiManager.showAddModelModal?.();
+            }
+          }
         } catch (error) {
           console.error(`服务商切换错误:`, error);
         }
@@ -75,13 +105,13 @@ export class EventManager {
     // 关闭模型弹窗按钮
     this.managers.uiManager.elements.closeModelModal?.addEventListener(
       "click",
-      () => this.managers.uiManager.hideAddModelModal()
+      () => this.handleCloseModelModal()
     );
 
-    // 取消添加模型按钮
+      // 取消添加模型按钮
     this.managers.uiManager.elements.cancelModelButton?.addEventListener(
       "click",
-      () => this.managers.uiManager.hideAddModelModal()
+      () => this.handleCancelModelModal()
     );
 
     // 保存模型按钮
@@ -122,13 +152,13 @@ export class EventManager {
     // 关闭自定义服务商弹窗按钮
     this.managers.uiManager.elements.closeCustomProviderModal?.addEventListener(
       "click",
-      () => this.managers.uiManager.hideCustomProviderModal()
+      () => this.handleCloseProviderModal()
     );
 
     // 取消自定义服务商按钮
     this.managers.uiManager.elements.cancelCustomProviderButton?.addEventListener(
       "click",
-      () => this.managers.uiManager.hideCustomProviderModal()
+      () => this.handleCancelProviderModal()
     );
 
     // 保存自定义服务商按钮
@@ -142,7 +172,7 @@ export class EventManager {
       "click",
       (e) => {
         if (e.target === this.managers.uiManager.elements.addModelModal) {
-          this.managers.uiManager.hideAddModelModal();
+          this.handleCloseModelModal();
         }
       }
     );
@@ -151,7 +181,7 @@ export class EventManager {
       "click",
       (e) => {
         if (e.target === this.managers.uiManager.elements.customProviderModal) {
-          this.managers.uiManager.hideCustomProviderModal();
+          this.handleCloseProviderModal();
         }
       }
     );
@@ -248,5 +278,51 @@ export class EventManager {
     chrome.tabs.create({
       url: instructionsUrl
     });
+  }
+
+  // 处理模型对话框关闭（不清除临时状态，允许恢复）
+  handleCloseModelModal() {
+    // 使用 ModelManager 的隐藏方法
+    if (this.managers.modelManager?.hideAddModelDialog) {
+      this.managers.modelManager.hideAddModelDialog();
+    } else {
+      // 兜底使用 UIManager
+      this.managers.uiManager.hideAddModelModal();
+    }
+  }
+
+  // 处理服务商对话框关闭（不清除临时状态，允许恢复）
+  handleCloseProviderModal() {
+    // 使用 ProviderUIManager 的隐藏方法
+    if (this.managers.providerUIManager?.hideCustomProviderDialog) {
+      this.managers.providerUIManager.hideCustomProviderDialog();
+    } else {
+      // 兜底使用 UIManager
+      this.managers.uiManager.hideCustomProviderModal();
+    }
+  }
+
+  // 处理用户明确取消操作（清除临时状态）
+  handleUserCancel(dialogType) {
+    if (this.managers.tempStateManager) {
+      this.managers.tempStateManager.clearTempState(dialogType);
+      console.log(`🗑️ 用户取消操作，清除临时状态: ${dialogType}`);
+    }
+  }
+
+  // 处理模型对话框取消（清除临时状态）
+  handleCancelModelModal() {
+    // 清除临时状态
+    this.handleUserCancel(this.managers.tempStateManager?.constructor?.TYPES?.ADD_MODEL);
+    // 关闭对话框
+    this.handleCloseModelModal();
+  }
+
+  // 处理服务商对话框取消（清除临时状态）
+  handleCancelProviderModal() {
+    // 清除临时状态
+    this.handleUserCancel(this.managers.tempStateManager?.constructor?.TYPES?.ADD_PROVIDER);
+    // 关闭对话框
+    this.handleCloseProviderModal();
   }
 }

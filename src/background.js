@@ -75,7 +75,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           aliyunCustomApiUrl: data.aliyunCustomApiUrl || '',
           aihubmixCustomApiUrl: data.aihubmixCustomApiUrl || '',
           language: data.language || 'en',
-          model: data.model || 'deepseek-chat',
+          model: data.model || '',
           provider: provider,
           customApiKey: customApiKey,
           customApiUrl: customApiUrl,
@@ -262,20 +262,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       });
     };
 
-    // 如果请求体中没有model参数，从storage中获取
-    if (request.body && !request.body.includes('"model"')) {
-      chrome.storage.sync.get(['model'], (data) => {
-        const model = data.model || 'deepseek-chat';
-        const bodyObj = JSON.parse(request.body);
-        bodyObj.model = model;
-        request.body = JSON.stringify(bodyObj);
-        processRequest(request.body);
-      });
-    } else {
-      // 请求体已经包含model参数，直接处理
-
-      processRequest(request.body);
-    }
+    // 不再对缺失的 model 进行注入，直接按传入的请求体处理
+    processRequest(request.body);
 
     return true;
   }

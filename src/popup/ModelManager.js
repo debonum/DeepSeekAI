@@ -1,9 +1,10 @@
 export class ModelManager {
-  constructor(providerManager, storageManager, uiManager, i18nManager) {
+  constructor(providerManager, storageManager, uiManager, i18nManager, tempStateManager) {
     this.providerManager = providerManager;
     this.storageManager = storageManager;
     this.uiManager = uiManager;
     this.i18nManager = i18nManager;
+    this.tempStateManager = tempStateManager;
     this.customModelDropdown = null;
   }
 
@@ -191,23 +192,25 @@ export class ModelManager {
       customDropdown.appendChild(optionElement);
     });
 
-    // 添加自定义模型选项 - 始终显示，并改进样式
-    const addCustomModel = document.createElement('div');
-    addCustomModel.className = 'custom-select-option add-model-option';
-    // 每次都重新获取国际化翻译
-    const addModelText = this.i18nManager.getTranslation('addModel');
-    addCustomModel.textContent = '+ ' + addModelText;
-    addCustomModel.style.color = 'var(--accent-color)';
-    addCustomModel.style.textAlign = 'center';
-    addCustomModel.style.fontWeight = 'bold';
-    addCustomModel.style.padding = '10px';
-    addCustomModel.style.borderTop = options.length > 0 ? '1px solid var(--border-color)' : 'none';
-    addCustomModel.addEventListener('click', () => {
-      customDropdown.style.display = 'none';
-      this.showAddModelDialog();
-    });
+    // 添加自定义模型选项 - deepseek不需要添加模型，其他服务商才显示
+    if (provider !== 'deepseek') {
+      const addCustomModel = document.createElement('div');
+      addCustomModel.className = 'custom-select-option add-model-option';
+      // 每次都重新获取国际化翻译
+      const addModelText = this.i18nManager.getTranslation('addModel');
+      addCustomModel.textContent = '+ ' + addModelText;
+      addCustomModel.style.color = 'var(--accent-color)';
+      addCustomModel.style.textAlign = 'center';
+      addCustomModel.style.fontWeight = 'bold';
+      addCustomModel.style.padding = '10px';
+      addCustomModel.style.borderTop = options.length > 0 ? '1px solid var(--border-color)' : 'none';
+      addCustomModel.addEventListener('click', () => {
+        customDropdown.style.display = 'none';
+        this.showAddModelDialog();
+      });
 
-    customDropdown.appendChild(addCustomModel);
+      customDropdown.appendChild(addCustomModel);
+    }
 
     // 下拉菜单点击事件处理
     const dropdownClickListener = (e) => {
@@ -391,20 +394,40 @@ export class ModelManager {
 
   // 显示添加模型弹窗
   showAddModelDialog() {
+    const provider = document.getElementById('provider')?.value;
+
+    // DeepSeek不需要添加自定义模型，直接返回
+    if (provider === 'deepseek') {
+      return;
+    }
+
     const addModelModal = document.getElementById('addModelModal');
     const modelApiId = document.getElementById('modelApiId');
     const modelDisplayName = document.getElementById('modelDisplayName');
+    const modelApiKey = document.getElementById('modelApiKey');
+    const modelApiKeyLabel = document.getElementById('modelApiKeyLabel');
     const modelValidationMessage = document.getElementById('modelValidationMessage');
 
     if (!addModelModal) return;
 
-    // 清空输入框
-    if (modelApiId) modelApiId.value = '';
-    if (modelDisplayName) modelDisplayName.value = '';
+    // 首先尝试恢复临时状态
+    const tempState = this.tempStateManager?.getTempState?.(this.tempStateManager.constructor.TYPES.ADD_MODEL);
+
+    if (tempState) {
+      console.log('🔄 检测到模型添加的临时状态，正在恢复...');
+      // 恢复表单数据
+      this.tempStateManager.restoreModelFormData(tempState);
+    } else {
+      // 如果没有临时状态，清空输入框（但保留已有的值避免复制粘贴丢失）
+      if (modelApiId && !modelApiId.value) modelApiId.value = '';
+      if (modelDisplayName && !modelDisplayName.value) modelDisplayName.value = '';
+      if (modelApiKey && !modelApiKey.value) modelApiKey.value = '';
+    }
 
     // 设置输入框的placeholder
     if (modelApiId) modelApiId.placeholder = this.i18nManager.getTranslation('modelApiIdPlaceholder');
     if (modelDisplayName) modelDisplayName.placeholder = this.i18nManager.getTranslation('modelDisplayNamePlaceholder');
+    if (modelApiKey) modelApiKey.placeholder = this.i18nManager.getTranslation('customProviderApiKeyPlaceholder');
 
     // 清除验证消息
     if (modelValidationMessage) {
@@ -415,15 +438,66 @@ export class ModelManager {
     // 显示弹窗
     addModelModal.classList.add('show');
 
+    // 安装表单监听器用于自动保存临时状态
+    if (this.tempStateManager) {
+      setTimeout(() => {
+        this.tempStateManager.installFormListeners(this.tempStateManager.constructor.TYPES.ADD_MODEL);
+      }, 100); // 稍微延迟以确保DOM已准备好
+    }
+
+    // 根据是否已保存 Provider 的 API Key 来决定是否显示 Key 输入
+    let currentProvider = document.getElementById('provider')?.value;
+    const hintedProvider = document.body?.dataset?.requireModelKeyProvider;
+    if (hintedProvider) {
+      currentProvider = hintedProvider;
+      try { delete document.body.dataset.requireModelKeyProvider; } catch (e) {}
+    }
+    if (currentProvider && modelApiKey && modelApiKeyLabel) {
+      this.providerManager.getApiKey(currentProvider).then((key) => {
+        const hasSavedKey = !!(key && key.trim());
+        // 若已有 Key，隐藏弹窗中的 Key 输入；否则显示并聚焦
+        modelApiKey.style.display = hasSavedKey ? 'none' : '';
+        modelApiKeyLabel.style.display = hasSavedKey ? 'none' : '';
+        if (!hasSavedKey && (!modelApiKey.value || modelApiKey.value.trim() === '')) {
+          modelApiKey.focus();
+        }
+      }).catch(() => {
+        // 发生错误时保持可见，便于用户填写
+        modelApiKey.style.display = '';
+        modelApiKeyLabel.style.display = '';
+      });
+    }
+
     // 处理ESC键关闭弹窗
     const handleEsc = (e) => {
       if (e.key === 'Escape') {
-        addModelModal.classList.remove('show');
-        document.removeEventListener('keydown', handleEsc);
+        this.hideAddModelDialog();
       }
     };
 
     document.addEventListener('keydown', handleEsc);
+
+    // 保存ESC处理器引用以便清理
+    addModelModal._escHandler = handleEsc;
+  }
+
+  // 隐藏添加模型弹窗
+  hideAddModelDialog() {
+    const addModelModal = document.getElementById('addModelModal');
+    if (!addModelModal) return;
+
+    // 移除ESC事件监听器
+    if (addModelModal._escHandler) {
+      document.removeEventListener('keydown', addModelModal._escHandler);
+      delete addModelModal._escHandler;
+    }
+
+    // 移除表单监听器
+    if (this.tempStateManager) {
+      this.tempStateManager.removeFormListeners(this.tempStateManager.constructor.TYPES.ADD_MODEL);
+    }
+
+    addModelModal.classList.remove('show');
   }
 
   // 处理删除模型
@@ -508,6 +582,7 @@ export class ModelManager {
     const modelApiId = document.getElementById('modelApiId');
     const modelDisplayName = document.getElementById('modelDisplayName');
     const provider = document.getElementById('provider')?.value;
+    const modelApiKeyInput = document.getElementById('modelApiKey');
     const saveModelButton = document.getElementById('saveModelButton');
     const modelValidationMessage = document.getElementById('modelValidationMessage');
 
@@ -541,10 +616,12 @@ export class ModelManager {
     modelValidationMessage.classList.add('info');
 
     try {
-      // 获取API密钥进行验证
-      const apiKey = await this.providerManager.getApiKey(provider);
-
+      // 先检查 provider 是否已有保存的 Key
+      const savedKey = await this.providerManager.getApiKey(provider);
+      // 优先使用已保存的 Key；若没有，再使用弹窗里填写的 Key；若仍没有，尝试读取主页面输入框当前值
+      let apiKey = savedKey || modelApiKeyInput?.value?.trim() || this.uiManager?.getApiKeyValue?.() || '';
       if (!apiKey) {
+        // 若仍无 key，直接提示并留在弹窗，避免打断流程
         modelValidationMessage.innerHTML = this.i18nManager.getTranslation('apiKeyEmpty');
         modelValidationMessage.classList.remove('info');
         modelValidationMessage.classList.add('error');
@@ -552,12 +629,12 @@ export class ModelManager {
         return;
       }
 
-      // 验证模型是否可用
-      const isValid = await this.providerManager.validateApiKey(provider, apiKey, modelId);
+      // 验证模型与 Key 是否可用（一次请求校验二者），并解析失败原因
+      const result = await this.providerManager.validateApiKey(provider, apiKey, modelId);
 
-      if (!isValid) {
-        // 验证失败
-        modelValidationMessage.innerHTML = this.i18nManager.getTranslation('modelValidationError');
+      if (!result?.ok) {
+        // 验证失败 - 统一提示
+        modelValidationMessage.innerHTML = this.i18nManager.getTranslation('checkModelOrKeyOrPermission');
         modelValidationMessage.classList.remove('info');
         modelValidationMessage.classList.add('error');
         saveModelButton.disabled = false;
@@ -579,6 +656,12 @@ export class ModelManager {
       const success = await this.providerManager.addModel(provider, newModel);
 
       if (success) {
+        // 保存 Key（若弹窗里填写了 key，以弹窗为准覆盖写入；否则保留已保存的 key）
+        if (modelApiKeyInput?.value?.trim()) {
+          await this.providerManager.saveApiKey(provider, modelApiKeyInput.value.trim());
+        } else if (!savedKey && apiKey) {
+          await this.providerManager.saveApiKey(provider, apiKey);
+        }
         // 保存并切换到新添加的模型
         await this.storageManager.saveModel(modelId);
 
@@ -593,6 +676,11 @@ export class ModelManager {
           }
         }
 
+        // 清除临时状态（验证成功，数据已正式保存）
+        if (this.tempStateManager) {
+          this.tempStateManager.clearTempState(this.tempStateManager.constructor.TYPES.ADD_MODEL);
+        }
+
         // 显示成功消息
         modelValidationMessage.innerHTML = this.i18nManager.getTranslation('modelSaveSuccess');
         modelValidationMessage.classList.remove('error', 'info');
@@ -600,10 +688,7 @@ export class ModelManager {
 
         // 延迟关闭弹窗并更新模型列表
         setTimeout(async () => {
-          const addModelModal = document.getElementById('addModelModal');
-          if (addModelModal) {
-            addModelModal.classList.remove('show');
-          }
+          this.hideAddModelDialog();
           await this.updateModelOptions(provider);
         }, 1500);
       } else {

@@ -68,7 +68,7 @@ const getPopupInitialStyle = (rect) => ({
   boxShadow: '0 0 0 0.5px rgba(0, 0, 0, 0.05), 0 2px 8px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.08)',
   backdropFilter: 'blur(25px)',
   borderRadius: '12px',
-  zIndex: '1000',
+  zIndex: '2147483647',
   fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif',
   overflow: 'hidden',
   userSelect: 'none',

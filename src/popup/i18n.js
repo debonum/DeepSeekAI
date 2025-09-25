@@ -5,8 +5,11 @@ export class I18nManager {
         validating: '验证中...',
         saveSuccess: '保存成功',
         apiKeyInvalid: 'API密钥无效或者检查当前选择的模型是否可用',
+        apiKeyInvalidStrict: 'API密钥无效',
+        modelInvalidStrict: '模型无效或不可用',
         noBalance: '余额不足',
         noApiKey: '请先设置API密钥',
+        noModel: '请先选择或添加模型',
         fetchError: '获取失败',
         rememberWindowSize: '保存窗口大小',
         customApiUrlSaveSuccess: '自定义API地址已保存',
@@ -21,8 +24,9 @@ export class I18nManager {
         customProviderNamePlaceholder: '输入自定义服务商名称',
         customProviderNameExamplePlaceholder: '例如: 我的自定义服务商',
         customProviderApiKeyPlaceholder: '请输入API密钥',
-        customProviderUrlExamplePlaceholder: '例如: https://api.example.com/v1/chat/completions',
+        customProviderUrlExamplePlaceholder: 'https://api.example.com/v1/chat/completions',
         customProviderModelNameExamplePlaceholder: '例如: deepseek-chat',
+        apiUrlHint: '📝 需使用 OpenAI 兼容的 API 接口格式',
         customProviderEmpty: '服务商名称不能为空',
         customProviderSaveSuccess: '自定义服务商已保存',
         customProviderSaveError: '保存自定义服务商失败',
@@ -35,6 +39,7 @@ export class I18nManager {
         saveCustomProviderBtnText: '保存',
         addModel: '添加模型',
         addModelTitle: '添加模型',
+        modelApiKeyLabel: 'API密钥',
         modelApiId: '模型API标识',
         modelDisplayName: '模型显示名称',
         modelApiIdPlaceholder: '输入模型API标识（如 deepseek-chat）',
@@ -76,14 +81,20 @@ export class I18nManager {
         confirmDeleteModel: '确定要删除模型 {model}？此操作不可撤销。',
         deleteModelSuccess: '模型删除成功',
         deleting: '删除中...',
-        saving: '保存中...'
+        saving: '保存中...',
+        checkModelOrKeyOrPermission: '请检查模型ID或者API Key，或确认该模型是否有权限使用',
+        toggleChatShortcut: '通过同一快捷键可以打开/关闭会话窗口',
+        toggleChatTip: '💡 可自定义快捷键以更快地打开/关闭对话窗口'
       },
       en: {
         validating: 'Validating...',
         saveSuccess: 'Saved successfully',
         apiKeyInvalid: 'API key is invalid or check if the current selected model is available',
+        apiKeyInvalidStrict: 'API key is invalid',
+        modelInvalidStrict: 'Model is invalid or unavailable',
         noBalance: 'Insufficient balance',
         noApiKey: 'Please set API key first',
+        noModel: 'Please set or add a model first',
         fetchError: 'Failed to fetch',
         rememberWindowSize: 'Save Window Size',
         customApiUrlSaveSuccess: 'Custom API URL saved',
@@ -98,8 +109,9 @@ export class I18nManager {
         customProviderNamePlaceholder: 'Enter custom provider name',
         customProviderNameExamplePlaceholder: 'e.g. My Custom Provider',
         customProviderApiKeyPlaceholder: 'Please enter API key',
-        customProviderUrlExamplePlaceholder: 'e.g. https://api.example.com/v1/chat/completions',
+        customProviderUrlExamplePlaceholder: 'https://api.example.com/v1/chat/completions',
         customProviderModelNameExamplePlaceholder: 'e.g. deepseek-chat',
+        apiUrlHint: '📝 Must use OpenAI compatible API format',
         customProviderEmpty: 'Provider name cannot be empty',
         customProviderSaveSuccess: 'Custom provider saved',
         customProviderSaveError: 'Failed to save custom provider',
@@ -112,6 +124,7 @@ export class I18nManager {
         saveCustomProviderBtnText: 'Save',
         addModel: 'Add Model',
         addModelTitle: 'Add Model',
+        modelApiKeyLabel: 'API Key',
         modelApiId: 'Model API ID',
         modelDisplayName: 'Model Display Name',
         modelApiIdPlaceholder: 'Enter model API ID (e.g. deepseek-chat)',
@@ -153,7 +166,10 @@ export class I18nManager {
         confirmDeleteModel: 'Are you sure you want to delete model {model}? This action cannot be undone.',
         deleteModelSuccess: 'Model deleted successfully',
         deleting: 'Deleting...',
-        saving: 'Saving...'
+        saving: 'Saving...',
+        checkModelOrKeyOrPermission: 'Please check the model ID or API key, or whether the model is permitted for your account',
+        toggleChatShortcut: 'Use the same shortcut key to open/close the chat window',
+        toggleChatTip: '💡 You can customize shortcuts to quickly open/close the chat window'
       }
     };
   }
@@ -209,6 +225,9 @@ export class I18nManager {
       this.updateElementText('statusText', 'statusText');
       this.updateElementText('feedbackText', 'feedbackText');
 
+      // 更新弹窗里的"获取API密钥"链接文案
+      this.updateElementText('addModelApiKeyLink', 'apiKeyLink');
+
       // 更新输入框占位符
       this.updateInputPlaceholder('apiKey', 'apiKeyPlaceholder');
 
@@ -218,6 +237,7 @@ export class I18nManager {
       this.updateInputPlaceholder('customApiUrlInput', 'customProviderUrlExamplePlaceholder');
       this.updateInputPlaceholder('customModelIdInput', 'customProviderModelNameExamplePlaceholder');
       this.updateInputPlaceholder('customModelNameInput', 'modelDisplayNamePlaceholder');
+      this.updateInputPlaceholder('modelApiKey', 'customProviderApiKeyPlaceholder');
       this.updateInputPlaceholder('modelApiId', 'modelApiIdPlaceholder');
       this.updateInputPlaceholder('modelDisplayName', 'modelDisplayNamePlaceholder');
 
@@ -226,10 +246,12 @@ export class I18nManager {
       this.updateElementText('customProviderNameInputLabel', 'customProviderNameLabel');
       this.updateElementText('customProviderApiKeyLabel', 'apiKeyLabel');
       this.updateElementText('customApiUrlInputLabel', 'customApiUrlLabel');
+      this.updateElementText('apiUrlHint', 'apiUrlHint');
       this.updateElementText('customModelIdInputLabel', 'modelApiId');
       this.updateElementText('customModelNameInputLabel', 'customModelNameLabel');
 
       this.updateElementText('addModelTitle', 'addModelTitle');
+      this.updateElementText('modelApiKeyLabel', 'modelApiKeyLabel');
       this.updateElementText('modelIdLabel', 'modelApiId');
       this.updateElementText('modelDisplayNameLabel', 'modelDisplayName');
 

@@ -48,25 +48,25 @@ const QUICK_ACTIONS = [
     id: "explain",
     icon: "explain",
     title: "Explain",
-    prompt: "Your task is to interpret the content input by the user.",
+    prompt: "Act as an AI assistant with MBTI persona INTJ-INFJ. Explain the following content clearly and directly, focusing on key points and practical clarity. Output only the final explanation; do not include analysis or chain-of-thought unless explicitly requested.",
   },
   {
     id: "summarize",
     icon: "summarize",
     title: "Summarize",
-    prompt: "Your task is to summarize the content input by the user.",
+    prompt: "Act as an AI assistant with MBTI persona ISTJ-INTJ. Summarize the content concisely, keep critical information, use a clear structure (bullets if suitable). Output only the summary; no reasoning unless asked.",
   },
   {
     id: "email",
     icon: "email",
     title: "Email",
-    prompt: "Your task is to write an email based on the user's input.",
+    prompt: "Act as an AI assistant with MBTI persona ISTJ-ENFJ. Write an email based on the user's input. Include a clear subject, proper greeting, concise body, actionable points, and a polite closing. Output only the email content with no extra commentary.",
   },
   {
     id: "analyze",
     icon: "analyze",
     title: "Analyze",
-    prompt: "Your task is to analyze the content entered by the user.",
+    prompt: "Act as an AI assistant with MBTI persona ISTP-ENTP. Analyze the content and highlight key issues, insights, and actionable suggestions. Provide only the final analysis without exposing intermediate reasoning.",
   },
 ];
 
@@ -90,6 +90,31 @@ export async function createQuickActionButtons(
   const container = document.createElement("div");
   container.className = "quick-action-buttons";
 
+  // 关闭快捷栏的小工具，避免与会话窗口并存
+  const closeQAB = () => {
+    try {
+      const wrapper = document.getElementById('quick-actions-wrapper');
+      if (wrapper && wrapper.parentNode) {
+        wrapper.parentNode.removeChild(wrapper);
+      }
+      const legacy = document.getElementById('fixed-quick-actions-container');
+      if (legacy) {
+        legacy.style.opacity = '0';
+        legacy.style.pointerEvents = 'none';
+        legacy.innerHTML = '';
+      }
+      // 兜底：移除任何遗留的 .quick-action-buttons 节点
+      document.querySelectorAll('.quick-action-buttons').forEach(node => {
+        if (node && node !== container && node.parentNode) {
+          node.parentNode.removeChild(node);
+        }
+      });
+
+      // 抑制 500ms 内的再次唤起
+      try { window.suppressQuickActionsUntil = Date.now() + 500; } catch(_) {}
+    } catch (_) {}
+  };
+
   // 获取上次选择的语言
   const lastLanguage = await getLastLanguage();
 
@@ -97,7 +122,7 @@ export async function createQuickActionButtons(
   const actions = [...QUICK_ACTIONS];
   const translateAction = actions.find((action) => action.id === "translate");
   if (translateAction) {
-    translateAction.prompt = `You are a professional multilingual translation engine that provides the ${lastLanguage}：version of user-given content, supporting dynamic context understanding and cross-round memory.Core Functions:Automatically identify the language of input content (if not explicitly specified by the user).Support mutual translation between mainstream languages while preserving the original format (such as poetry, code, glossaries).Record previous translation content, allowing users to make corrections through vague instructions (e.g., "translate the last sentence into French" or "adjust the formality of the last paragraph").Multi-Round Processing Mechanism If no target language is specified by the user, proactively inquire about theirneeds.When users refer to previous text (e.g., "modify wording in the third translation"), accurately locate historical records for precise positioning. Provide differentiated translation suggestions for different styles such as technical documents and colloquial texts.The translation MUST be accurate and natural in ${lastLanguage},You only need to provide the translated text directly, clearly and without any additional explanation or clarification.`;
+    translateAction.prompt = `Act as an AI assistant with MBTI persona ISTJ-INFJ, functioning as a professional multilingual translation engine that provides the ${lastLanguage} version of user-given content while preserving the original format (e.g., poetry, code, glossaries). If no target language is specified, ask proactively. Translate accurately and naturally in ${lastLanguage}. Output only the translated text without any explanations.`;
   }
 
   // 添加Shadow DOM所需样式
@@ -343,7 +368,7 @@ export async function createQuickActionButtons(
       button.onclick = (e) => {
         e.preventDefault();
         e.stopPropagation();
-
+        closeQAB();
         const range = window.getSelection().getRangeAt(0);
         const rect = range.getBoundingClientRect();
 
@@ -375,7 +400,7 @@ export async function createQuickActionButtons(
       button.onclick = (e) => {
         e.preventDefault();
         e.stopPropagation();
-
+        closeQAB();
         // 执行操作
         handleActionClick(action, selectedText);
       };
@@ -412,9 +437,10 @@ export async function createQuickActionButtons(
           await chrome.storage.sync.set({ lastLanguage: lang.native });
 
           // 修改prompt中的语言
-          action.prompt = `You are a professional multilingual translation engine that provides the ${lang.native}：version of user-given content, supporting dynamic context understanding and cross-round memory.Core Functions:Automatically identify the language of input content (if not explicitly specified by the user).Support mutual translation between mainstream languages while preserving the original format (such as poetry, code, glossaries).Record previous translation content, allowing users to make corrections through vague instructions (e.g., "translate the last sentence into French" or "adjust the formality of the last paragraph").Multi-Round Processing Mechanism If no target language is specified by the user, proactively inquire about theirneeds.When users refer to previous text (e.g., "modify wording in the third translation"), accurately locate historical records for precise positioning. Provide differentiated translation suggestions for different styles such as technical documents and colloquial texts.The translation MUST be accurate and natural in ${lang.native},You only need to provide the translated text directly, clearly and without any additional explanation or clarification.`;
+          action.prompt = `Act as an AI assistant with MBTI persona ISTJ-INFJ, functioning as a professional multilingual translation engine that provides the ${lang.native} version of user-given content while preserving the original format (such as poetry, code, glossaries). If no target language is specified, ask proactively. The translation MUST be accurate and natural in ${lang.native}. Output only the translated text directly without any additional explanation or clarification.`;
 
           // 处理动作
+          closeQAB();
           handleActionClick(action, selectedText);
 
           // 隐藏菜单
@@ -507,7 +533,7 @@ export async function createQuickActionButtons(
   }, true);
 
   // 自动聚焦
-  setTimeout(() => customInput.focus(), 50);
+  // 不自动聚焦，避免打断页面的文本选区高亮；仅用户点击时再获得焦点
 
   // 添加键盘事件处理
   customInput.addEventListener("keydown", (e) => {
@@ -607,6 +633,7 @@ export async function createQuickActionButtons(
 
       // 执行操作
       try {
+        closeQAB();
         handleActionClick(customAction, textToUse);
       } catch (err) {
         console.error("处理自定义操作时出错:", err);

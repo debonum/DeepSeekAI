@@ -359,12 +359,44 @@ export class ProviderManager {
     try {
       const keyName = `${providerId}ApiKey`;
       return new Promise((resolve) => {
+        // 读取主键
         chrome.storage.sync.get(keyName, (data) => {
-          const apiKey = data[keyName] || "";
-          console.log(
-            `获取${providerId}的API密钥: ${apiKey ? "已设置" : "未设置"}`
-          );
-          resolve(apiKey);
+          let apiKey = data[keyName] || "";
+
+          // 别名迁移：兼容历史拼写错误等情况（如 volcengine <- voiceengine）
+          const aliasMap = {
+            volcengine: ["voiceengine"],
+          };
+
+          const aliases = aliasMap[providerId] || [];
+          if (!apiKey && aliases.length > 0) {
+            const aliasKeys = aliases.map((a) => `${a}ApiKey`);
+            chrome.storage.sync.get(aliasKeys, (aliasData) => {
+              const aliasKeyName = aliasKeys.find((k) => aliasData[k]);
+              if (aliasKeyName && aliasData[aliasKeyName]) {
+                apiKey = aliasData[aliasKeyName];
+                // 迁移到正确的键名，保底写入
+                chrome.storage.sync.set({ [keyName]: apiKey }, () => {
+                  // 可选：清理别名旧键
+                  chrome.storage.sync.remove(aliasKeyName, () => {
+                    console.log(`已迁移别名密钥 ${aliasKeyName} -> ${keyName}`);
+                    resolve(apiKey);
+                  });
+                });
+                return;
+              }
+
+              console.log(
+                `获取${providerId}的API密钥: ${apiKey ? "已设置" : "未设置"}`
+              );
+              resolve(apiKey);
+            });
+          } else {
+            console.log(
+              `获取${providerId}的API密钥: ${apiKey ? "已设置" : "未设置"}`
+            );
+            resolve(apiKey);
+          }
         });
       });
     } catch (error) {
@@ -461,9 +493,9 @@ export class ProviderManager {
     return "";
   }
 
-  // 验证API密钥
+  // 验证API密钥并区分失败原因（必要时使用一次“歧义消解”二次探测）
   async validateApiKey(providerId, apiKey, model) {
-    if (!apiKey) return false;
+    if (!apiKey) return { ok: false, reason: 'invalid_key', status: 0, message: 'Empty API key' };
 
     try {
       console.log(
@@ -474,7 +506,7 @@ export class ProviderManager {
       const provider = await this.getProviderById(providerId);
       if (!provider) {
         console.error(`❌ 未找到服务商信息: ${providerId}`);
-        return false;
+        return { ok: false, reason: 'unknown', status: 0, message: 'Provider not found' };
       }
 
       // 获取API URL
@@ -482,52 +514,126 @@ export class ProviderManager {
       console.log(`🌐 API URL: ${apiUrl}`);
       if (!apiUrl) {
         console.error(`❌ 未找到API URL`);
-        return false;
+        return { ok: false, reason: 'unknown', status: 0, message: 'API URL missing' };
+      }
+
+      // 非 deepseek 必须提供模型，deepseek 允许使用固定模型作为兜底
+      const resolvedModel = providerId === 'deepseek' ? (model || 'deepseek-chat') : model;
+
+      if (!resolvedModel) {
+        console.error('❌ 验证失败：模型未设置');
+        return { ok: false, reason: 'invalid_model', status: 0, message: 'Model not set' };
       }
 
       // 构建请求体
       const requestBody = {
-        model: model || "deepseek-chat",
+        model: resolvedModel,
         messages: [{ role: "user", content: "test" }],
         stream: false,
       };
 
-      // 发送验证请求
-
-
-      const response = await new Promise((resolve) => {
-        chrome.runtime.sendMessage(
-          {
-            action: "proxyRequest",
-            url: apiUrl,
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${apiKey}`,
+      const sendProbe = async (probeModel) => {
+        const reqBody = {
+          model: probeModel,
+          messages: [{ role: "user", content: "test" }],
+          stream: false,
+        };
+        return await new Promise((resolve) => {
+          chrome.runtime.sendMessage(
+            {
+              action: "proxyRequest",
+              url: apiUrl,
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${apiKey}`,
+              },
+              body: JSON.stringify(reqBody),
             },
-            body: JSON.stringify(requestBody),
-          },
-          (result) => {
-            resolve(result);
-          }
-        );
-      });
+            (result) => resolve(result)
+          );
+        });
+      };
 
+      const response = await sendProbe(resolvedModel);
+
+      // 成功
       if (response?.status === 200) {
-        // 验证成功，保存API密钥
         await this.saveApiKey(providerId, apiKey);
-        return true;
+        return { ok: true, status: 200 };
       }
 
-      console.error(
-        `❌ API密钥验证失败 - 状态码: ${response?.status}, 错误: ${
-          response?.error || "未知错误"
-        }`
-      );
-      return false;
+      // 失败原因判定（含更全面的关键字匹配）
+      const classify = (resp) => {
+        const status = resp?.status || 0;
+        const data = resp?.data || {};
+        const text = (resp?.text || resp?.error || '') + '';
+        const errorObj = data?.error || {};
+        const code = (errorObj.code || errorObj.type || '').toString().toLowerCase();
+        const message = (errorObj.message || resp?.error || resp?.text || '').toString();
+        const msgLower = message.toLowerCase();
+
+        const isKeyStatus = status === 401 || status === 403;
+        const keyHints = ['invalid api key','invalid key','api key','apikey','api-key','unauthorized','authentication','auth','access denied','bearer','token'];
+        const modelHints = ['model','not found','no such','does not exist','unknown','unsupported'];
+
+        const matchAny = (hay, arr) => arr.some(w => hay.includes(w));
+
+        const isKeyKeyword = matchAny(code, keyHints) || matchAny(msgLower, keyHints);
+        const isModelKeyword = matchAny(code, modelHints) || (msgLower.includes('model') && matchAny(msgLower, modelHints));
+
+        if (isKeyStatus || isKeyKeyword) return { reason: 'invalid_key', status, message };
+        if (status === 404 || isModelKeyword) return { reason: 'invalid_model', status, message };
+        if (status === 429) return { reason: 'rate_limited', status, message };
+        if (status >= 500 && status < 600) return { reason: 'server_error', status, message };
+        return { reason: 'unknown', status, message };
+      };
+
+      let verdict = classify(response);
+
+      // 歧义消解：当原因为 unknown 或 400 且无明显关键词时，再用“已知有效模型”二次探测
+      if (verdict.reason === 'unknown' || verdict.status === 400) {
+        try {
+          const defaults = this.getDefaultModels(providerId);
+          const fallbackModel = (defaults && defaults[0]?.value) || (providerId === 'deepseek' ? 'deepseek-chat' : null);
+          if (fallbackModel) {
+            const probeResp = await sendProbe(fallbackModel);
+            // 如果 fallback 仍然失败且被判定为 key 错，则认定 key 错
+            const probeVerdict = classify(probeResp);
+            if (!probeResp?.ok) {
+              if (probeVerdict.reason === 'invalid_key' || probeResp?.status === 401 || probeResp?.status === 403) {
+                verdict = { reason: 'invalid_key', status: probeResp?.status || verdict.status, message: probeVerdict.message };
+              } else if (probeVerdict.reason === 'invalid_model') {
+                // fallback 也报模型，说明可能不是模型问题而是服务端报文差异，保留 unknown 但倾向 key
+                verdict = { reason: 'unknown', status: probeResp?.status || verdict.status, message: probeVerdict.message };
+              }
+            } else {
+              // fallback 成功 → key 正常，原模型异常
+              verdict = { reason: 'invalid_model', status: response?.status || 400, message: verdict.message };
+            }
+          }
+        } catch (e) {
+          // 忽略二次探测异常，维持原判定
+        }
+      }
+
+      if (verdict.reason === 'invalid_key') {
+        return { ok: false, reason: 'invalid_key', status: verdict.status, message: verdict.message };
+      }
+      if (verdict.reason === 'invalid_model') {
+        return { ok: false, reason: 'invalid_model', status: verdict.status, message: verdict.message };
+      }
+      if (verdict.reason === 'rate_limited') {
+        return { ok: false, reason: 'rate_limited', status: verdict.status, message: verdict.message };
+      }
+      if (verdict.reason === 'server_error') {
+        return { ok: false, reason: 'server_error', status: verdict.status, message: verdict.message };
+      }
+
+      return { ok: false, reason: 'unknown', status: verdict.status, message: verdict.message };
     } catch (error) {
       console.error("❌ 验证API密钥错误:", error);
-      return false;
+      return { ok: false, reason: 'network', status: 0, message: String(error?.message || error) };
     }
   }
 
@@ -542,24 +648,29 @@ export class ProviderManager {
         });
       });
 
-      // 获取已删除的默认模型列表
-      const deletedModelsKeyName = `${providerId}DeletedDefaultModels`;
-      const deletedDefaultModels = await new Promise((resolve) => {
-        chrome.storage.sync.get(deletedModelsKeyName, (data) => {
-          resolve(data[deletedModelsKeyName] || []);
-        });
-      });
-
       // 如果有自定义模型，返回它们
       if (result && result.length > 0) {
         return result;
       }
 
-      // 否则返回默认模型列表（过滤掉已删除的）
-      const defaultModels = this.getDefaultModels(providerId);
-      return defaultModels.filter(
-        (model) => !deletedDefaultModels.includes(model.value)
-      );
+      // 仅对 deepseek 保留默认模型回退，其他提供商不再提供默认模型
+      if (providerId === 'deepseek') {
+        // 获取已删除的默认模型列表，仅用于 deepseek
+        const deletedModelsKeyName = `${providerId}DeletedDefaultModels`;
+        const deletedDefaultModels = await new Promise((resolve) => {
+          chrome.storage.sync.get(deletedModelsKeyName, (data) => {
+            resolve(data[deletedModelsKeyName] || []);
+          });
+        });
+
+        const defaultModels = this.getDefaultModels(providerId);
+        return defaultModels.filter(
+          (model) => !deletedDefaultModels.includes(model.value)
+        );
+      }
+
+      // 非 deepseek：无默认模型
+      return [];
     } catch (error) {
       console.error("获取模型列表错误:", error);
       return [];
@@ -570,8 +681,8 @@ export class ProviderManager {
   getDefaultModels(providerId) {
     const defaultModels = {
       deepseek: [
-        { value: "deepseek-chat", label: "DeepSeek-V3" },
-        { value: "deepseek-reasoner", label: "DeepSeek-R1" },
+        { value: "deepseek-chat", label: "deepseek-chat" },
+        { value: "deepseek-reasoner", label: "deepseek-reasoner" },
       ],
       siliconflow: [
         { value: "deepseek-ai/DeepSeek-V3", label: "DeepSeek-V3" },

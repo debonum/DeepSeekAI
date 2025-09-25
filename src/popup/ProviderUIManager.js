@@ -1,9 +1,10 @@
 export class ProviderUIManager {
-  constructor(providerManager, storageManager, uiManager, i18nManager) {
+  constructor(providerManager, storageManager, uiManager, i18nManager, tempStateManager) {
     this.providerManager = providerManager;
     this.storageManager = storageManager;
     this.uiManager = uiManager;
     this.i18nManager = i18nManager;
+    this.tempStateManager = tempStateManager;
     this.customProviderDropdown = null;
   }
 
@@ -33,6 +34,29 @@ export class ProviderUIManager {
         }
       }
     }
+
+    // 同步更新"添加模型"弹窗里的获取Key链接
+    try {
+      const addModelLink = document.getElementById('addModelApiKeyLink');
+      const url = this.providerManager.getApiKeyLink(provider) || this.providerManager.getApiKeyLink('deepseek');
+
+      // 检查当前provider是否有已保存的API Key
+      this.providerManager.getApiKey(provider).then((key) => {
+        const hasSavedKey = !!(key && key.trim());
+
+        if (addModelLink) {
+          addModelLink.href = url;
+          // 如果是自定义服务商、添加自定义服务商选项，或者已有保存的Key，则隐藏链接
+          addModelLink.style.display = (isCustom || isAddCustom || hasSavedKey) ? 'none' : 'inline';
+        }
+      }).catch(() => {
+        // 发生错误时保持链接可见，便于用户获取API Key
+        if (addModelLink) {
+          addModelLink.href = url;
+          addModelLink.style.display = (isCustom || isAddCustom) ? 'none' : 'inline';
+        }
+      });
+    } catch (e) {}
 
     // 清空API密钥输入框
     this.uiManager.setApiKeyValue('');
@@ -88,12 +112,13 @@ export class ProviderUIManager {
       // 获取API密钥
       const apiKey = await this.providerManager.getApiKey(provider);
 
-      // 清空输入框
-      this.uiManager.setApiKeyValue('');
+      // 不再强制清空，避免用户刚复制粘贴被打断；仅在有真实已保存的值时覆盖
 
       // 设置API密钥到输入框
-      if (apiKey) {
+      if (typeof apiKey === 'string' && apiKey.length > 0) {
         this.uiManager.setApiKeyValue(apiKey);
+      } else {
+        // 若无保存值，则保持现有输入（可能来自用户粘贴未失焦）
       }
 
     } catch (error) {
@@ -446,12 +471,21 @@ export class ProviderUIManager {
 
     if (!customProviderModal) return;
 
-    // 清空输入框
-    if (customProviderNameInput) customProviderNameInput.value = '';
-    if (customProviderApiKey) customProviderApiKey.value = '';
-    if (customApiUrlInput) customApiUrlInput.value = '';
-    if (customModelIdInput) customModelIdInput.value = '';
-    if (customModelNameInput) customModelNameInput.value = '';
+    // 首先尝试恢复临时状态
+    const tempState = this.tempStateManager?.getTempState?.(this.tempStateManager.constructor.TYPES.ADD_PROVIDER);
+
+    if (tempState) {
+      console.log('🔄 检测到服务商添加的临时状态，正在恢复...');
+      // 恢复表单数据
+      this.tempStateManager.restoreProviderFormData(tempState);
+    } else {
+      // 如果没有临时状态，清空输入框
+      if (customProviderNameInput) customProviderNameInput.value = '';
+      if (customProviderApiKey) customProviderApiKey.value = '';
+      if (customApiUrlInput) customApiUrlInput.value = '';
+      if (customModelIdInput) customModelIdInput.value = '';
+      if (customModelNameInput) customModelNameInput.value = '';
+    }
 
     // 设置输入框的placeholder
     if (customProviderNameInput) customProviderNameInput.placeholder = this.i18nManager.getTranslation('customProviderNameExamplePlaceholder');
@@ -469,15 +503,43 @@ export class ProviderUIManager {
     // 显示弹窗
     customProviderModal.classList.add('show');
 
+    // 安装表单监听器用于自动保存临时状态
+    if (this.tempStateManager) {
+      setTimeout(() => {
+        this.tempStateManager.installFormListeners(this.tempStateManager.constructor.TYPES.ADD_PROVIDER);
+      }, 100); // 稍微延迟以确保DOM已准备好
+    }
+
     // 处理ESC键关闭弹窗
     const handleEsc = (e) => {
       if (e.key === 'Escape') {
-        customProviderModal.classList.remove('show');
-        document.removeEventListener('keydown', handleEsc);
+        this.hideCustomProviderDialog();
       }
     };
 
     document.addEventListener('keydown', handleEsc);
+
+    // 保存ESC处理器引用以便清理
+    customProviderModal._escHandler = handleEsc;
+  }
+
+  // 隐藏添加服务商弹窗
+  hideCustomProviderDialog() {
+    const customProviderModal = document.getElementById('customProviderModal');
+    if (!customProviderModal) return;
+
+    // 移除ESC事件监听器
+    if (customProviderModal._escHandler) {
+      document.removeEventListener('keydown', customProviderModal._escHandler);
+      delete customProviderModal._escHandler;
+    }
+
+    // 移除表单监听器
+    if (this.tempStateManager) {
+      this.tempStateManager.removeFormListeners(this.tempStateManager.constructor.TYPES.ADD_PROVIDER);
+    }
+
+    customProviderModal.classList.remove('show');
   }
 
   // 处理删除服务商
@@ -708,16 +770,18 @@ export class ProviderUIManager {
           }
         }
 
+        // 清除临时状态（验证成功，数据已正式保存）
+        if (this.tempStateManager) {
+          this.tempStateManager.clearTempState(this.tempStateManager.constructor.TYPES.ADD_PROVIDER);
+        }
+
         customProviderValidationMessage.innerHTML = this.i18nManager.getTranslation('customProviderSaveSuccess');
         customProviderValidationMessage.classList.remove('error');
         customProviderValidationMessage.classList.add('success');
 
         // 隐藏弹窗
         setTimeout(() => {
-          const customProviderModal = document.getElementById('customProviderModal');
-          if (customProviderModal) {
-            customProviderModal.classList.remove('show');
-          }
+          this.hideCustomProviderDialog();
 
           // 触发页面重新加载
           window.location.reload();

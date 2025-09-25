@@ -1,8 +1,9 @@
 export class ApiKeyManager {
-  constructor(providerManager, uiManager, i18nManager) {
+  constructor(providerManager, uiManager, i18nManager, modelManager) {
     this.providerManager = providerManager;
     this.uiManager = uiManager;
     this.i18nManager = i18nManager;
+    this.modelManager = modelManager; // 可选：用于统一弹出添加模型对话框
     this.lastValidatedValue = '';
   }
 
@@ -31,12 +32,29 @@ export class ApiKeyManager {
         customApiUrl: this.uiManager.getCustomApiUrlValue()
       };
 
-      const isValid = await this.providerManager.validateApiKey(provider, apiKey, settings.model);
+      // 非 deepseek：必须有模型，否则不要保存 Key，直接引导添加模型
+      if (provider !== 'deepseek' && !settings.model) {
+        this.uiManager.showMessage(
+          this.i18nManager.getTranslation('noModel'),
+          false
+        );
+        if (this.modelManager?.showAddModelDialog) {
+          this.modelManager.showAddModelDialog();
+        } else if (this.uiManager.showAddModelModal) {
+          // 兜底
+          this.uiManager.showAddModelModal();
+        }
+        // 恢复API输入框状态
+        this.uiManager.elements.apiKeyInput.disabled = false;
+        return;
+      }
+
+      const result = await this.providerManager.validateApiKey(provider, apiKey, settings.model);
 
       // 恢复API输入框状态
       this.uiManager.elements.apiKeyInput.disabled = false;
 
-      if (isValid) {
+      if (result?.ok) {
         // 仅在验证成功后保存API密钥
         await this.providerManager.saveApiKey(provider, apiKey);
         // 更新lastValidatedValue
@@ -47,10 +65,22 @@ export class ApiKeyManager {
           true
         );
       } else {
-        this.uiManager.showMessage(
-          this.i18nManager.getTranslation('apiKeyInvalid'),
-          false
-        );
+        const reason = result?.reason;
+        const msg = result?.message || this.i18nManager.getTranslation('apiKeyInvalid');
+        // 针对不同原因给出更明确的提示
+        if (reason === 'invalid_key') {
+          this.uiManager.showMessage(this.i18nManager.getTranslation('apiKeyInvalidStrict'), false);
+        } else if (reason === 'invalid_model') {
+          this.uiManager.showMessage(this.i18nManager.getTranslation('modelInvalidStrict'), false);
+        } else if (reason === 'rate_limited') {
+          this.uiManager.showMessage('Rate limited. Please try later.', false);
+        } else if (reason === 'server_error') {
+          this.uiManager.showMessage('Service error. Please retry later.', false);
+        } else if (reason === 'network') {
+          this.uiManager.showMessage('Network error. Check connection.', false);
+        } else {
+          this.uiManager.showMessage(msg, false);
+        }
       }
     } catch (error) {
       // 恢复API输入框状态

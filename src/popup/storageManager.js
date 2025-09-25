@@ -37,7 +37,7 @@ export class StorageManager {
             aliyunCustomApiUrl: data.aliyunCustomApiUrl || '',
             aihubmixCustomApiUrl: data.aihubmixCustomApiUrl || '',
             language: data.language || 'en',
-            model: data.model || 'deepseek-chat',
+            model: data.model || '',
             provider: data.provider || 'deepseek',
             selectionEnabled: typeof data.selectionEnabled === 'undefined' ? true : data.selectionEnabled,
             rememberWindowSize: typeof data.rememberWindowSize === 'undefined' ? false : data.rememberWindowSize,

@@ -162,6 +162,8 @@ export function addIconsToElement(element) {
         event.stopPropagation();
         const questionText = userQuestion.textContent;
         element.textContent = "";
+        // 显示生成中动画
+        element.classList.add('generating');
         const abortController = new AbortController();
         const aiResponseContainer = window.aiResponseContainer;
 
@@ -173,14 +175,37 @@ export function addIconsToElement(element) {
           aiResponseContainer.perfectScrollbar.update();
         });
 
+        // 完成与错误回调：移除生成中状态
+        const onGenerationComplete = () => {
+          if (element) {
+            element.classList.remove('generating');
+            element.style.transition = 'background-color 0.5s ease';
+            const originalColor = getComputedStyle(element).backgroundColor;
+            element.style.backgroundColor = 'var(--success-color-alpha, rgba(52, 199, 89, 0.1))';
+            setTimeout(() => { element.style.backgroundColor = originalColor; }, 1000);
+          }
+        };
+
+        const onGenerationError = () => {
+          if (element) {
+            element.classList.remove('generating');
+            element.classList.add('error');
+          }
+        };
+
         getAIResponse(
           questionText,
           element,
-          abortController.signal,
+          { controller: abortController },
           aiResponseContainer.perfectScrollbar,
           null,
           aiResponseContainer,
-          true
+          true,
+          null,
+          false,
+          '',
+          onGenerationComplete,
+          onGenerationError
         );
       });
 
@@ -275,7 +300,9 @@ export function updateLastAnswerIcons() {
     regenerateWrapper.addEventListener("click", (event) => {
       event.stopPropagation();
       const questionText = userQuestion.textContent;
-      lastAnswer.textContent = "";
+        lastAnswer.textContent = "";
+        // 显示生成中动画
+        lastAnswer.classList.add('generating');
       const abortController = new AbortController();
       let ps = aiResponseContainer.ps;
       if (!ps) {
@@ -292,14 +319,37 @@ export function updateLastAnswerIcons() {
         ps.update();
       });
 
+        // 完成与错误回调：移除生成中状态
+        const onGenerationComplete = () => {
+          if (lastAnswer) {
+            lastAnswer.classList.remove('generating');
+            lastAnswer.style.transition = 'background-color 0.5s ease';
+            const originalColor = getComputedStyle(lastAnswer).backgroundColor;
+            lastAnswer.style.backgroundColor = 'var(--success-color-alpha, rgba(52, 199, 89, 0.1))';
+            setTimeout(() => { lastAnswer.style.backgroundColor = originalColor; }, 1000);
+          }
+        };
+
+        const onGenerationError = () => {
+          if (lastAnswer) {
+            lastAnswer.classList.remove('generating');
+            lastAnswer.classList.add('error');
+          }
+        };
+
       getAIResponse(
         questionText,
         lastAnswer,
-        abortController.signal,
-        ps,
-        null,
-        aiResponseContainer,
-        true
+          { controller: abortController },
+          ps,
+          null,
+          aiResponseContainer,
+          true,
+          null,
+          false,
+          '',
+          onGenerationComplete,
+          onGenerationError
       );
     });
     iconContainer.appendChild(regenerateWrapper);

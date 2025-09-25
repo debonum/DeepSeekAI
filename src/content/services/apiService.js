@@ -251,6 +251,31 @@ export async function getAIResponse(
       return;
     }
 
+    // 在缺少模型时进行拦截（非 deepseek 必须手动填写模型）
+    if (provider !== 'deepseek' && (!model || (typeof model === 'string' && model.trim() === ''))) {
+      const linkElement = document.createElement("a");
+      linkElement.href = "#";
+      linkElement.textContent = "Please first set your Model in extension popup.";
+      linkElement.style.color = "#0066cc";
+      linkElement.style.textDecoration = "underline";
+      linkElement.style.cursor = "pointer";
+      linkElement.addEventListener("click", async (e) => {
+        e.preventDefault();
+        try {
+          await chrome.runtime.sendMessage({ action: "openPopup" });
+        } catch (error) {
+          console.error('Failed to open popup:', error);
+          chrome.runtime.sendMessage({ action: "getSelectedText" });
+        }
+      });
+      responseElement.textContent = "";
+      responseElement.appendChild(linkElement);
+      if (existingIconContainer) {
+        responseElement.appendChild(existingIconContainer);
+      }
+      return;
+    }
+
     // 使用自定义API URL或默认URL
     const apiUrl = customApiUrl || (
       provider.startsWith('custom_')
@@ -274,8 +299,8 @@ export async function getAIResponse(
         : 'https://api.deepseek.com/v1/chat/completions'
     );
 
-    const modelName = isGreeting ? "deepseek-chat" : model;
-    const modelDisplayNameForApi = isGreeting ? "deepseek-chat" : modelDisplayName;
+    const modelName = provider === 'deepseek' ? (isGreeting ? "deepseek-chat" : model) : model;
+    const modelDisplayNameForApi = provider === 'deepseek' ? (isGreeting ? "deepseek-chat" : modelDisplayName) : modelDisplayName;
 
     // 确保每次请求都使用正确的模型名称
     // console.log(`📦 调用API - 使用模型: ${modelDisplayNameForApi}`);

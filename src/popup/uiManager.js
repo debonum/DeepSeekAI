@@ -28,6 +28,7 @@ export class UiManager {
       addModelButton: document.getElementById("addModelButton"),
       addModelModal: document.getElementById("addModelModal"),
       closeModelModal: document.getElementById("closeModelModal"),
+      modelApiKey: document.getElementById("modelApiKey"),
       modelApiId: document.getElementById("modelApiId"),
       modelDisplayName: document.getElementById("modelDisplayName"),
       saveModelButton: document.getElementById("saveModelButton"),
@@ -36,6 +37,7 @@ export class UiManager {
       addModelTitle: document.getElementById("addModelTitle"),
       modelIdLabel: document.getElementById("modelIdLabel"),
       modelDisplayNameLabel: document.getElementById("modelDisplayNameLabel"),
+      modelApiKeyLabel: document.getElementById("modelApiKeyLabel"),
       // 自定义服务商弹窗元素
       customProviderModal: document.getElementById("customProviderModal"),
       closeCustomProviderModal: document.getElementById("closeCustomProviderModal"),
