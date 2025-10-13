@@ -24,7 +24,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         "deepseekCustomApiUrl", "siliconflowCustomApiUrl", "openrouterCustomApiUrl",
         "volcengineCustomApiUrl", "tencentcloudCustomApiUrl", "iflytekstarCustomApiUrl",
         "baiducloudCustomApiUrl", "aliyunCustomApiUrl", "aihubmixCustomApiUrl",
-        "language", "model"
+        "language", "model", "customSystemPrompt"
       ];
 
       // 为每个自定义服务商添加API key的键名
@@ -79,7 +79,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           provider: provider,
           customApiKey: customApiKey,
           customApiUrl: customApiUrl,
-          customProviders: customProviders
+          customProviders: customProviders,
+          customSystemPrompt: data.customSystemPrompt || ''
         });
       });
     });
@@ -317,42 +318,57 @@ chrome.commands.onCommand.addListener(async (command) => {
       const [{result}] = await chrome.scripting.executeScript({
         target: { tabId: tab.id },
         func: () => {
-          // 首先尝试使用window.getSelection()
           const selection = window.getSelection();
           if (selection && selection.toString && selection.toString().trim()) {
             return selection.toString().trim();
           }
-
-          // 如果没有选中文本，尝试检查页面上可能的选中元素
-          // 某些网站可能使用自定义选择或点击交互会清除选择
-          // 检查是否有具有特定CSS样式的元素表明它们被选中
-          const selectedElements = document.querySelectorAll(
-            '.selected, .highlight, .highlighted, [aria-selected="true"], ::-moz-selection, ::selection'
-          );
-
-          for (const el of selectedElements) {
-            if (el.textContent && el.textContent.trim()) {
-              return el.textContent.trim();
-            }
-          }
-
-          // 如果上述都失败，返回空字符串
           return '';
         }
       });
 
-
       // 发送toggleChat消息以实现真正的切换功能
       chrome.tabs.sendMessage(tab.id, {
         action: "toggleChat",
-        selectedText: result, // 发送选中的文本，如果为空则使用问候语
+        selectedText: result,
         useGreeting: getGreeting()
       });
     } catch (error) {
       console.error("获取选中文本出错:", error);
-      // 即使出错，也发送消息以打开聊天窗口，只是不带选中文本
       chrome.tabs.sendMessage(tab.id, {
         action: "toggleChat",
+        selectedText: "",
+        useGreeting: getGreeting()
+      });
+    }
+  } else if (command === "show-hide-chat") {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab || tab.url.startsWith('chrome://') || tab.url.startsWith('edge://')) {
+      return;
+    }
+
+    try {
+      // 获取选中文本
+      const [{result}] = await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: () => {
+          const selection = window.getSelection();
+          if (selection && selection.toString && selection.toString().trim()) {
+            return selection.toString().trim();
+          }
+          return '';
+        }
+      });
+
+      // 发送showHideChat消息,保留窗口状态
+      chrome.tabs.sendMessage(tab.id, {
+        action: "showHideChat",
+        selectedText: result,
+        useGreeting: getGreeting()
+      });
+    } catch (error) {
+      console.error("获取选中文本出错:", error);
+      chrome.tabs.sendMessage(tab.id, {
+        action: "showHideChat",
         selectedText: "",
         useGreeting: getGreeting()
       });

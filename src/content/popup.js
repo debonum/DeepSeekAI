@@ -183,18 +183,20 @@ export function createPopup(selectedText, rect, hideQuestion = false, removeCall
   window.aiResponseContainer.appendChild(aiResponseElement);
   popup.appendChild(window.aiResponseContainer);
 
-  const ps = new PerfectScrollbar(window.aiResponseContainer, {
-    suppressScrollX: true,
-    wheelPropagation: false,
-    touchStartThreshold: 0,
-    wheelEventTarget: window.aiResponseContainer,
-    minScrollbarLength: 40,
-    maxScrollbarLength: 300,
-    swipeEasing: true,
-    scrollingThreshold: 1000,
-    wheelSpeed: 1
-  });
+  // 禁用 PerfectScrollbar，使用原生滚动以确保滚动功能正常
+  // const ps = new PerfectScrollbar(window.aiResponseContainer, {
+  //   suppressScrollX: true,
+  //   wheelPropagation: false,
+  //   touchStartThreshold: 0,
+  //   wheelEventTarget: window.aiResponseContainer,
+  //   minScrollbarLength: 40,
+  //   maxScrollbarLength: 300,
+  //   swipeEasing: true,
+  //   scrollingThreshold: 1000,
+  //   wheelSpeed: 1
+  // });
 
+  const ps = null; // 禁用 PerfectScrollbar
   window.aiResponseContainer.perfectScrollbar = ps;
   window.aiResponseContainer.scrollStateManager = createScrollManager();
 
@@ -608,6 +610,18 @@ document.addEventListener('DOMContentLoaded', () => {
       100% {
         opacity: 1;
         transform: translateY(0) scale(1);
+      }
+    }
+
+    /* 隐藏动画 */
+    @keyframes popup-hide {
+      0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(8px) scale(0.98);
       }
     }
 

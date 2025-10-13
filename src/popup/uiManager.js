@@ -24,6 +24,15 @@ export class UiManager {
       customModelContainer: document.getElementById("customModelContainer"),
       saveCustomProviderBtn: document.getElementById("saveCustomProviderBtn"),
       saveCustomProviderContainer: document.getElementById("saveCustomProviderContainer"),
+      // 自定义 system prompt 相关元素
+      customSystemPromptButton: document.getElementById("customSystemPromptButton"),
+      customSystemPromptModal: document.getElementById("customSystemPromptModal"),
+      closeCustomSystemPromptModal: document.getElementById("closeCustomSystemPromptModal"),
+      customSystemPromptInput: document.getElementById("customSystemPromptInput"),
+      saveCustomSystemPromptButton: document.getElementById("saveCustomSystemPromptButton"),
+      cancelCustomSystemPromptButton: document.getElementById("cancelCustomSystemPromptButton"),
+      customSystemPromptValidationMessage: document.getElementById("customSystemPromptValidationMessage"),
+      customSystemPromptTitle: document.getElementById("customSystemPromptTitle"),
       // 添加模型相关元素
       addModelButton: document.getElementById("addModelButton"),
       addModelModal: document.getElementById("addModelModal"),
@@ -218,6 +227,32 @@ export class UiManager {
     }
     if (!this.elements.deleteModelTitle) {
       this.elements.deleteModelTitle = document.getElementById("deleteModelTitle");
+    }
+
+    // 自定义 system prompt 相关元素
+    if (!this.elements.customSystemPromptButton) {
+      this.elements.customSystemPromptButton = document.getElementById("customSystemPromptButton");
+    }
+    if (!this.elements.customSystemPromptModal) {
+      this.elements.customSystemPromptModal = document.getElementById("customSystemPromptModal");
+    }
+    if (!this.elements.closeCustomSystemPromptModal) {
+      this.elements.closeCustomSystemPromptModal = document.getElementById("closeCustomSystemPromptModal");
+    }
+    if (!this.elements.customSystemPromptInput) {
+      this.elements.customSystemPromptInput = document.getElementById("customSystemPromptInput");
+    }
+    if (!this.elements.saveCustomSystemPromptButton) {
+      this.elements.saveCustomSystemPromptButton = document.getElementById("saveCustomSystemPromptButton");
+    }
+    if (!this.elements.cancelCustomSystemPromptButton) {
+      this.elements.cancelCustomSystemPromptButton = document.getElementById("cancelCustomSystemPromptButton");
+    }
+    if (!this.elements.customSystemPromptValidationMessage) {
+      this.elements.customSystemPromptValidationMessage = document.getElementById("customSystemPromptValidationMessage");
+    }
+    if (!this.elements.customSystemPromptTitle) {
+      this.elements.customSystemPromptTitle = document.getElementById("customSystemPromptTitle");
     }
   }
 
@@ -513,6 +548,51 @@ export class UiManager {
         this.elements.deleteProviderValidationMessage.classList.add('success');
       } else {
         this.elements.deleteProviderValidationMessage.classList.add('error');
+      }
+    }
+  }
+
+  // 显示自定义 system prompt 弹窗
+  showCustomSystemPromptModal() {
+    this.refreshElements();
+    if (this.elements.customSystemPromptModal) {
+      this.elements.customSystemPromptModal.classList.add('show');
+      this.clearValidationMessage(this.elements.customSystemPromptValidationMessage);
+    }
+  }
+
+  // 隐藏自定义 system prompt 弹窗
+  hideCustomSystemPromptModal() {
+    this.refreshElements();
+    if (this.elements.customSystemPromptModal) {
+      this.elements.customSystemPromptModal.classList.remove('show');
+      this.clearValidationMessage(this.elements.customSystemPromptValidationMessage);
+    }
+  }
+
+  // 获取自定义 system prompt 输入值
+  getCustomSystemPromptValue() {
+    this.refreshElements();
+    return this.elements.customSystemPromptInput?.value?.trim() || '';
+  }
+
+  // 设置自定义 system prompt 输入值
+  setCustomSystemPromptValue(value) {
+    this.refreshElements();
+    if (this.elements.customSystemPromptInput) {
+      this.elements.customSystemPromptInput.value = value;
+    }
+  }
+
+  // 显示自定义 system prompt 验证消息
+  showCustomSystemPromptValidationMessage(message, isSuccess) {
+    if (this.elements.customSystemPromptValidationMessage) {
+      this.elements.customSystemPromptValidationMessage.textContent = message;
+      this.elements.customSystemPromptValidationMessage.className = 'validation-message';
+      if (isSuccess) {
+        this.elements.customSystemPromptValidationMessage.classList.add('success');
+      } else {
+        this.elements.customSystemPromptValidationMessage.classList.add('error');
       }
     }
   }

@@ -7,6 +7,7 @@ import { ModelManager } from './ModelManager.js';
 import { ProviderUIManager } from './ProviderUIManager.js';
 import { EventManager } from './EventManager.js';
 import { TempStateManager } from './TempStateManager.js';
+import { SystemPromptManager } from './SystemPromptManager.js';
 
 class PopupManager {
   constructor() {
@@ -41,6 +42,12 @@ class PopupManager {
       this.modelManager
     );
 
+    this.systemPromptManager = new SystemPromptManager(
+      this.storageManager,
+      this.uiManager,
+      this.i18nManager
+    );
+
     // 将所有管理器传递给事件管理器
     this.eventManager = new EventManager({
       i18nManager: this.i18nManager,
@@ -50,7 +57,8 @@ class PopupManager {
       modelManager: this.modelManager,
       providerUIManager: this.providerUIManager,
       apiKeyManager: this.apiKeyManager,
-      tempStateManager: this.tempStateManager
+      tempStateManager: this.tempStateManager,
+      systemPromptManager: this.systemPromptManager
     });
 
     // 初始化
@@ -148,6 +156,9 @@ class PopupManager {
         this.uiManager.elements.modelSelect.value = settings.model;
       }
 
+      // 初始化自定义 system prompt 管理器
+      await this.systemPromptManager.initialize();
+
       // 再次更新国际化标签，确保所有动态生成的元素也应用了正确的语言
       this.i18nManager.updateLabels();
 
@@ -226,3 +237,73 @@ document.getElementById('language-toggle')?.addEventListener('click', () => {
     });
   }
 });
+
+// 滚动提示逻辑
+function initScrollIndicator() {
+  const scrollIndicator = document.getElementById('scrollIndicator');
+  if (!scrollIndicator) return;
+
+  // 检查是否需要显示滚动提示
+  function checkScrollIndicator() {
+    const scrollHeight = document.documentElement.scrollHeight;
+    const clientHeight = window.innerHeight;
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+    const hasScroll = scrollHeight > clientHeight;
+
+    // 只有在需要滚动且在顶部附近时才显示
+    if (hasScroll && scrollTop < 20) {
+      scrollIndicator.classList.remove('hidden');
+    } else {
+      scrollIndicator.classList.add('hidden');
+    }
+  }
+
+  // 监听滚动事件
+  function handleScroll() {
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const scrollHeight = document.documentElement.scrollHeight;
+    const clientHeight = window.innerHeight;
+
+    // 如果已经滚动到底部（允许10px误差），隐藏提示
+    if (scrollTop + clientHeight >= scrollHeight - 10) {
+      scrollIndicator.classList.add('hidden');
+    } else {
+      // 只有在确实需要滚动时才显示
+      const hasScroll = scrollHeight > clientHeight;
+      if (hasScroll && scrollTop < 20) { // 只在顶部附近显示
+        scrollIndicator.classList.remove('hidden');
+      } else {
+        scrollIndicator.classList.add('hidden');
+      }
+    }
+  }
+
+  // 初始化检查
+  checkScrollIndicator();
+
+  // 监听窗口大小变化
+  window.addEventListener('resize', checkScrollIndicator);
+
+  // 监听滚动事件
+  window.addEventListener('scroll', handleScroll);
+
+  // 监听内容变化（因为表单内容可能会动态改变）
+  const observer = new MutationObserver(() => {
+    setTimeout(checkScrollIndicator, 100);
+  });
+
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['style', 'class']
+  });
+}
+
+// 初始化滚动提示
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initScrollIndicator);
+} else {
+  initScrollIndicator();
+}

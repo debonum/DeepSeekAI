@@ -9,7 +9,7 @@ export const createQuestionInputContainer = (aiResponseContainer) => {
 
   container.innerHTML = `
     <div class="input-container">
-      <textarea class="expandable-textarea" placeholder="Enter your question..."></textarea>
+      <textarea class="expandable-textarea" placeholder="Ask me anything..."></textarea>
       <svg class="send-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -116,12 +116,15 @@ const setupTextarea = (textarea) => {
     const cursorPos = element.selectionStart;
 
     if (!element.value.trim()) {
-      // 对于空内容，直接设置为默认高度，不使用过渡效果
+      // 对于空内容，恢复单行样式
       element.style.transition = 'none';
-      element.style.height = '44px';
+      element.style.height = '48px';
+      element.style.lineHeight = '48px';
+      element.style.padding = '0 52px 0 16px';
+
       // 恢复过渡效果
       setTimeout(() => {
-        element.style.transition = 'height 0.2s ease';
+        element.style.transition = 'height 0.2s ease, line-height 0.2s ease';
       }, 0);
 
       // 确保父容器也调整高度
@@ -133,10 +136,14 @@ const setupTextarea = (textarea) => {
       // 添加轻微的视觉反馈
       element.style.backgroundColor = 'var(--input-bg)';
     } else {
+      // 多行文本时切换到正常的 line-height
+      element.style.lineHeight = '1.5';
+      element.style.padding = '12px 52px 12px 16px';
+
       // 清除之前设置的高度以获得准确的scrollHeight
       element.style.height = '0px';
       // 然后设置为scrollHeight，不低于最小值也不超过最大值
-      const newHeight = Math.min(Math.max(44, element.scrollHeight), 120);
+      const newHeight = Math.min(Math.max(48, element.scrollHeight), 120);
       element.style.height = `${newHeight}px`;
 
       // 确保父容器也调整高度
@@ -255,7 +262,9 @@ const setupTextarea = (textarea) => {
     textarea.style.borderColor = 'var(--border-color)';
 
     if (!event.target.value) {
-      event.target.style.height = '44px';
+      event.target.style.height = '48px';
+      event.target.style.lineHeight = '48px';
+      event.target.style.padding = '0 52px 0 16px';
     }
   });
 
@@ -266,8 +275,8 @@ const setupTextarea = (textarea) => {
   window.addEventListener('resize', resizeHandler);
 
   // 初始化时执行一次高度调整
-  textarea.style.height = "44px";
-  textarea.style.minHeight = "44px";
+  textarea.style.height = "48px";
+  textarea.style.minHeight = "48px";
   textarea.style.maxHeight = "120px";
 
   // 为cleanup添加事件移除
@@ -505,7 +514,7 @@ const setupUpdateButtonState = (container) => {
       // 禁用输入框
       textarea.style.cursor = "not-allowed";
       textarea.setAttribute("disabled", "disabled");
-      textarea.setAttribute("placeholder", "AI is responding...");
+      textarea.setAttribute("placeholder", "AI 正在回复...");
       textarea.style.opacity = '0.8';
     } else {
       // 切换回正常状态
@@ -538,7 +547,7 @@ const setupUpdateButtonState = (container) => {
       // 启用输入框
       textarea.style.cursor = "text";
       textarea.removeAttribute("disabled");
-      textarea.setAttribute("placeholder", "Enter your question...");
+      textarea.setAttribute("placeholder", "Ask me anything...");
       textarea.style.opacity = '1';
     }
   };
@@ -690,7 +699,9 @@ const sendQuestion = (textarea, aiResponseContainer) => {
     // 在消息飞出的同时清空输入框，但给予一些延迟
     setTimeout(() => {
       textarea.value = "";
-      textarea.style.height = "44px";
+      textarea.style.height = "48px";
+      textarea.style.lineHeight = "48px";
+      textarea.style.padding = "0 52px 0 16px";
 
       // 重置父容器高度
       const containerElement = textarea.closest('.input-container');

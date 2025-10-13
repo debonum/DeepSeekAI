@@ -23,6 +23,9 @@ importers:
       css-minimizer-webpack-plugin:
         specifier: ^7.0.0
         version: 7.0.0(webpack@5.93.0)
+      dompurify:
+        specifier: ^3.0.11
+        version: 3.2.4
       highlight.js:
         specifier: ^11.10.0
         version: 11.10.0

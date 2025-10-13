@@ -14,7 +14,7 @@ export class StorageManager {
       chrome.storage.sync.get(
           ["deepseekApiKey", "siliconflowApiKey", "openrouterApiKey","volcengineApiKey" ,"tencentcloudApiKey", "iflytekstarApiKey","baiducloudApiKey","aliyunApiKey", "aihubmixApiKey",
            "deepseekCustomApiUrl", "siliconflowCustomApiUrl", "openrouterCustomApiUrl", "volcengineCustomApiUrl", "tencentcloudCustomApiUrl", "iflytekstarCustomApiUrl", "baiducloudCustomApiUrl", "aliyunCustomApiUrl", "aihubmixCustomApiUrl",
-           "language", "model", "provider", "selectionEnabled", "rememberWindowSize", "pinWindow", "customModels"],
+           "language", "model", "provider", "selectionEnabled", "rememberWindowSize", "pinWindow", "customModels", "customSystemPrompt", "shortcuts"],
         (data) => {
           // 更新缓存
           this.cachedSettings = {
@@ -42,7 +42,20 @@ export class StorageManager {
             selectionEnabled: typeof data.selectionEnabled === 'undefined' ? true : data.selectionEnabled,
             rememberWindowSize: typeof data.rememberWindowSize === 'undefined' ? false : data.rememberWindowSize,
             pinWindow: typeof data.pinWindow === 'undefined' ? false : data.pinWindow,
-            customModels: data.customModels || {}
+            customModels: data.customModels || {},
+            customSystemPrompt: data.customSystemPrompt || '',
+            shortcuts: data.shortcuts || {
+              'toggle-chat': {
+                default: 'Ctrl+Shift+Y',
+                description: 'Open or close the chat window (destroys session).',
+                displayName: 'Open/Close Chat'
+              },
+              'show-hide-chat': {
+                default: 'Ctrl+Shift+U',
+                description: 'Show or hide the chat window (preserves session).',
+                displayName: 'Show/Hide Chat'
+              }
+            }
           };
           resolve(this.cachedSettings);
         }
@@ -345,5 +358,44 @@ export class StorageManager {
         resolve();
       });
     });
+  }
+
+  async saveCustomSystemPrompt(prompt) {
+    return new Promise((resolve) => {
+      chrome.storage.sync.set({ customSystemPrompt: prompt }, () => {
+        // 更新缓存
+        if (this.cachedSettings) {
+          this.cachedSettings.customSystemPrompt = prompt;
+        }
+        resolve();
+      });
+    });
+  }
+
+  async getCustomSystemPrompt() {
+    return new Promise((resolve) => {
+      chrome.storage.sync.get(['customSystemPrompt'], (data) => {
+        resolve(data.customSystemPrompt || '');
+      });
+    });
+  }
+
+  // 保存快捷键设置
+  async saveShortcuts(shortcuts) {
+    return new Promise((resolve) => {
+      chrome.storage.sync.set({ shortcuts }, () => {
+        // 更新缓存
+        if (this.cachedSettings) {
+          this.cachedSettings.shortcuts = shortcuts;
+        }
+        resolve();
+      });
+    });
+  }
+
+  // 获取快捷键设置
+  async getShortcuts() {
+    const settings = await this.getSettings();
+    return settings.shortcuts;
   }
 }

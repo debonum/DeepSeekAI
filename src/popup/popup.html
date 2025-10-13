@@ -6,20 +6,20 @@
     <title>DeepSeek AI</title>
     <style>
       :root {
-        /* 亮色模式变量 */
-        --background-primary: #ffffff;
-        --background-secondary: #f5f5f7;
-        --background-tertiary: #e8e8ed;
+        /* 亮色模式变量 - 优化苹果风格色彩 */
+        --background-primary: #fafafa;
+        --background-secondary: #f0f0f2;
+        --background-tertiary: #e5e5e7;
         --text-primary: #1d1d1f;
-        --text-secondary: #86868b;
-        --accent-color: #0066cc;
-        --accent-color-hover: #0051a3;
-        --border-color: rgba(0, 0, 0, 0.1);
-        --input-background: rgba(0, 0, 0, 0.03);
-        --input-background-focus: rgba(0, 0, 0, 0.05);
-        --switch-bg-off: rgba(0, 0, 0, 0.1);
+        --text-secondary: #8e8e93;
+        --accent-color: #007aff;
+        --accent-color-hover: #0056d6;
+        --border-color: rgba(0, 0, 0, 0.08);
+        --input-background: rgba(0, 0, 0, 0.02);
+        --input-background-focus: rgba(0, 122, 255, 0.04);
+        --switch-bg-off: rgba(0, 0, 0, 0.08);
         --switch-bg-on: #34c759;
-        --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        --card-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
         --modal-overlay: rgba(0, 0, 0, 0.2);
         --success-color: #34c759;
         --warning-color: #ff9500;
@@ -63,14 +63,16 @@
         font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text",
           "Helvetica Neue", sans-serif;
         margin: 0;
-        padding: 16px;
-        width: 340px;
+        padding: 20px;
+        width: 360px;
         height: auto;
         color: var(--text-primary);
         background-color: var(--background-primary);
-        line-height: 1.4;
+        line-height: 1.5;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+        position: relative;
+        overflow-x: hidden;
       }
 
       .container {
@@ -83,8 +85,8 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 10px;
-        padding-bottom: 12px;
+        gap: 12px;
+        padding-bottom: 16px;
         border-bottom: 1px solid var(--border-color);
         position: relative;
       }
@@ -103,9 +105,9 @@
 
       .section {
         background-color: var(--background-secondary);
-        border-radius: 12px;
-        padding: 14px 16px;
-        margin-bottom: 12px;
+        border-radius: 14px;
+        padding: 18px 20px;
+        margin-bottom: 16px;
         box-shadow: var(--card-shadow);
         transition: all 0.2s ease;
       }
@@ -192,9 +194,11 @@
 
       input:focus {
         outline: none;
-        box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.3);
+        box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.25);
         background-color: var(--input-background-focus);
         border-color: var(--accent-color);
+        transform: translateY(-1px);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
       .toggle-visibility {
@@ -274,8 +278,10 @@
 
       select:focus {
         outline: none;
-        box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.3);
+        box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.25);
         border-color: var(--accent-color);
+        transform: translateY(-1px);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
       select option {
@@ -438,7 +444,7 @@
         cursor: pointer;
         font-size: 14px;
         font-weight: 500;
-        transition: all 0.2s ease;
+        transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
         height: 40px;
         display: flex;
         align-items: center;
@@ -447,10 +453,13 @@
 
       button:hover {
         background-color: var(--accent-color-hover);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 122, 255, 0.25);
       }
 
       button:active {
-        transform: scale(0.98);
+        transform: translateY(0);
+        box-shadow: 0 2px 6px rgba(0, 122, 255, 0.2);
       }
 
       .button-content {
@@ -807,8 +816,8 @@
         height: 100%;
         background-color: var(--modal-overlay);
         opacity: 0;
-        transition: opacity 0.3s ease;
-        backdrop-filter: blur(4px);
+        transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        backdrop-filter: blur(12px);
       }
 
       .modal.show {
@@ -820,31 +829,34 @@
 
       .modal-content {
         background-color: var(--background-primary);
-        width: 350px;
-        border-radius: 16px;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        width: 420px;
+        border-radius: 20px;
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3);
         overflow: hidden;
-        animation: fadeIn 0.3s ease;
+        animation: modalSlideIn 0.4s cubic-bezier(0.2, 0, 0.2, 1);
+        border: 1px solid var(--border-color);
       }
 
       .modal-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 16px 20px;
+        padding: 16px 20px 12px;
         border-bottom: 1px solid var(--border-color);
+        background: linear-gradient(135deg, var(--background-primary) 0%, var(--background-secondary) 100%);
       }
 
       .modal-header span:first-child {
-        font-size: 17px;
+        font-size: 16px;
         font-weight: 600;
         color: var(--text-primary);
+        letter-spacing: -0.01em;
       }
 
       .close {
         cursor: pointer;
         font-size: 24px;
-        line-height: 20px;
+        line-height: 18px;
         color: var(--text-secondary);
         width: 28px;
         height: 28px;
@@ -852,28 +864,30 @@
         align-items: center;
         justify-content: center;
         border-radius: 50%;
-        transition: all 0.2s ease;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
       .close:hover {
         background-color: var(--background-secondary);
         color: var(--text-primary);
+        transform: scale(1.05);
       }
 
       .modal-body {
-        padding: 20px;
+        padding: 16px 20px;
       }
 
       .form-group {
-        margin-bottom: 16px;
+        margin-bottom: 14px;
       }
 
       .form-group label {
         display: block;
-        font-size: 14px;
-        font-weight: 500;
-        margin-bottom: 8px;
-        color: var(--text-secondary);
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 6px;
+        color: var(--text-primary);
+        letter-spacing: -0.005em;
       }
 
       .input-hint {
@@ -882,25 +896,33 @@
         margin-top: 4px;
         margin-left: 2px;
         opacity: 0.8;
+        line-height: 1.3;
       }
 
       .form-control {
         width: 100%;
-        padding: 12px 15px;
+        padding: 10px 12px;
         border-radius: 10px;
         font-size: 13px;
         background-color: var(--input-background);
         border: 1px solid var(--border-color);
         box-sizing: border-box;
         color: var(--text-primary);
-        transition: all 0.2s ease;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
       }
 
       .form-control:focus {
         outline: none;
-        box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.3);
+        box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.25);
         border-color: var(--accent-color);
         background-color: var(--input-background-focus);
+        transform: translateY(-1px);
+      }
+
+      .form-control::placeholder {
+        color: var(--text-secondary);
+        opacity: 0.6;
       }
 
       .validation-message {
@@ -939,38 +961,50 @@
       .modal-footer {
         display: flex;
         justify-content: center;
-        gap: 12px;
-        margin-top: 12px;
+        gap: 10px;
+        margin-top: 16px;
+        padding: 0 20px 16px;
       }
 
       .cancel-button {
-        padding: 10px 16px;
+        padding: 8px 18px;
         background-color: var(--background-secondary);
         border: none;
         border-radius: 10px;
-        font-size: 14px;
-        font-weight: 500;
+        font-size: 13px;
+        font-weight: 600;
         cursor: pointer;
         color: var(--text-primary);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        min-width: 80px;
       }
 
       .cancel-button:hover {
         background-color: var(--background-tertiary);
+        transform: translateY(-1px);
       }
 
       .save-button {
-        padding: 10px 16px;
-        background-color: var(--accent-color);
+        padding: 8px 18px;
+        background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-color-hover) 100%);
         border: none;
         border-radius: 10px;
-        font-size: 14px;
-        font-weight: 500;
+        font-size: 13px;
+        font-weight: 600;
         cursor: pointer;
         color: white;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        min-width: 80px;
+        box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
       }
 
       .save-button:hover {
-        background-color: var(--accent-color-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(0, 122, 255, 0.4);
+      }
+
+      .save-button:active {
+        transform: translateY(0);
       }
 
       /* 添加模型按钮样式 */
@@ -1012,14 +1046,36 @@
         }
       }
 
+      @keyframes modalSlideIn {
+        from {
+          transform: scale(0.88) translateY(-30px);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1) translateY(0);
+          opacity: 1;
+        }
+      }
+
+      @keyframes modalSlideOut {
+        from {
+          transform: scale(1) translateY(0);
+          opacity: 1;
+        }
+        to {
+          transform: scale(0.92) translateY(20px);
+          opacity: 0;
+        }
+      }
+
       .spinner {
         display: inline-block;
         width: 16px;
         height: 16px;
-        border: 2px solid rgba(0, 0, 0, 0.1);
-        border-top-color: #3498db;
+        border: 2px solid var(--background-tertiary);
+        border-top-color: var(--accent-color);
         border-radius: 50%;
-        animation: spinner-rotate 0.8s linear infinite;
+        animation: spinner-rotate 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
       }
 
       /* 在暗模式下调整spinner颜色 */
@@ -1032,37 +1088,383 @@
 
       /* 成功消息中的spinner样式 */
       .success-message .spinner {
-        border-color: rgba(52, 199, 89, 0.3);
+        border-color: rgba(52, 199, 89, 0.25);
         border-top-color: var(--success-color);
         width: 14px;
         height: 14px;
         vertical-align: middle;
-        margin-left: 5px;
+        margin-left: 6px;
       }
 
       /* 错误消息中的spinner样式 */
       .error-message .spinner {
-        border-color: rgba(255, 59, 48, 0.3);
+        border-color: rgba(255, 59, 48, 0.25);
         border-top-color: var(--error-color);
         width: 14px;
         height: 14px;
         vertical-align: middle;
-        margin-left: 5px;
+        margin-left: 6px;
       }
 
       /* 在验证消息容器中的spinner样式 */
       .validation-message.success .spinner {
-        border-color: rgba(52, 199, 89, 0.3);
+        border-color: rgba(52, 199, 89, 0.25);
         border-top-color: var(--success-color);
       }
 
       .validation-message.error .spinner {
-        border-color: rgba(255, 59, 48, 0.3);
+        border-color: rgba(255, 59, 48, 0.25);
         border-top-color: var(--error-color);
+      }
+
+      /* 优化的成功指示器 */
+      .success-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--success-color);
+        font-weight: 500;
+        font-size: 13px;
+      }
+
+      /* 优雅的按钮加载状态 */
+      button.loading {
+        pointer-events: none;
+        opacity: 0.7;
+        position: relative;
+      }
+
+      button.loading .spinner {
+        position: absolute;
+        right: 12px;
+        width: 14px;
+        height: 14px;
+      }
+
+      /* 优化的系统prompt模态窗口样式 */
+      .prompt-modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: var(--modal-overlay);
+        opacity: 0;
+        transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        backdrop-filter: blur(12px);
+      }
+
+      .prompt-modal.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 1;
+      }
+
+      .prompt-modal-content {
+        background-color: var(--background-primary);
+        width: 420px;
+        max-width: 90vw;
+        max-height: 80vh;
+        border-radius: 20px;
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+        animation: promptModalSlideIn 0.4s cubic-bezier(0.2, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+      }
+
+      @keyframes promptModalSlideIn {
+        from {
+          transform: scale(0.88) translateY(-30px);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1) translateY(0);
+          opacity: 1;
+        }
+      }
+
+      .prompt-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 24px 16px;
+        border-bottom: 1px solid var(--border-color);
+        background: linear-gradient(135deg, var(--background-primary) 0%, var(--background-secondary) 100%);
+      }
+
+      .prompt-modal-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text-primary);
+        letter-spacing: -0.01em;
+      }
+
+      .prompt-modal-close {
+        cursor: pointer;
+        font-size: 28px;
+        line-height: 20px;
+        color: var(--text-secondary);
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        opacity: 0.7;
+      }
+
+      .prompt-modal-close:hover {
+        background-color: var(--background-secondary);
+        color: var(--text-primary);
+        transform: scale(1.05);
+        opacity: 1;
+      }
+
+      .prompt-modal-body {
+        padding: 0;
+        flex: 1;
+        overflow-y: auto;
+      }
+
+      .prompt-editor-container {
+        background: var(--background-secondary);
+        border-radius: 0;
+        border: none;
+        margin: 0;
+      }
+
+      .prompt-editor {
+        width: 100%;
+        min-height: 200px;
+        padding: 20px 24px;
+        font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+        font-size: 14px;
+        line-height: 1.6;
+        border: none;
+        outline: none;
+        resize: vertical;
+        background: transparent;
+        color: var(--text-primary);
+        box-sizing: border-box;
+      }
+
+      .prompt-editor::placeholder {
+        color: var(--text-secondary);
+        opacity: 0.6;
+      }
+
+      .prompt-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 24px;
+        background-color: var(--background-tertiary);
+        border-top: 1px solid var(--border-color);
+      }
+
+      .prompt-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .char-count {
+        font-size: 12px;
+        color: var(--text-secondary);
+        font-weight: 500;
+        padding: 4px 8px;
+        background-color: var(--background-secondary);
+        border-radius: 6px;
+        transition: all 0.2s ease;
+      }
+
+      .char-count.warning {
+        color: var(--warning-color);
+        background-color: rgba(255, 149, 0, 0.1);
+      }
+
+      .char-count.error {
+        color: var(--error-color);
+        background-color: rgba(255, 59, 48, 0.1);
+      }
+
+      .prompt-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .prompt-template-btn {
+        padding: 6px 12px;
+        background: var(--background-secondary);
+        border: none;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .prompt-template-btn:hover {
+        background-color: var(--accent-color);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      .prompt-modal-footer {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 16px 24px 20px;
+        background: linear-gradient(180deg, var(--background-secondary) 0%, var(--background-primary) 100%);
+        gap: 12px;
+      }
+
+      .prompt-validation {
+        font-size: 12px;
+        color: var(--text-secondary);
+        text-align: center;
+        width: 100%;
+      }
+
+      .prompt-buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+      }
+
+      .prompt-cancel-btn {
+        padding: 10px 20px;
+        background-color: var(--background-secondary);
+        border: none;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        color: var(--text-primary);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .prompt-cancel-btn:hover {
+        background-color: var(--background-tertiary);
+        transform: translateY(-1px);
+      }
+
+      .prompt-save-btn {
+        padding: 10px 20px;
+        background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-color-hover) 100%);
+        border: none;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        color: white;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+      }
+
+      .prompt-save-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(0, 122, 255, 0.4);
+      }
+
+      .prompt-save-btn:active {
+        transform: translateY(0);
+      }
+
+      /* 滚动提示动画 */
+      .scroll-indicator {
+        position: fixed;
+        bottom: 15px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 20px;
+        height: 30px;
+        border: 1.5px solid var(--text-secondary);
+        border-radius: 10px;
+        opacity: 0.4;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+        z-index: 100;
+      }
+
+      .scroll-indicator::before {
+        content: '';
+        position: absolute;
+        top: 5px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 3px;
+        height: 6px;
+        background-color: var(--text-secondary);
+        border-radius: 2px;
+        animation: scroll-wheel 2s infinite;
+      }
+
+      @keyframes scroll-wheel {
+        0% {
+          opacity: 0.8;
+          transform: translateX(-50%) translateY(0);
+        }
+        50% {
+          opacity: 0.3;
+          transform: translateX(-50%) translateY(4px);
+        }
+        100% {
+          opacity: 0.8;
+          transform: translateX(-50%) translateY(0);
+        }
+      }
+
+      .scroll-indicator.hidden {
+        opacity: 0;
+      }
+
+      /* 暗色模式下的滚动提示 */
+      @media (prefers-color-scheme: dark) {
+        .scroll-indicator {
+          border-color: var(--text-secondary);
+        }
+
+        .scroll-indicator::before {
+          background-color: var(--text-secondary);
+        }
+      }
+
+      /* 底部内容提示 */
+      .content-hint {
+        text-align: center;
+        margin-top: 12px;
+      }
+
+      /* 响应式设计 */
+      @media (max-width: 480px) {
+        .prompt-modal-content {
+          width: 95vw;
+          margin: 20px;
+        }
+
+        .prompt-toolbar {
+          flex-direction: column;
+          gap: 12px;
+          align-items: stretch;
+        }
+
+        .prompt-actions {
+          justify-content: center;
+        }
       }
     </style>
   </head>
   <body>
+    <!-- 滚动提示 -->
+    <div class="scroll-indicator" id="scrollIndicator"></div>
+
     <button class="language-toggle" id="language-toggle">
       <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <path
@@ -1264,6 +1666,18 @@
             <label for="pinWindow" class="switch-label"></label>
           </div>
         </div>
+
+        <div class="selection-switch">
+          <label
+            id="customSystemPromptLabel"
+            class="switch-label-text"
+            data-tooltip="Set a custom system prompt that will be used for all AI interactions"
+            >Custom System Prompt</label
+          >
+          <button id="customSystemPromptButton" class="link-button" style="margin-left: auto;">
+            <span id="customSystemPromptText">Configure</span>
+          </button>
+        </div>
       </div>
 
       <div class="settings-section">
@@ -1296,86 +1710,69 @@
       </div>
 
       <div class="help-link">
-        <a href="#" id="instructionsLink">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <circle cx="12" cy="12" r="10"></circle>
-            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-            <line x1="12" y1="17" x2="12" y2="17"></line>
-          </svg>
-          <span id="instructionsText">Instructions</span>
-        </a>
+        <div class="content-hint">
+          <a href="#" id="instructionsLink">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+              <line x1="12" y1="17" x2="12" y2="17"></line>
+            </svg>
+            <span id="instructionsText">Instructions</span>
+          </a>
 
-        <a
-          href="https://github.com/DeepLifeStudio/DeepSeekAI"
-          target="_blank"
-          rel="noopener noreferrer"
-          id="githubLink"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
+          <a
+            href="https://github.com/DeepLifeStudio/DeepSeekAI"
+            target="_blank"
+            rel="noopener noreferrer"
+            id="githubLink"
           >
-            <path
-              d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"
-            ></path>
-          </svg>
-          <span id="githubText">GitHub</span>
-        </a>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"
+              ></path>
+            </svg>
+            <span id="githubText">GitHub</span>
+          </a>
 
-        <a
-          href="https://status.deepseek.com/"
-          target="_blank"
-          rel="noopener noreferrer"
-          id="statusLink"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
-          </svg>
-          <span id="statusText">API Service Status</span>
-        </a>
 
-        <a
-          href="https://chromewebstore.google.com/detail/deepseek-ai/bjjobdlpgglckcmhgmmecijpfobmcpap"
-          target="_blank"
-          rel="noopener noreferrer"
-          id="feedbackLink"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
+          <a
+            href="https://chromewebstore.google.com/detail/deepseek-ai/bjjobdlpgglckcmhgmmecijpfobmcpap"
+            target="_blank"
+            rel="noopener noreferrer"
+            id="feedbackLink"
           >
-            <path
-              d="M12 2l2.4 7.4h7.6l-6 4.6 2.4 7.4-6-4.6-6 4.6 2.4-7.4-6-4.6h7.6z"
-            ></path>
-          </svg>
-          <span id="feedbackText">Feedback</span>
-        </a>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M12 2l2.4 7.4h7.6l-6 4.6 2.4 7.4-6-4.6-6 4.6 2.4-7.4-6-4.6h7.6z"
+              ></path>
+            </svg>
+            <span id="feedbackText">Feedback</span>
+          </a>
+        </div>
       </div>
     </div>
 
@@ -1566,6 +1963,47 @@
             </button>
             <button id="confirmDeleteModelButton" class="delete-button">
               删除
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 重新设计的系统prompt模态窗口 -->
+    <div id="customSystemPromptModal" class="prompt-modal">
+      <div class="prompt-modal-content">
+        <div class="prompt-modal-header">
+          <h3 class="prompt-modal-title" id="customSystemPromptTitle">Custom System Prompt</h3>
+          <button class="prompt-modal-close" id="closeCustomSystemPromptModal">&times;</button>
+        </div>
+
+        <div class="prompt-modal-body">
+          <div class="prompt-editor-container">
+            <textarea
+              id="customSystemPromptInput"
+              class="prompt-editor"
+              placeholder="Enter your custom system prompt here. This will be used for all AI interactions."
+              maxlength="2000"
+            ></textarea>
+          </div>
+
+          <div class="prompt-toolbar">
+            <div class="prompt-info">
+              <div class="char-count" id="charCount">0 / 2000</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="prompt-modal-footer">
+          <div class="prompt-validation" id="customSystemPromptValidationMessage">
+            Configure how the AI should behave in conversations
+          </div>
+          <div class="prompt-buttons">
+            <button class="prompt-cancel-btn" id="cancelCustomSystemPromptButton">
+              Cancel
+            </button>
+            <button class="prompt-save-btn" id="saveCustomSystemPromptButton">
+              Save
             </button>
           </div>
         </div>

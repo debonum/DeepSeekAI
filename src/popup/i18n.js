@@ -84,7 +84,16 @@ export class I18nManager {
         saving: '保存中...',
         checkModelOrKeyOrPermission: '请检查模型ID或者API Key，或确认该模型是否有权限使用',
         toggleChatShortcut: '通过同一快捷键可以打开/关闭会话窗口',
-        toggleChatTip: '💡 可自定义快捷键以更快地打开/关闭对话窗口'
+        toggleChatTip: '💡 可自定义快捷键以更快地打开/关闭对话窗口',
+        customSystemPromptLabel: '自定义系统提示词',
+        customSystemPromptText: '配置',
+        customSystemPromptTitle: '自定义系统提示词',
+        customSystemPromptInputLabel: '系统提示词',
+        customSystemPromptPlaceholder: '输入您的自定义系统提示词。这将用于所有AI交互。',
+        customSystemPromptHint: '此提示词将与默认语言检测提示词结合使用，用于所有AI交互，但快捷操作按钮有自己的特定提示词除外。',
+        customSystemPromptSaveSuccess: '自定义系统提示词保存成功',
+        customSystemPromptSaveError: '保存自定义系统提示词失败',
+        customSystemPromptEmpty: '系统提示词不能为空'
       },
       en: {
         validating: 'Validating...',
@@ -169,7 +178,16 @@ export class I18nManager {
         saving: 'Saving...',
         checkModelOrKeyOrPermission: 'Please check the model ID or API key, or whether the model is permitted for your account',
         toggleChatShortcut: 'Use the same shortcut key to open/close the chat window',
-        toggleChatTip: '💡 You can customize shortcuts to quickly open/close the chat window'
+        toggleChatTip: '💡 You can customize shortcuts to quickly open/close the chat window',
+        customSystemPromptLabel: 'Custom System Prompt',
+        customSystemPromptText: 'Configure',
+        customSystemPromptTitle: 'Custom System Prompt',
+        customSystemPromptInputLabel: 'System Prompt',
+        customSystemPromptPlaceholder: 'Enter your custom system prompt here. This will be used for all AI interactions.',
+        customSystemPromptHint: 'This prompt will be combined with the default language detection prompt and used for all AI interactions, except for quick action buttons which have their own specific prompts.',
+        customSystemPromptSaveSuccess: 'Custom system prompt saved successfully',
+        customSystemPromptSaveError: 'Failed to save custom system prompt',
+        customSystemPromptEmpty: 'System prompt cannot be empty'
       }
     };
   }
@@ -214,6 +232,8 @@ export class I18nManager {
       this.updateElementText('preferredLanguageLabel', 'preferredLanguageLabel');
       this.updateElementText('rememberWindowSizeLabel', 'rememberWindowSize');
       this.updateElementText('pinWindowLabel', 'pinWindowLabel');
+      this.updateElementText('customSystemPromptLabel', 'customSystemPromptLabel');
+      this.updateElementText('customSystemPromptText', 'customSystemPromptText');
 
       // 更新快捷键设置标签
       this.updateElementText('shortcutSettingsText', 'shortcutSettingsText');
@@ -240,6 +260,7 @@ export class I18nManager {
       this.updateInputPlaceholder('modelApiKey', 'customProviderApiKeyPlaceholder');
       this.updateInputPlaceholder('modelApiId', 'modelApiIdPlaceholder');
       this.updateInputPlaceholder('modelDisplayName', 'modelDisplayNamePlaceholder');
+      this.updateInputPlaceholder('customSystemPromptInput', 'customSystemPromptPlaceholder');
 
       // 更新弹窗标签
       this.updateElementText('customProviderTitle', 'addCustomProvider');
@@ -257,6 +278,9 @@ export class I18nManager {
 
       this.updateElementText('deleteProviderTitle', 'deleteProvider');
       this.updateElementText('deleteModelTitle', 'deleteModel');
+      this.updateElementText('customSystemPromptTitle', 'customSystemPromptTitle');
+      this.updateElementText('customSystemPromptInputLabel', 'customSystemPromptInputLabel');
+      this.updateElementText('customSystemPromptHint', 'customSystemPromptHint');
 
       // 更新按钮文本
       this.updateElementText('saveCustomProviderButton', 'saveCustomProviderBtnText');

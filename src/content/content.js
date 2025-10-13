@@ -787,37 +787,28 @@ function getReliableSelectedText() {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "toggleChat") {
     try {
-      // 如果弹窗已经存在，直接关闭它并返回
+      // 如果弹窗已经存在,关闭它(销毁会话)
       if (popupStateManager.isVisible() && currentPopup) {
         safeRemovePopup();
         return;
       }
 
-      // 获取当前页面的选中内容，使用更可靠的方法
+      // 如果窗口不存在,创建新窗口
       let selectedTextContent = "";
-
-      // 优先使用后台传递的选中文本
       if (request.selectedText) {
         selectedTextContent = request.selectedText;
-        // 更新最后选中文本
         lastSelectionText = selectedTextContent;
         lastSelectionTime = Date.now();
       } else {
-        // 使用更可靠的方法获取选中文本
         selectedTextContent = getReliableSelectedText();
       }
 
-      // 最终使用的选中文本
       const finalSelectedText = selectedTextContent;
-
       let rect;
-      // 确定矩形区域
       const selection = window.getSelection();
       if (selection && selection.rangeCount > 0 && selection.toString().trim()) {
-        // 如果页面上有选中内容，使用选中内容的区域
         rect = selection.getRangeAt(0).getBoundingClientRect();
       } else {
-        // 无选中内容，使用默认位置（页面中央）
         rect = {
           left: window.innerWidth / 2,
           top: window.innerHeight / 2 - 190,
@@ -826,17 +817,72 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         };
       }
 
-      // 确定要使用的文本和是否隐藏问题
       const textToUse = finalSelectedText || request.useGreeting;
-      // 如果没有选中文本，则使用问候语模式（隐藏问题框）
       const hideQuestion = !finalSelectedText;
 
-
-      // 显示弹窗
       handlePopupCreation(textToUse, rect, hideQuestion);
     } catch (error) {
       console.warn('Error handling toggleChat:', error);
-      // 确保在出错时重置状态
+      safeRemovePopup();
+    }
+  } else if (request.action === "showHideChat") {
+    try {
+      // 显示/隐藏窗口(保留会话状态)
+      if (currentPopup) {
+        const isCurrentlyVisible = currentPopup.style.display !== 'none';
+
+        if (isCurrentlyVisible) {
+          // 隐藏窗口(添加动画)
+          currentPopup.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+          currentPopup.style.opacity = '0';
+          currentPopup.style.transform = 'translateY(8px) scale(0.98)';
+
+          setTimeout(() => {
+            currentPopup.style.display = 'none';
+            popupStateManager.setVisible(false);
+          }, 200);
+        } else {
+          // 显示窗口(添加动画)
+          currentPopup.style.display = 'block';
+          requestAnimationFrame(() => {
+            currentPopup.style.opacity = '1';
+            currentPopup.style.transform = 'translateY(0) scale(1)';
+          });
+          popupStateManager.setVisible(true);
+        }
+        return;
+      }
+
+      // 如果窗口不存在,创建新窗口
+      let selectedTextContent = "";
+      if (request.selectedText) {
+        selectedTextContent = request.selectedText;
+        lastSelectionText = selectedTextContent;
+        lastSelectionTime = Date.now();
+      } else {
+        selectedTextContent = getReliableSelectedText();
+      }
+
+      const finalSelectedText = selectedTextContent;
+      let rect;
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0 && selection.toString().trim()) {
+        rect = selection.getRangeAt(0).getBoundingClientRect();
+      } else {
+        rect = {
+          left: window.innerWidth / 2,
+          top: window.innerHeight / 2 - 190,
+          width: 0,
+          height: 0
+        };
+      }
+
+      const textToUse = finalSelectedText || request.useGreeting;
+      const hideQuestion = !finalSelectedText;
+
+      handlePopupCreation(textToUse, rect, hideQuestion);
+    } catch (error) {
+      console.warn('Error handling showHideChat:', error);
       safeRemovePopup();
     }
   } else if (request.action === "createPopup") {

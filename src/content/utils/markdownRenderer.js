@@ -89,6 +89,7 @@ const md = new MarkdownIt({
   html: true,
   linkify: true,
   typographer: true,
+  breaks: true,
   highlight: (str, lang) => {
     if (!lang || !hljs.getLanguage(lang)) {
       return `<div class="code-wrap">${md.utils.escapeHtml(str)}</div>`;

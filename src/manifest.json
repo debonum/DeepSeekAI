@@ -68,11 +68,19 @@
   "commands": {
     "toggle-chat": {
       "suggested_key": {
-        "default": "Ctrl+Shift+D",
-        "mac": "Command+Shift+D",
-        "windows": "Ctrl+Shift+D"
+        "default": "Ctrl+Shift+Y",
+        "mac": "Command+Shift+Y",
+        "windows": "Ctrl+Shift+Y"
       },
-      "description": "Toggle the chat window open/close."
+      "description": "Open or close the chat window (destroys session)."
+    },
+    "show-hide-chat": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+U",
+        "mac": "Command+Shift+U",
+        "windows": "Ctrl+Shift+U"
+      },
+      "description": "Show or hide the chat window (preserves session)."
     }
   },
   "host_permissions": [

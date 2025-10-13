@@ -305,6 +305,7 @@ export async function getAIResponse(
     // 确保每次请求都使用正确的模型名称
     // console.log(`📦 调用API - 使用模型: ${modelDisplayNameForApi}`);
 
+    // 构建系统提示
     const systemPrompt = quickActionPrompt && quickActionPrompt.includes('You are a professional multilingual translation engine')
       ? quickActionPrompt
       : language === "auto"
