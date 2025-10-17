@@ -614,6 +614,10 @@ function showQuickActionsForSelection(selection) {
         wrapper.style.opacity = '1';
         // 记录显示时间，防止双击/三击的下一次 mousedown 立即移除
         quickActionsShownAt = Date.now();
+        // 初始化拖拽功能
+        if (buttonsContainer.initDrag) {
+          buttonsContainer.initDrag();
+        }
         // 不再主动恢复选区，严格不干预浏览器的选择状态
       })
       .catch(err => {

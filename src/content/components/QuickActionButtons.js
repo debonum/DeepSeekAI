@@ -125,148 +125,133 @@ export async function createQuickActionButtons(
     translateAction.prompt = `Act as an AI assistant with MBTI persona ISTJ-INFJ, functioning as a professional multilingual translation engine that provides the ${lastLanguage} version of user-given content while preserving the original format (e.g., poetry, code, glossaries). If no target language is specified, ask proactively. Translate accurately and naturally in ${lastLanguage}. Output only the translated text without any explanations.`;
   }
 
-  // 添加Shadow DOM所需样式
+  // 添加Shadow DOM所需样式 - 苹果设计哲学
   const style = document.createElement('style');
   style.textContent = `
-    /* 主容器 - 紧凑卡片式设计 */
+    /* 主容器 - 极简主义设计 */
     .quick-action-buttons {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
       padding: 12px;
-      border-radius: 18px;
-      background: rgba(255, 255, 255, 0.92);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.8);
       box-shadow:
-        0 16px 40px rgba(0, 0, 0, 0.14),
-        0 4px 12px rgba(0, 0, 0, 0.08),
-        inset 0 0 0 0.5px rgba(255, 255, 255, 0.6);
-      border: 0.5px solid rgba(0, 0, 0, 0.06);
-      backdrop-filter: blur(40px) saturate(200%);
-      -webkit-backdrop-filter: blur(40px) saturate(200%);
+        0 8px 32px rgba(0, 0, 0, 0.12),
+        0 2px 8px rgba(0, 0, 0, 0.08);
+      border: 0.5px solid rgba(0, 0, 0, 0.04);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
       position: absolute;
       z-index: 2147483647;
       isolation: isolate;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
-      font-size: 14px;
-      line-height: 1.2;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
+      font-size: 13px;
+      line-height: 1.4;
       box-sizing: border-box;
-      width: 320px;
+      width: 340px;
       max-width: 90vw;
       pointer-events: auto;
       user-select: none;
-      animation: quickActionsAppear 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-      transform-origin: top center;
+      animation: quickActionsAppear 0.3s cubic-bezier(0.2, 0, 0.2, 1) forwards;
+      transform-origin: center;
       will-change: transform, opacity;
     }
 
-    /* 入场动画 - 更有弹性 */
+    /* 入场动画 - 简洁优雅 */
     @keyframes quickActionsAppear {
       0% {
         opacity: 0;
-        transform: scale(0.85) translateY(-12px);
-        filter: blur(4px);
-      }
-      60% {
-        opacity: 1;
-        transform: scale(1.03) translateY(2px);
-        filter: blur(0px);
+        transform: scale(0.9) translateY(-8px);
       }
       100% {
         opacity: 1;
         transform: scale(1) translateY(0);
-        filter: blur(0px);
       }
     }
 
-    /* 按钮容器 - 简洁网格 */
+    /* 按钮容器 - 流式布局 */
     .quick-action-buttons-container {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
       width: 100%;
+      justify-content: center;
       user-select: none;
     }
 
-    /* 按钮基础样式 - 简单方形 */
+    /* 按钮基础样式 - 极简圆形 */
     .quick-action-button {
       box-sizing: border-box;
-      aspect-ratio: 1 / 1;
-      width: 100%;
+      width: 44px;
+      height: 44px;
       padding: 0;
       margin: 0;
-      border-radius: 14px;
-      background: linear-gradient(135deg, rgba(242, 242, 247, 0.4), rgba(242, 242, 247, 0.8));
+      border-radius: 50%;
+      background: rgba(245, 245, 247, 0.8);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transition: all 0.2s cubic-bezier(0.2, 0, 0.2, 1);
       outline: none;
       user-select: none;
-      border: 1px solid rgba(0, 0, 0, 0.04);
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+      border: none;
+      position: relative;
     }
 
-    /* 按钮图标 */
+    /* 按钮图标 - 精致尺寸 */
     .quick-action-button img,
     .quick-action-button svg {
-      width: 24px !important;
-      height: 24px !important;
-      opacity: 0.85;
-      transition: all 0.3s ease;
+      width: 20px !important;
+      height: 20px !important;
+      opacity: 0.7;
+      transition: all 0.2s ease;
       flex-shrink: 0;
     }
 
-    /* 悬停效果 */
+    /* 悬停效果 - 微妙变化 */
     .quick-action-button:hover {
-      background: linear-gradient(135deg, rgba(0, 122, 255, 0.08), rgba(0, 122, 255, 0.12));
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(0, 122, 255, 0.2);
-      border-color: rgba(0, 122, 255, 0.2);
+      background: rgba(0, 122, 255, 0.1);
+      transform: scale(1.05);
     }
 
     .quick-action-button:hover img,
     .quick-action-button:hover svg {
       opacity: 1;
-      transform: scale(1.15);
     }
 
-    /* 按下效果 */
+    /* 按下效果 - 简洁反馈 */
     .quick-action-button:active {
-      transform: translateY(0);
-      box-shadow: 0 2px 6px rgba(0, 122, 255, 0.15);
-      background: linear-gradient(135deg, rgba(0, 122, 255, 0.12), rgba(0, 122, 255, 0.18));
+      transform: scale(0.95);
+      background: rgba(0, 122, 255, 0.15);
     }
-    /* 语言选择菜单 - 优雅下拉 */
+    /* 语言选择菜单 - 极简设计 */
     .language-select {
       position: absolute;
-      top: calc(100% + 6px);
+      top: calc(100% + 4px);
       left: 50%;
       transform: translateX(-50%);
-      min-width: 140px;
-      max-height: 320px;
+      min-width: 120px;
+      max-height: 280px;
       overflow-y: auto;
-      padding: 6px;
-      border-radius: 14px;
-      background: rgba(255, 255, 255, 0.92);
-      border: 0.5px solid rgba(0, 0, 0, 0.08);
-      box-shadow:
-        0 12px 28px rgba(0, 0, 0, 0.15),
-        0 2px 8px rgba(0, 0, 0, 0.08);
-      backdrop-filter: blur(30px) saturate(180%);
-      -webkit-backdrop-filter: blur(30px) saturate(180%);
+      padding: 4px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 0.5px solid rgba(0, 0, 0, 0.06);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
       z-index: 2147483648;
       display: none;
-      grid-template-columns: 1fr;
-      gap: 2px;
       user-select: none;
-      animation: menuSlideIn 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      animation: menuSlideIn 0.2s cubic-bezier(0.2, 0, 0.2, 1);
     }
 
     @keyframes menuSlideIn {
       0% {
         opacity: 0;
-        transform: translateX(-50%) translateY(-8px);
+        transform: translateX(-50%) translateY(-4px);
       }
       100% {
         opacity: 1;
@@ -274,164 +259,158 @@ export async function createQuickActionButtons(
       }
     }
 
-    /* 语言选项 - 精致按钮 */
+    /* 语言选项 - 简洁按钮 */
     .language-option {
       width: 100%;
-      padding: 10px 18px;
+      padding: 8px 12px;
       cursor: pointer;
       background-color: transparent;
       border: none;
-      text-align: center;
+      text-align: left;
       color: #1d1d1f;
       white-space: nowrap;
-      transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      transition: all 0.15s ease;
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
-      font-size: 15px;
+      font-size: 13px;
       font-weight: 400;
-      line-height: 1.2;
-      border-radius: 10px;
+      line-height: 1.3;
+      border-radius: 6px;
       user-select: none;
     }
 
     .language-option:hover {
       background-color: rgba(0, 122, 255, 0.08);
-      transform: scale(1.02);
     }
 
     .language-option:active {
-      background-color: rgba(0, 122, 255, 0.15);
-      transform: scale(0.98);
+      background-color: rgba(0, 122, 255, 0.12);
     }
-    /* 输入框容器 - 底部固定 */
+
+    /* 输入框容器 - 简约设计 */
     .custom-input-wrapper {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       width: 100%;
-      order: 10; /* 确保在底部 */
-      padding-top: 6px;
-      border-top: 1px solid rgba(0, 0, 0, 0.06);
+      margin-top: 4px;
+      padding-top: 8px;
+      border-top: 0.5px solid rgba(0, 0, 0, 0.06);
     }
 
-    /* 输入框 - 精致设计 */
+    /* 输入框 - 极简风格 */
     .custom-prompt-input {
       flex: 1;
-      padding: 10px 12px;
-      border-radius: 12px;
-      background: rgba(242, 242, 247, 0.6);
-      border: 1.5px solid rgba(0, 0, 0, 0.04);
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: rgba(245, 245, 247, 0.8);
+      border: 0.5px solid rgba(0, 0, 0, 0.06);
       color: #1d1d1f;
-      font-size: 14px;
-      line-height: 1.4;
+      font-size: 13px;
+      line-height: 1.3;
       font-weight: 400;
       width: 100%;
-      min-height: 38px;
-      max-height: 80px;
+      min-height: 32px;
+      max-height: 64px;
       outline: none;
-      transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      transition: all 0.2s ease;
       overflow-y: auto;
       resize: none;
       user-select: text;
-      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.03);
     }
 
     .custom-prompt-input::placeholder {
-      color: rgba(60, 60, 67, 0.5);
+      color: rgba(60, 60, 67, 0.6);
       font-weight: 400;
     }
 
     /* 输入框聚焦 */
     .custom-prompt-input:focus {
-      border-color: rgba(0, 122, 255, 0.5);
-      background: rgba(255, 255, 255, 0.9);
-      box-shadow:
-        0 0 0 3px rgba(0, 122, 255, 0.12),
-        inset 0 1px 2px rgba(0, 0, 0, 0.02);
+      border-color: rgba(0, 122, 255, 0.4);
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.1);
     }
 
-    /* 发送按钮 - 精致圆形 */
+    /* 发送按钮 - 简约圆形 */
     .custom-prompt-send {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 38px;
-      height: 38px;
-      min-width: 38px;
+      width: 32px;
+      height: 32px;
+      min-width: 32px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #007aff, #0a84ff);
-      box-shadow:
-        0 3px 10px rgba(0, 122, 255, 0.35),
-        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      background: #007aff;
+      box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
       cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transition: all 0.2s ease;
       user-select: none;
       border: none;
-      opacity: 1;
     }
 
     .custom-prompt-send:hover {
-      transform: scale(1.1);
-      box-shadow:
-        0 5px 16px rgba(0, 122, 255, 0.45),
-        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(0, 122, 255, 0.4);
     }
 
     .custom-prompt-send:active {
       transform: scale(0.95);
-      box-shadow:
-        0 2px 6px rgba(0, 122, 255, 0.3),
-        inset 0 1px 2px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 1px 4px rgba(0, 122, 255, 0.3);
     }
 
     .custom-prompt-send svg {
       color: white;
-      opacity: 1;
-      transition: transform 0.25s ease;
+      transition: transform 0.15s ease;
     }
 
     .custom-prompt-send:hover svg {
-      transform: scale(1.08) translateX(1px);
+      transform: translateX(1px);
     }
-    /* 抖动动画 - 错误提示 */
+
+    /* 抖动动画 - 简洁错误提示 */
     .shake {
-      animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+      animation: shake 0.3s ease-in-out;
     }
 
     @keyframes shake {
       0%, 100% { transform: translateX(0); }
-      10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
-      20%, 40%, 60%, 80% { transform: translateX(4px); }
+      25% { transform: translateX(-2px); }
+      75% { transform: translateX(2px); }
     }
 
-    /* Logo容器 - 跨2列 */
+    /* Logo容器 - 可拖拽的简洁展示 */
     .quick-action-logo {
-      grid-column: span 2;
-      aspect-ratio: 2 / 1;
       width: 100%;
+      height: 40px;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 12px;
+      padding: 8px;
       box-sizing: border-box;
-      border-radius: 14px;
-      background: linear-gradient(135deg, rgba(242, 242, 247, 0.6), rgba(255, 255, 255, 0.8));
-      border: 1px solid rgba(0, 0, 0, 0.04);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-      transition: all 0.3s ease;
-      cursor: default;
+      background: transparent;
+      cursor: grab;
+      margin-bottom: 4px;
+      user-select: none;
+      -webkit-user-select: none;
+      transition: background-color 0.2s ease;
+    }
+
+    .quick-action-logo:active {
+      cursor: grabbing;
+      background: rgba(0, 122, 255, 0.05);
+    }
+
+    /* 拖拽状态 */
+    .quick-action-buttons.dragging {
+      opacity: 0.95;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2), 0 4px 16px rgba(0, 0, 0, 0.15);
+      transition: none;
     }
 
     .quick-action-logo img {
-      max-width: 100%;
-      max-height: 100%;
-      width: auto !important;
-      height: auto !important;
-      opacity: 0.95;
-      transition: all 0.3s ease;
-    }
-
-    .quick-action-logo:hover {
-      transform: scale(1.02);
+      height: 24px;
+      width: auto;
+      opacity: 0.8;
+      transition: opacity 0.2s ease;
     }
 
     .quick-action-logo:hover img {
@@ -441,7 +420,6 @@ export async function createQuickActionButtons(
     /* 翻译按钮包装器 */
     .quick-action-translate {
       position: relative;
-      display: contents; /* 让子元素继承grid布局 */
     }
 
     .quick-action-translate .quick-action-button {
@@ -536,9 +514,15 @@ export async function createQuickActionButtons(
 
       const logo = document.createElement("img");
       logo.src = chrome.runtime.getURL("icons/icon24.png");
+      logo.style.pointerEvents = 'none'; // 防止图片拖拽干扰
+      logo.setAttribute("draggable", "false");
 
       logoContainer.appendChild(logo);
       buttonsContainer.appendChild(logoContainer);
+
+      // 添加拖拽功能
+      // 注意：由于container还未添加到DOM，我们需要在返回后再初始化拖拽
+      container.logoContainer = logoContainer; // 保存引用
     } else if (action.id === "copy") {
       const button = createSvgIcon(action.icon, action.title);
       button.className = "quick-action-button quick-action-copy";
@@ -757,6 +741,118 @@ export async function createQuickActionButtons(
   customInputWrapper.appendChild(customInput);
   customInputWrapper.appendChild(sendButton);
   container.appendChild(customInputWrapper);
+
+  // 初始化拖拽功能 - 返回初始化函数而不是立即执行
+  container.initDrag = function() {
+    const logoContainer = container.logoContainer;
+    if (!logoContainer) return;
+
+    const DRAG_THRESHOLD_PX = 3;
+    let isDragging = false;
+    let hasExceededThreshold = false;
+    let startX = 0, startY = 0;
+    let initialLeft = 0, initialTop = 0;
+    let activePointerId = null;
+
+    const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
+
+    const isInInteractiveZone = (target) => {
+      return !!target.closest('.quick-action-button, .custom-prompt-input, .language-select, .language-option, .custom-prompt-send');
+    };
+
+    const onPointerDown = (e) => {
+      // 仅处理主指针并排除交互区域
+      if (e.button !== undefined && e.button !== 0) return;
+      if (isInInteractiveZone(e.target)) return;
+
+      const wrapper = container.parentElement;
+      if (!wrapper) return;
+
+      // 仅允许从 logo 或容器空白处开始拖拽
+      const isValidHandle = e.target === logoContainer || e.target.closest('.quick-action-logo') || e.target === container;
+      if (!isValidHandle) return;
+
+      const rect = wrapper.getBoundingClientRect();
+      initialLeft = rect.left;
+      initialTop = rect.top;
+
+      startX = e.clientX;
+      startY = e.clientY;
+      hasExceededThreshold = false;
+      isDragging = true;
+      activePointerId = e.pointerId ?? null;
+
+      // 更流畅的视觉与手势反馈
+      container.classList.add('dragging');
+      logoContainer.style.cursor = 'grabbing';
+      wrapper.style.transition = 'none';
+      try { e.target.setPointerCapture && e.target.setPointerCapture(activePointerId); } catch(_) {}
+
+      if ('vibrate' in navigator) { navigator.vibrate(8); }
+
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    const onPointerMove = (e) => {
+      if (!isDragging) return;
+      if (activePointerId !== null && e.pointerId !== activePointerId) return;
+
+      const wrapper = container.parentElement;
+      if (!wrapper) return;
+
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+
+      if (!hasExceededThreshold && (Math.abs(dx) > DRAG_THRESHOLD_PX || Math.abs(dy) > DRAG_THRESHOLD_PX)) {
+        hasExceededThreshold = true;
+      }
+      if (!hasExceededThreshold) return;
+
+      const nextLeft = initialLeft + dx;
+      const nextTop = initialTop + dy;
+
+      const maxLeft = window.innerWidth - wrapper.offsetWidth;
+      const maxTop = window.innerHeight - wrapper.offsetHeight;
+
+      wrapper.style.left = `${clamp(nextLeft, 0, Math.max(0, maxLeft))}px`;
+      wrapper.style.top = `${clamp(nextTop, 0, Math.max(0, maxTop))}px`;
+
+      e.preventDefault();
+    };
+
+    const onPointerUp = (e) => {
+      if (!isDragging) return;
+      if (activePointerId !== null && e.pointerId !== activePointerId) return;
+
+      isDragging = false;
+      activePointerId = null;
+
+      const wrapper = container.parentElement;
+      if (wrapper) {
+        wrapper.style.transition = 'opacity 0.15s ease';
+      }
+      container.classList.remove('dragging');
+      logoContainer.style.cursor = 'grab';
+      try { e.target.releasePointerCapture && e.target.releasePointerCapture(e.pointerId); } catch(_) {}
+
+      if ('vibrate' in navigator) { navigator.vibrate(5); }
+    };
+
+    // 绑定 Pointer 事件到容器与 logo，提升可拖拽命中率
+    container.addEventListener('pointerdown', onPointerDown, true);
+    logoContainer.addEventListener('pointerdown', onPointerDown, true);
+    document.addEventListener('pointermove', onPointerMove, true);
+    document.addEventListener('pointerup', onPointerUp, true);
+
+    // 保存清理函数
+    container.cleanupDrag = () => {
+      container.removeEventListener('pointerdown', onPointerDown, true);
+      logoContainer.removeEventListener('pointerdown', onPointerDown, true);
+      document.removeEventListener('pointermove', onPointerMove, true);
+      document.removeEventListener('pointerup', onPointerUp, true);
+    };
+  };
 
   return container;
 }

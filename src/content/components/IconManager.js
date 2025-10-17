@@ -172,7 +172,9 @@ export function addIconsToElement(element) {
         requestAnimationFrame(() => {
           const questionTop = userQuestion.offsetTop;
           aiResponseContainer.scrollTop = Math.max(0, questionTop - 20);
-          aiResponseContainer.perfectScrollbar.update();
+          if (aiResponseContainer.perfectScrollbar && aiResponseContainer.perfectScrollbar.update) {
+            aiResponseContainer.perfectScrollbar.update();
+          }
         });
 
         // 完成与错误回调：移除生成中状态
@@ -304,19 +306,14 @@ export function updateLastAnswerIcons() {
         // 显示生成中动画
         lastAnswer.classList.add('generating');
       const abortController = new AbortController();
-      let ps = aiResponseContainer.ps;
-      if (!ps) {
-        ps = new PerfectScrollbar(aiResponseContainer, {
-          suppressScrollX: true,
-          wheelPropagation: false,
-        });
-        aiResponseContainer.ps = ps;
-      }
+      const ps = aiResponseContainer.perfectScrollbar;
 
       requestAnimationFrame(() => {
         const questionTop = userQuestion.offsetTop;
         aiResponseContainer.scrollTop = Math.max(0, questionTop - 20);
-        ps.update();
+        if (ps && ps.update) {
+          ps.update();
+        }
       });
 
         // 完成与错误回调：移除生成中状态

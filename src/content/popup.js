@@ -434,7 +434,7 @@ function updateInputContainer(popup) {
 
 function sendQuestionToAI(question) {
   const aiResponseElement = document.getElementById("ai-response");
-  const aiResponseContainer = document.getElementById("ai-response-container");
+  const aiResponseContainer = window.aiResponseContainer;
 
   const userQuestionDiv = document.createElement('div');
   userQuestionDiv.className = 'user-question';

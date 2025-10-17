@@ -136,15 +136,37 @@ const setupTextarea = (textarea) => {
       // 添加轻微的视觉反馈
       element.style.backgroundColor = 'var(--input-bg)';
     } else {
-      // 多行文本时切换到正常的 line-height
-      element.style.lineHeight = '1.5';
-      element.style.padding = '12px 52px 12px 16px';
+      // 检查是否真正需要多行
+      const lines = element.value.split('\n');
+      const hasMultipleLines = lines.length > 1 || (lines.length === 1 && lines[0].length > 30);
+      
+      if (hasMultipleLines) {
+        // 多行文本时切换到正常的 line-height 和 padding
+        element.style.lineHeight = '1.3';
+        element.style.padding = '8px 52px 8px 16px'; // 减小padding
 
-      // 清除之前设置的高度以获得准确的scrollHeight
-      element.style.height = '0px';
-      // 然后设置为scrollHeight，不低于最小值也不超过最大值
-      const newHeight = Math.min(Math.max(48, element.scrollHeight), 120);
-      element.style.height = `${newHeight}px`;
+        // 清除之前设置的高度以获得准确的scrollHeight
+        element.style.height = '0px';
+        // 然后设置为scrollHeight，降低最小高度
+        const newHeight = Math.min(Math.max(40, element.scrollHeight), 100); // 降低最小和最大高度
+        element.style.height = `${newHeight}px`;
+      } else {
+        // 单行文本保持单行样式，但允许高度稍微扩展以容纳长文本
+        element.style.lineHeight = '48px';
+        element.style.padding = '0 52px 0 16px';
+        
+        // 对于单行长文本，计算是否需要稍微增加高度
+        const textWidth = element.value.length * 8; // 估算字符宽度
+        const availableWidth = element.offsetWidth - 68; // 减去padding
+        
+        if (textWidth > availableWidth) {
+          // 文本太长，需要稍微增加高度
+          element.style.height = '48px';
+        } else {
+          // 正常单行高度
+          element.style.height = '48px';
+        }
+      }
 
       // 确保父容器也调整高度
       const inputContainer = element.closest('.input-container');
@@ -567,6 +589,16 @@ const sendQuestion = (textarea, aiResponseContainer) => {
       feedbackEl.className = 'send-feedback';
       feedbackEl.textContent = question;
 
+      // 计算合适的padding，基于内容长度
+      const textLength = question.length;
+      let paddingSize = '8px 12px'; // 默认较小padding
+      if (textLength > 50) {
+        paddingSize = '10px 14px'; // 中等长度文本
+      }
+      if (textLength > 100) {
+        paddingSize = '12px 16px'; // 长文本
+      }
+
       // 设置初始样式（纯文本，无背景）
       feedbackEl.style.position = 'absolute';
       feedbackEl.style.right = '20px'; // 从右侧开始
@@ -575,10 +607,10 @@ const sendQuestion = (textarea, aiResponseContainer) => {
       feedbackEl.style.maxWidth = '70%';
       feedbackEl.style.backgroundColor = 'var(--user-question-bg)'; // 添加与user-question相同的背景色
       feedbackEl.style.color = 'white'; // 修改文字颜色为白色，与user-question一致
-      feedbackEl.style.padding = '12px 16px';
+      feedbackEl.style.padding = paddingSize; // 动态调整padding
       feedbackEl.style.fontFamily = 'var(--font-family)';
       feedbackEl.style.fontSize = 'var(--font-size-base)';
-      feedbackEl.style.lineHeight = 'var(--line-height-base)';
+      feedbackEl.style.lineHeight = '1.47'; // 与user-question保持一致
       feedbackEl.style.opacity = '1';
       feedbackEl.style.pointerEvents = 'none';
       feedbackEl.style.zIndex = '3';
