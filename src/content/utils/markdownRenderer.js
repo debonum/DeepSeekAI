@@ -7,6 +7,19 @@ import xml from "highlight.js/lib/languages/xml";
 import bash from "highlight.js/lib/languages/bash";
 import python from "highlight.js/lib/languages/python";
 import markdown from "highlight.js/lib/languages/markdown";
+import java from "highlight.js/lib/languages/java";
+import cpp from "highlight.js/lib/languages/cpp";
+import c from "highlight.js/lib/languages/c";
+import csharp from "highlight.js/lib/languages/csharp";
+import go from "highlight.js/lib/languages/go";
+import php from "highlight.js/lib/languages/php";
+import ruby from "highlight.js/lib/languages/ruby";
+import swift from "highlight.js/lib/languages/swift";
+import kotlin from "highlight.js/lib/languages/kotlin";
+import rust from "highlight.js/lib/languages/rust";
+import yaml from "highlight.js/lib/languages/yaml";
+import sql from "highlight.js/lib/languages/sql";
+import css from "highlight.js/lib/languages/css";
 
 // 仅注册常用语言，减少体积
 hljs.registerLanguage('javascript', javascript);
@@ -17,6 +30,20 @@ hljs.registerLanguage('bash', bash);
 hljs.registerLanguage('python', python);
 hljs.registerLanguage('md', markdown);
 hljs.registerLanguage('markdown', markdown);
+hljs.registerLanguage('java', java);
+hljs.registerLanguage('cpp', cpp);
+hljs.registerLanguage('c', c);
+hljs.registerLanguage('csharp', csharp);
+hljs.registerLanguage('go', go);
+hljs.registerLanguage('php', php);
+hljs.registerLanguage('ruby', ruby);
+hljs.registerLanguage('swift', swift);
+hljs.registerLanguage('kotlin', kotlin);
+hljs.registerLanguage('rust', rust);
+hljs.registerLanguage('yaml', yaml);
+hljs.registerLanguage('yml', yaml);
+hljs.registerLanguage('sql', sql);
+hljs.registerLanguage('css', css);
 // 延迟加载 mathjax，仅在检测到数学公式时再引入插件
 
 // 使用 WeakMap 来缓存已处理过的数学公式
