@@ -9,6 +9,7 @@ import { isDarkMode, watchThemeChanges, applyTheme } from './utils/themeManager'
 import { STYLE_CONSTANTS } from './utils/constants';
 import { popupStateManager } from './utils/popupStateManager';
 import { initCopyButtonsVisibility } from "./utils/markdownRenderer";
+import { focusInputIfSafe } from './utils/focusManager';
 
 // 将aiResponseContainer移动到window对象上
 window.aiResponseContainer = null;
@@ -82,7 +83,7 @@ const getPopupInitialStyle = (rect) => ({
   ...adjustPopupPosition(rect)
 });
 
-export function createPopup(selectedText, rect, hideQuestion = false, removeCallback, messages = null, quickActionPrompt = null) {
+export function createPopup(selectedText, rect, hideQuestion = false, removeCallback, messages = null, quickActionPrompt = null, minimizeCallback = null) {
   // 确保移除快捷按钮
   if (window.currentIcon && document.body.contains(window.currentIcon)) {
     document.body.removeChild(window.currentIcon);
@@ -241,6 +242,9 @@ export function createPopup(selectedText, rect, hideQuestion = false, removeCall
         initialAnswerElement.style.backgroundColor = originalColor;
       }, 1000);
     }
+
+    // 生成完成后按条件聚焦输入框
+    requestAnimationFrame(() => focusInputIfSafe(popup));
   };
 
   // 增加错误处理回调
@@ -273,7 +277,7 @@ export function createPopup(selectedText, rect, hideQuestion = false, removeCall
     onGenerationError     // 新增错误回调
   );
 
-  const dragHandle = createDragHandle(enhancedRemoveCallback);
+  const dragHandle = createDragHandle(enhancedRemoveCallback, minimizeCallback);
   popup.appendChild(dragHandle);
 
   setupInteractions(popup, dragHandle, window.aiResponseContainer);
@@ -290,6 +294,10 @@ export function createPopup(selectedText, rect, hideQuestion = false, removeCall
       const textarea = popup.querySelector('.expandable-textarea');
       if (textarea) {
         textarea.style.animation = 'input-attention 0.5s ease-out';
+        // 自动聚焦到输入框
+        setTimeout(() => {
+          textarea.focus();
+        }, 100);
       }
       // 添加轻微的弹跳效果，提升确定感
       popup.classList.add('popup-ready');
@@ -475,6 +483,8 @@ function sendQuestionToAI(question) {
         answerElement.style.backgroundColor = originalColor;
       }, 1000);
     }
+
+    requestAnimationFrame(() => focusInputIfSafe(document.getElementById('ai-popup')));
   };
 
   const onGenerationError = () => {

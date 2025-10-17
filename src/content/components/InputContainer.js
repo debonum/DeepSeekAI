@@ -2,6 +2,7 @@ import { getIsGenerating } from '../services/apiService';
 import { getAIResponse } from '../services/apiService';
 import { addIconsToElement } from './IconManager';
 import { isDarkMode } from '../utils/themeManager';
+import { focusInputIfSafe } from '../utils/focusManager';
 
 export const createQuestionInputContainer = (aiResponseContainer) => {
   const container = document.createElement("div");
@@ -139,7 +140,7 @@ const setupTextarea = (textarea) => {
       // 检查是否真正需要多行
       const lines = element.value.split('\n');
       const hasMultipleLines = lines.length > 1 || (lines.length === 1 && lines[0].length > 30);
-      
+
       if (hasMultipleLines) {
         // 多行文本时切换到正常的 line-height 和 padding
         element.style.lineHeight = '1.3';
@@ -154,11 +155,11 @@ const setupTextarea = (textarea) => {
         // 单行文本保持单行样式，但允许高度稍微扩展以容纳长文本
         element.style.lineHeight = '48px';
         element.style.padding = '0 52px 0 16px';
-        
+
         // 对于单行长文本，计算是否需要稍微增加高度
         const textWidth = element.value.length * 8; // 估算字符宽度
         const availableWidth = element.offsetWidth - 68; // 减去padding
-        
+
         if (textWidth > availableWidth) {
           // 文本太长，需要稍微增加高度
           element.style.height = '48px';
@@ -536,7 +537,7 @@ const setupUpdateButtonState = (container) => {
       // 禁用输入框
       textarea.style.cursor = "not-allowed";
       textarea.setAttribute("disabled", "disabled");
-      textarea.setAttribute("placeholder", "AI 正在回复...");
+      textarea.setAttribute("placeholder", "AI is answering...");
       textarea.style.opacity = '0.8';
     } else {
       // 切换回正常状态
@@ -703,6 +704,7 @@ const sendQuestion = (textarea, aiResponseContainer) => {
             answerElement.style.backgroundColor = originalColor;
           }, 1000);
         }
+        requestAnimationFrame(() => focusInputIfSafe(document.getElementById('ai-popup')));
       };
 
       const onGenerationError = () => {

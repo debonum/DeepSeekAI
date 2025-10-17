@@ -1,6 +1,7 @@
 import { getAIResponse } from '../services/apiService';
 import PerfectScrollbar from "perfect-scrollbar";
 import { setAllowAutoScroll } from "../utils/scrollManager";
+import { focusInputIfSafe } from '../utils/focusManager';
 
 export function createIcon(x, y) {
   const icon = document.createElement("img");
@@ -186,6 +187,7 @@ export function addIconsToElement(element) {
             element.style.backgroundColor = 'var(--success-color-alpha, rgba(52, 199, 89, 0.1))';
             setTimeout(() => { element.style.backgroundColor = originalColor; }, 1000);
           }
+          requestAnimationFrame(() => focusInputIfSafe(document.getElementById('ai-popup')));
         };
 
         const onGenerationError = () => {
@@ -325,6 +327,7 @@ export function updateLastAnswerIcons() {
             lastAnswer.style.backgroundColor = 'var(--success-color-alpha, rgba(52, 199, 89, 0.1))';
             setTimeout(() => { lastAnswer.style.backgroundColor = originalColor; }, 1000);
           }
+          requestAnimationFrame(() => focusInputIfSafe(document.getElementById('ai-popup')));
         };
 
         const onGenerationError = () => {
@@ -355,3 +358,166 @@ export function updateLastAnswerIcons() {
 
 window.updateLastAnswerIcons = updateLastAnswerIcons;
 window.addIconsToElement = addIconsToElement;
+
+// 创建最小化小图标
+export function createMinimizeIcon(restoreCallback, initialPosition) {
+  const icon = document.createElement('div');
+  icon.id = 'ai-minimize-icon';
+  icon.className = 'theme-adaptive minimize-icon-enter';
+
+  // 设置基础样式
+  Object.assign(icon.style, {
+    position: 'fixed',
+    width: '48px',
+    height: '48px',
+    borderRadius: '50%',
+    boxShadow: '0 2px 12px rgba(0,0,0,0.15), 0 4px 24px rgba(0,0,0,0.1)',
+    cursor: 'pointer',
+    zIndex: '2147483647',
+    transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease',
+    background: 'var(--bg-primary)',
+    backdropFilter: 'blur(10px)',
+    border: '2px solid var(--border-color)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    bottom: `${initialPosition.bottom}px`,
+    right: `${initialPosition.right}px`,
+    userSelect: 'none',
+    WebkitUserSelect: 'none'
+  });
+
+  // 添加图标图片
+  const img = document.createElement('img');
+  img.src = chrome.runtime.getURL('icons/icon48.png');
+  Object.assign(img.style, {
+    width: '32px',
+    height: '32px',
+    borderRadius: '50%',
+    pointerEvents: 'none',
+    userSelect: 'none',
+    WebkitUserSelect: 'none',
+    WebkitUserDrag: 'none',
+    draggable: 'false'
+  });
+  img.setAttribute('draggable', 'false');
+  icon.appendChild(img);
+
+  // 添加悬停效果
+  icon.addEventListener('mouseenter', () => {
+    icon.style.transform = 'scale(1.15)';
+    icon.style.boxShadow = '0 4px 16px rgba(0,0,0,0.2), 0 8px 32px rgba(0,0,0,0.15)';
+  });
+
+  icon.addEventListener('mouseleave', () => {
+    icon.style.transform = 'scale(1)';
+    icon.style.boxShadow = '0 2px 12px rgba(0,0,0,0.15), 0 4px 24px rgba(0,0,0,0.1)';
+  });
+
+  // 实现拖动功能
+  let isDragging = false;
+  let hasMoved = false; // 跟踪是否真的移动了
+  let startX, startY;
+  let initialBottom, initialRight;
+  const DRAG_THRESHOLD = 5; // 拖拽检测阈值（像素）
+
+  const handleMouseDown = (e) => {
+    e.preventDefault();
+    isDragging = true;
+    hasMoved = false; // 重置移动标志
+    startX = e.clientX;
+    startY = e.clientY;
+
+    // 获取当前位置
+    const rect = icon.getBoundingClientRect();
+    initialBottom = window.innerHeight - rect.bottom;
+    initialRight = window.innerWidth - rect.right;
+
+    icon.style.cursor = 'grabbing';
+    icon.style.transition = 'none';
+
+    // 触觉反馈
+    if ('vibrate' in navigator) {
+      navigator.vibrate(8);
+    }
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+    e.preventDefault();
+
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+
+    // 检查是否移动超过阈值
+    const moveDistance = Math.sqrt(dx * dx + dy * dy);
+    if (moveDistance > DRAG_THRESHOLD) {
+      hasMoved = true;
+    }
+
+    // 计算新位置（相对于视口）
+    const newRight = initialRight - dx;
+    const newBottom = initialBottom - dy;
+
+    // 限制在视口内
+    const maxRight = window.innerWidth - 48;
+    const maxBottom = window.innerHeight - 48;
+
+    const constrainedRight = Math.max(0, Math.min(newRight, maxRight));
+    const constrainedBottom = Math.max(0, Math.min(newBottom, maxBottom));
+
+    icon.style.right = `${constrainedRight}px`;
+    icon.style.bottom = `${constrainedBottom}px`;
+  };
+
+  const handleMouseUp = async () => {
+    if (!isDragging) return;
+
+    isDragging = false;
+    icon.style.cursor = 'pointer';
+    icon.style.transition = 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease';
+
+    // 触觉反馈
+    if ('vibrate' in navigator) {
+      navigator.vibrate(5);
+    }
+
+    // 只在真正移动时保存位置
+    if (hasMoved) {
+      const currentBottom = parseInt(icon.style.bottom);
+      const currentRight = parseInt(icon.style.right);
+
+      // 使用 popupStateManager 保存位置
+      const { popupStateManager } = await import('../utils/popupStateManager');
+      await popupStateManager.saveIconPosition(currentBottom, currentRight);
+    }
+  };
+
+  // 点击恢复窗口（只在未拖拽时触发）
+  icon.addEventListener('click', (e) => {
+    e.stopPropagation();
+
+    // 如果刚刚拖拽过，不触发点击事件
+    if (hasMoved) {
+      hasMoved = false; // 重置标志
+      return;
+    }
+
+    if (restoreCallback) {
+      restoreCallback();
+    }
+  });
+
+  icon.addEventListener('mousedown', handleMouseDown);
+  document.addEventListener('mousemove', handleMouseMove);
+  document.addEventListener('mouseup', handleMouseUp);
+
+  // 清理函数
+  icon.cleanup = () => {
+    icon.removeEventListener('mousedown', handleMouseDown);
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
+  };
+
+  return icon;
+}
