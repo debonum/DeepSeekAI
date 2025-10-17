@@ -329,9 +329,21 @@
           <div class="usage-item">
             <h3 id="shortcut-usage">Shortcut Usage</h3>
             <p id="shortcut-usage-desc">
-              You can use the custom shortcut key to toggle the chat window open/close
-              regardless of whether text is selected.
+              The extension provides three customizable shortcuts that work regardless of whether text is selected, and can be modified in your browser's extension settings:
             </p>
+            <div style="margin-top: 20px;">
+              <p style="font-weight: 600; margin-bottom: 12px;" id="shortcut-key-1">Activate Extension</p>
+              <p style="margin-left: 16px; color: var(--text-secondary);" id="shortcut-key-1-desc">Quickly activate the DeepSeek AI extension</p>
+
+              <p style="font-weight: 600; margin-bottom: 12px; margin-top: 16px;" id="shortcut-key-2">Show/Hide Chat Window</p>
+              <p style="margin-left: 16px; color: var(--text-secondary);" id="shortcut-key-2-desc">Toggle the chat window visibility (preserves current session, works regardless of text selection)</p>
+
+              <p style="font-weight: 600; margin-bottom: 12px; margin-top: 16px;" id="shortcut-key-3">Open/Close Chat Window</p>
+              <p style="margin-left: 16px; color: var(--text-secondary);" id="shortcut-key-3-desc">Open or close the chat window (clears session history when closed, works regardless of text selection)</p>
+            </div>
+          </div>
+          <div class="tip">
+            <p>💡 <span id="shortcut-custom-tip-prefix">Tip: Customize these shortcuts at</span> <a href="#" id="shortcuts-settings-link" style="color: var(--accent-color); text-decoration: none; font-weight: 500;">chrome://extensions/shortcuts</a><span id="shortcut-custom-tip-suffix"></span></p>
           </div>
         </div>
       </section>

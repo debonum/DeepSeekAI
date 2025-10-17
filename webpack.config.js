@@ -42,7 +42,7 @@ module.exports = {
         { from: "./src/content/styles/style.css", to: "style.css" },
         { from: "./src/popup", to: "popup" },
         { from: "./src/background.js", to: "background.js" },
-        { from: "./src/Instructions/Instructions.html", to: "Instructions/Instructions.html" },
+        { from: "./src/Instructions/instructions.html", to: "Instructions/Instructions.html" },
         { from: "./src/Instructions/instructions.js", to: "Instructions/instructions.js" }
       ],
     }),

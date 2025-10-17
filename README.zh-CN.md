@@ -48,6 +48,7 @@ DeepSeekAI 是一款非官方的浏览器扩展插件，基于 [DeepSeek](https:
 - **快捷键支持**：支持自定义快捷键直接弹出会话窗口
 - **余额查询**：支持实时查询 API 余额
 - **使用说明**：内置详细的使用教程
+  - 📖 [**查看完整使用方式**](src/Instructions/instructions.html) - 点击查看详细说明文档
 
 ### 🎨 内容展示
 - **Markdown 渲染**：支持丰富的 Markdown 格式，包括代码块、列表和数学公式（MathJax）
@@ -86,7 +87,8 @@ pnpm run build
    - 选择网页文本后点击弹出的图标
    - 选择文本后右键选择 "DeepSeek AI"
    - 使用自定义快捷键打开对话窗口/关闭会话窗口
-   
+
+> 💡 **需要帮助？** 查看我们的 [**完整使用方式**](src/Instructions/instructions.html) 了解所有功能的详细说明，包括快捷键自定义等！
 
 ## 🛠️ 技术栈
 

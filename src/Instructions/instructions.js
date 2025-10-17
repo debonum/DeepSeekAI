@@ -1,6 +1,6 @@
 const translations = {
   zh: {
-    title: "DeepSeek AI 使用说明",
+    title: "DeepSeek AI 使用方式",
     subtitle: "让 AI 助手为您的网页浏览体验增添智慧",
     quickStart: "快速开始",
     chromeInstall: "Chrome 商店安装",
@@ -29,7 +29,15 @@ const translations = {
     quickButtonDesc: "在扩展设置中开启快捷按钮后，选中网页文本时会自动显示一个工具栏，可以根据自己的需求单击对应按钮。",
     shortcutUsage: "快捷键使用",
     shortcutUsageDesc:
-      "无论是否选中文本，都可以直接使用同一快捷键打开/关闭对话窗口。",
+      "扩展提供了三种可自定义的快捷键，无论是否选中文本都可使用，可在浏览器的扩展设置中修改：",
+    shortcutKey1: "激活扩展程序",
+    shortcutKey1Desc: "快速激活 DeepSeek AI 扩展",
+    shortcutKey2: "显示/隐藏对话窗口",
+    shortcutKey2Desc: "切换对话窗口的显示状态（保留当前会话内容，无论是否选中文本都可使用）",
+    shortcutKey3: "打开/关闭对话窗口",
+    shortcutKey3Desc: "打开或关闭对话窗口（关闭时会清除会话记录，无论是否选中文本都可使用）",
+    shortcutCustomTipPrefix: "提示：可在",
+    shortcutCustomTipSuffix: "页面自定义这些快捷键",
     features: "功能特点",
     smartChat: "智能对话",
     smartChat1: "• 支持多轮对话，记住上下文",
@@ -59,7 +67,7 @@ const translations = {
       "重视您的隐私。DeepSeek AI 扩展只会在必要时发送您选中的文本到 API，不会收集或存储任何其他个人信息。您的 API 密钥仅保存在本地浏览器中。",
   },
   en: {
-    title: "DeepSeek AI User Guide",
+    title: "DeepSeek AI Usage Guide",
     subtitle: "Enhance your web browsing experience with AI assistance",
     quickStart: "Quick Start",
     chromeInstall: "Install from Chrome Web Store",
@@ -88,7 +96,15 @@ const translations = {
     quickButtonDesc: "After enabling the quick button in the extension settings, a toolbar will automatically appear when you select webpage text, allowing you to click on the corresponding button according to your needs.",
     shortcutUsage: "Shortcut Usage",
     shortcutUsageDesc:
-      "Whether or not text is selected, you can directly use the same shortcut key to open/close the chat window.",
+      "The extension provides three customizable shortcuts that work regardless of whether text is selected, and can be modified in your browser's extension settings:",
+    shortcutKey1: "Activate Extension",
+    shortcutKey1Desc: "Quickly activate the DeepSeek AI extension",
+    shortcutKey2: "Show/Hide Chat Window",
+    shortcutKey2Desc: "Toggle the chat window visibility (preserves current session, works regardless of text selection)",
+    shortcutKey3: "Open/Close Chat Window",
+    shortcutKey3Desc: "Open or close the chat window (clears session history when closed, works regardless of text selection)",
+    shortcutCustomTipPrefix: "Tip: Customize these shortcuts at",
+    shortcutCustomTipSuffix: "",
     features: "Features",
     smartChat: "Smart Chat",
     smartChat1: "• Supports multi-turn conversations with context memory",
@@ -173,6 +189,32 @@ const updateContent = () => {
   document.getElementById("shortcut-usage-desc").textContent =
     langData.shortcutUsageDesc;
 
+  // 更新快捷键说明
+  if (document.getElementById("shortcut-key-1")) {
+    document.getElementById("shortcut-key-1").textContent = langData.shortcutKey1;
+  }
+  if (document.getElementById("shortcut-key-1-desc")) {
+    document.getElementById("shortcut-key-1-desc").textContent = langData.shortcutKey1Desc;
+  }
+  if (document.getElementById("shortcut-key-2")) {
+    document.getElementById("shortcut-key-2").textContent = langData.shortcutKey2;
+  }
+  if (document.getElementById("shortcut-key-2-desc")) {
+    document.getElementById("shortcut-key-2-desc").textContent = langData.shortcutKey2Desc;
+  }
+  if (document.getElementById("shortcut-key-3")) {
+    document.getElementById("shortcut-key-3").textContent = langData.shortcutKey3;
+  }
+  if (document.getElementById("shortcut-key-3-desc")) {
+    document.getElementById("shortcut-key-3-desc").textContent = langData.shortcutKey3Desc;
+  }
+  if (document.getElementById("shortcut-custom-tip-prefix")) {
+    document.getElementById("shortcut-custom-tip-prefix").textContent = langData.shortcutCustomTipPrefix;
+  }
+  if (document.getElementById("shortcut-custom-tip-suffix")) {
+    document.getElementById("shortcut-custom-tip-suffix").textContent = langData.shortcutCustomTipSuffix || "";
+  }
+
   document.getElementById("features").textContent = langData.features;
   document.getElementById("smart-chat").textContent = langData.smartChat;
   document.getElementById("smart-chat-1").textContent = langData.smartChat1;
@@ -234,3 +276,12 @@ document
     chrome.runtime.openOptionsPage();
     chrome.tabs.create({ url: "chrome://extensions/shortcuts" });
   });
+
+// 快捷键设置链接点击事件
+const shortcutsSettingsLink = document.getElementById("shortcuts-settings-link");
+if (shortcutsSettingsLink) {
+  shortcutsSettingsLink.addEventListener("click", function (e) {
+    e.preventDefault();
+    chrome.tabs.create({ url: "chrome://extensions/shortcuts" });
+  });
+}

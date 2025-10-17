@@ -48,6 +48,7 @@ DeepSeekAI is an unofficial browser extension powered by the [DeepSeek](https://
 - **Keyboard Shortcuts**: Support custom shortcuts to directly pop up the chat window
 - **Balance Query**: Real-time API balance checking
 - **User Guide**: Built-in detailed usage instructions
+  - 📖 [**View Complete Usage Guide**](src/Instructions/instructions.html) - Click to view comprehensive instructions
 
 ### 🎨 Content Display
 - **Markdown Rendering**: Support for rich Markdown formatting, including code blocks, lists, and mathematical formulas (MathJax)
@@ -84,6 +85,8 @@ pnpm run build
    - Click the popup icon after selecting text
    - Right-click and select "DeepSeek AI" after text selection
    - Use custom shortcuts to open dialog window/close session window
+
+> 💡 **Need Help?** Check out our [**Complete Usage Guide**](src/Instructions/instructions.html) for detailed instructions on all features including keyboard shortcuts customization!
 
 ## 🛠️ Tech Stack
 
