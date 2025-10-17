@@ -1,4 +1,3 @@
-import PerfectScrollbar from "perfect-scrollbar";
 import interact from "interactjs";
 import { getAIResponse, getIsGenerating } from "./services/apiService";
 import { createDragHandle, initDraggable, resizeMoveListener } from "./components/DragHandle";

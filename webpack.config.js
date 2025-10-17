@@ -1,6 +1,7 @@
 const path = require("path");
 const CopyPlugin = require("copy-webpack-plugin");
 const TerserPlugin = require("terser-webpack-plugin");
+const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 
 module.exports = {
   entry: "./src/content/content.js",
@@ -51,6 +52,14 @@ module.exports = {
     minimizer: [
       new TerserPlugin({
         terserOptions: {
+          compress: {
+            drop_console: true,
+            drop_debugger: true,
+            passes: 2,
+            pure_getters: true,
+            module: true
+          },
+          mangle: true,
           format: {
             comments: false,
             ascii_only: true
@@ -58,6 +67,7 @@ module.exports = {
         },
         extractComments: false,
       }),
+      new CssMinimizerPlugin(),
     ],
   },
   resolve: {

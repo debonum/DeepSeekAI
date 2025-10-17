@@ -1,5 +1,22 @@
 import MarkdownIt from "markdown-it";
-import hljs from "highlight.js";
+import hljs from "highlight.js/lib/core";
+import javascript from "highlight.js/lib/languages/javascript";
+import typescript from "highlight.js/lib/languages/typescript";
+import json from "highlight.js/lib/languages/json";
+import xml from "highlight.js/lib/languages/xml";
+import bash from "highlight.js/lib/languages/bash";
+import python from "highlight.js/lib/languages/python";
+import markdown from "highlight.js/lib/languages/markdown";
+
+// 仅注册常用语言，减少体积
+hljs.registerLanguage('javascript', javascript);
+hljs.registerLanguage('typescript', typescript);
+hljs.registerLanguage('json', json);
+hljs.registerLanguage('xml', xml);
+hljs.registerLanguage('bash', bash);
+hljs.registerLanguage('python', python);
+hljs.registerLanguage('md', markdown);
+hljs.registerLanguage('markdown', markdown);
 import mathjax3 from "markdown-it-mathjax3";
 
 // 使用 WeakMap 来缓存已处理过的数学公式

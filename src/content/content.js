@@ -2,7 +2,6 @@ import './styles/style.css';
 import { createSvgIcon, createIcon } from "./components/IconManager";
 import { createQuickActionButtons } from "./components/QuickActionButtons";
 import { createPopup } from "./popup";
-import "perfect-scrollbar/css/perfect-scrollbar.css";
 import { popupStateManager } from './utils/popupStateManager';
 
 // 选区保持管理器
