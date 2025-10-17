@@ -244,13 +244,15 @@ const setupTextarea = (textarea) => {
           // 回车发送时提供明确的视觉反馈
           const sendIcon = event.target.parentElement.querySelector('.send-icon');
           if (sendIcon) {
-            sendIcon.style.transform = 'translateY(-50%) scale(0.9)';
+            // 发送按钮动画：缩小 → 弹回
+            sendIcon.style.transition = 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)';
+            sendIcon.style.transform = 'translateY(-50%) scale(0.85)';
             sendIcon.style.opacity = '1';
 
-            // 添加200ms的延迟，让用户感知到按钮被点击
             setTimeout(() => {
+              sendIcon.style.transform = 'translateY(-50%) scale(1)';
               sendQuestion(textarea, aiResponseContainer);
-            }, 50);
+            }, 120);
             return;
           }
 
@@ -319,37 +321,6 @@ const setupTextarea = (textarea) => {
         40%, 60% { transform: translate3d(2px, 0, 0); }
       }
 
-      @keyframes sendFeedbackText {
-        0% {
-          opacity: 1;
-          transform: translateX(-50%) translateY(0);
-        }
-        30% {
-          opacity: 0.9;
-          transform: translateX(-50%) translateY(-40px);
-        }
-        100% {
-          opacity: 0;
-          transform: translateX(-50%) translateY(-120px);
-        }
-      }
-
-      @keyframes sendFeedbackRight {
-        0% {
-          opacity: 1;
-          transform: translateY(0) translateX(0);
-        }
-        30% {
-          opacity: 0.9;
-          transform: translateY(-30px) translateX(30px);
-        }
-        100% {
-          opacity: 0;
-          transform: translateY(-100px) translateX(60px);
-          scale: 0.8;
-        }
-      }
-
       @keyframes pulseAnimation {
         0% {
           transform: translateY(-50%) scale(1);
@@ -406,16 +377,17 @@ const setupSendButton = (sendIcon, textarea, aiResponseContainer) => {
     }
   });
 
-  // 原有的点击处理
+  // 点击发送按钮处理
   sendIcon.addEventListener("click", () => {
     if (!getIsGenerating()) {
-      // 添加点击反馈
-      sendIcon.style.transform = 'translateY(-50%) scale(0.9)';
-      setTimeout(() => {
-        sendIcon.style.transform = 'translateY(-50%)';
-      }, 150);
+      // 点击反馈动画：缩小 → 弹回
+      sendIcon.style.transition = 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)';
+      sendIcon.style.transform = 'translateY(-50%) scale(0.85)';
 
-      sendQuestion(textarea, aiResponseContainer);
+      setTimeout(() => {
+        sendIcon.style.transform = 'translateY(-50%) scale(1)';
+        sendQuestion(textarea, aiResponseContainer);
+      }, 120);
     }
   });
 };
@@ -582,73 +554,10 @@ const setupUpdateButtonState = (container) => {
 const sendQuestion = (textarea, aiResponseContainer) => {
   const question = textarea.value.trim();
   if (question) {
-    // 添加发送反馈动画，纯文本飞出到右侧
-    const inputContainerWrapper = textarea.closest('.input-container-wrapper');
-    if (inputContainerWrapper) {
-      // 创建一个纯文本反馈元素
-      const feedbackEl = document.createElement('div');
-      feedbackEl.className = 'send-feedback';
-      feedbackEl.textContent = question;
+    // 清空文本域并重置高度
+    textarea.style.transition = 'height 0.2s ease, background-color 0.2s ease';
 
-      // 计算合适的padding，基于内容长度
-      const textLength = question.length;
-      let paddingSize = '8px 12px'; // 默认较小padding
-      if (textLength > 50) {
-        paddingSize = '10px 14px'; // 中等长度文本
-      }
-      if (textLength > 100) {
-        paddingSize = '12px 16px'; // 长文本
-      }
-
-      // 设置初始样式（纯文本，无背景）
-      feedbackEl.style.position = 'absolute';
-      feedbackEl.style.right = '20px'; // 从右侧开始
-      feedbackEl.style.top = `${textarea.offsetTop}px`;
-      feedbackEl.style.width = 'auto';
-      feedbackEl.style.maxWidth = '70%';
-      feedbackEl.style.backgroundColor = 'var(--user-question-bg)'; // 添加与user-question相同的背景色
-      feedbackEl.style.color = 'white'; // 修改文字颜色为白色，与user-question一致
-      feedbackEl.style.padding = paddingSize; // 动态调整padding
-      feedbackEl.style.fontFamily = 'var(--font-family)';
-      feedbackEl.style.fontSize = 'var(--font-size-base)';
-      feedbackEl.style.lineHeight = '1.47'; // 与user-question保持一致
-      feedbackEl.style.opacity = '1';
-      feedbackEl.style.pointerEvents = 'none';
-      feedbackEl.style.zIndex = '3';
-      feedbackEl.style.overflow = 'hidden';
-      feedbackEl.style.whiteSpace = 'pre-wrap';
-      feedbackEl.style.textOverflow = 'ellipsis';
-      feedbackEl.style.textAlign = 'right'; // 右对齐
-      feedbackEl.style.boxSizing = 'border-box';
-      feedbackEl.style.borderRadius = '14px'; // 添加圆角，与user-question一致
-      feedbackEl.style.borderBottomRightRadius = '4px'; // 右下角特殊处理，与user-question一致
-
-      // 使用CSS动画而不是JavaScript计算的转换
-      feedbackEl.style.animation = 'none'; // 初始化时不应用动画
-
-      inputContainerWrapper.appendChild(feedbackEl);
-
-      // 延迟一帧，确保元素已渲染，然后应用动画
-      requestAnimationFrame(() => {
-        // 给予更多时间让用户感知到初始状态
-        setTimeout(() => {
-          // 使用CSS关键帧动画，简化代码并提供更平滑的效果
-          feedbackEl.style.animation = 'sendFeedbackRight 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards';
-        }, 50); // 短暂延迟，让用户能感知到初始状态
-
-        // 动画结束后移除元素
-        setTimeout(() => {
-          if (inputContainerWrapper.contains(feedbackEl)) {
-            inputContainerWrapper.removeChild(feedbackEl);
-          }
-        }, 1200); // 动画持续时间
-      });
-    }
-
-    // 清空文本域并重置高度时增加过渡效果，使用更缓和的曲线
-    textarea.style.transition = 'height 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease';
-
-    // 模拟短信发送效果，先创建用户问题再清空输入框
+    // 立即创建用户问题并添加到聊天区域
     const aiResponseElement = document.getElementById("ai-response");
 
     const userQuestionDiv = document.createElement('div');
@@ -658,45 +567,61 @@ const sendQuestion = (textarea, aiResponseContainer) => {
     userQuestionDiv.appendChild(userQuestionP);
     addIconsToElement(userQuestionDiv);
 
-    // 先添加样式但不立即添加到DOM
+    // 设置初始状态：偏下+缩小+透明
     userQuestionDiv.style.opacity = '0';
-    userQuestionDiv.style.transform = 'translateY(10px)';
-    userQuestionDiv.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+    userQuestionDiv.style.transform = 'translateY(20px) scale(0.92)';
+    userQuestionDiv.style.transition = 'opacity 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)';
 
-    // 在动画进行一段时间后添加实际问题到聊天区域，延长时间
-    setTimeout(() => {
-      aiResponseElement.appendChild(userQuestionDiv);
-      // 触发一次重排
-      void userQuestionDiv.offsetHeight;
-      // 显示动画
+    // 立即添加到 DOM
+    aiResponseElement.appendChild(userQuestionDiv);
+
+    // 触发重排后应用动画
+    requestAnimationFrame(() => {
       userQuestionDiv.style.opacity = '1';
-      userQuestionDiv.style.transform = 'translateY(0)';
-    }, 300); // 调整延迟时间，配合飞出动画
+      userQuestionDiv.style.transform = 'translateY(0) scale(1)';
+    });
 
-    // 延迟创建答案元素和触发API调用
+    // 立即滚动到底部
+    aiResponseContainer.scrollTop = aiResponseContainer.scrollHeight;
+
+    const ps = aiResponseContainer.perfectScrollbar;
+    if (ps) {
+      ps.update();
+    }
+
+    // 立即清空输入框
+    textarea.value = "";
+    textarea.style.height = "48px";
+    textarea.style.lineHeight = "48px";
+    textarea.style.padding = "0 52px 0 16px";
+
+    // 重置父容器高度
+    const containerElement = textarea.closest('.input-container');
+    if (containerElement) {
+      containerElement.style.height = 'auto';
+    }
+
+    textarea.classList.remove('has-content');
+
+    // 延迟创建答案元素，让用户看到消息发送动画
     setTimeout(() => {
       const answerElement = document.createElement("div");
       answerElement.className = "ai-answer";
       answerElement.textContent = "";
-      // 添加生成中类，显示进度动画
       answerElement.classList.add('generating');
       addIconsToElement(answerElement);
       aiResponseElement.appendChild(answerElement);
 
       aiResponseContainer.scrollTop = aiResponseContainer.scrollHeight;
-
-      const ps = aiResponseContainer.perfectScrollbar;
       if (ps) {
         ps.update();
       }
 
       const abortController = new AbortController();
 
-      // 添加回调函数处理生成完成和错误情况
       const onGenerationComplete = () => {
         if (answerElement) {
           answerElement.classList.remove('generating');
-          // 添加一个短暂的高亮效果，表示生成完成
           answerElement.style.transition = 'background-color 0.5s ease';
           const originalColor = getComputedStyle(answerElement).backgroundColor;
           answerElement.style.backgroundColor = 'var(--success-color-alpha, rgba(52, 199, 89, 0.1))';
@@ -728,25 +653,6 @@ const sendQuestion = (textarea, aiResponseContainer) => {
         onGenerationComplete,
         onGenerationError
       );
-    }, 600); // 调整延迟时间，让整个过程更自然
-
-    // 在消息飞出的同时清空输入框，但给予一些延迟
-    setTimeout(() => {
-      textarea.value = "";
-      textarea.style.height = "48px";
-      textarea.style.lineHeight = "48px";
-      textarea.style.padding = "0 52px 0 16px";
-
-      // 重置父容器高度
-      const containerElement = textarea.closest('.input-container');
-      if (containerElement) {
-        containerElement.style.height = 'auto';
-      }
-
-      textarea.classList.remove('has-content');
-
-      // 增加一个轻微的视觉反馈
-      textarea.style.backgroundColor = 'var(--input-bg)';
-    }, 80); // 稍微延迟清空，让用户感知到发送过程
+    }, 250); // 延迟 250ms，让消息发送动画更明显
   }
 };

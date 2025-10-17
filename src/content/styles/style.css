@@ -1815,9 +1815,10 @@
   --accent-color-alpha: rgba(10, 132, 255, 0.25);
 }
 
-/* 优化消息气泡出现动画，更平滑 */
+/* 消息气泡出现动画 - 带弹性效果 */
 .user-question, .ai-answer {
-  transition: opacity 0.5s ease, transform 0.5s ease;
+  transition: opacity 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+              transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* 按键反馈样式优化 */
