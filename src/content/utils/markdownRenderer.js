@@ -17,7 +17,7 @@ hljs.registerLanguage('bash', bash);
 hljs.registerLanguage('python', python);
 hljs.registerLanguage('md', markdown);
 hljs.registerLanguage('markdown', markdown);
-import mathjax3 from "markdown-it-mathjax3";
+// 延迟加载 mathjax，仅在检测到数学公式时再引入插件
 
 // 使用 WeakMap 来缓存已处理过的数学公式
 const mathCache = new WeakMap();
@@ -141,7 +141,12 @@ const mathjaxOptions = {
   }
 };
 
-md.use(mathjax3, mathjaxOptions);
+let mathPluginEnabled = false; // 仅在需要时启用一次
+
+function shouldRenderMath(text) {
+  // 检测 $$...$$ 或 $...$
+  return /\$\$[\s\S]+?\$\$/.test(text) || /(^|[^$])\$([^$]+)\$(?!\$)/.test(text);
+}
 
 // 优化渲染方法
 const originalRender = md.render.bind(md);
@@ -155,7 +160,18 @@ md.render = function(text) {
     }
 
     // 使用 Promise 和 requestAnimationFrame 优化渲染时机
-    const renderPromise = new Promise((resolve) => {
+    const renderPromise = new Promise(async (resolve) => {
+      // 如需数学渲染，按需加载插件（代码分割）
+      if (!mathPluginEnabled && shouldRenderMath(preprocessedText)) {
+        try {
+          const { default: mathjax3 } = await import(/* webpackChunkName: "mathjax3" */ "markdown-it-mathjax3");
+          md.use(mathjax3, mathjaxOptions);
+          mathPluginEnabled = true;
+        } catch (e) {
+          console.warn('MathJax plugin load failed, fallback to plain text:', e);
+        }
+      }
+
       requestAnimationFrame(() => {
         const result = originalRender(preprocessedText)
           .replace(/\$\$([\s\S]+?)\$\$/g, (_, p1) =>
