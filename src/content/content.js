@@ -1,6 +1,6 @@
 import './styles/style.css';
 import { createSvgIcon, createIcon } from "./components/IconManager";
-import { createQuickActionButtons } from "./components/QuickActionButtons";
+import { createQuickActionButtons, removeSelectionHighlight, updateSelectionHighlight } from "./components/QuickActionButtons";
 import { createPopup } from "./popup";
 import { popupStateManager } from './utils/popupStateManager';
 
@@ -146,6 +146,7 @@ let isHandlingIconClick = false;
 let isSelectionEnabled = true; // 默认启用
 let selectedText = "";
 let currentPopup = null; // 新增：跟踪当前弹窗
+let minimizeIcon = null; // 保存最小化图标引用
 let isRememberWindowSize = false; // 默认不记住窗口大小
 let lastSelectionText = "";
 let lastSelectionTime = 0;
@@ -227,7 +228,13 @@ function removeUnderlines() {
 }
 
 // 更新安全的弹窗移除函数
-function safeRemovePopup() {
+function safeRemovePopup(forceRemove = false) {
+  // 如果窗口已最小化，不要移除它（除非强制移除）
+  if (popupStateManager.isMinimized() && !forceRemove) {
+    console.log('窗口已最小化，跳过移除操作');
+    return;
+  }
+
   // 不再调用 removeUnderlines()，避免影响选中状态
 
   // 立即重置所有状态
@@ -330,6 +337,117 @@ function safeRemovePopup() {
   popupStateManager.reset();
 }
 
+// 最小化弹窗
+async function minimizePopup() {
+  console.log('尝试最小化窗口...', { hasPopup: !!currentPopup });
+
+  if (!currentPopup) {
+    console.error('无法最小化：currentPopup 不存在');
+    return;
+  }
+
+  // 隐藏窗口（带动画）
+  currentPopup.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+  currentPopup.style.opacity = '0';
+  currentPopup.style.transform = 'scale(0.9)';
+
+  setTimeout(async () => {
+    if (currentPopup) {
+      currentPopup.style.display = 'none';
+      popupStateManager.setVisible(false);
+      popupStateManager.setMinimized(true);
+
+      console.log('窗口已隐藏，创建小图标...');
+
+      // 创建并显示小图标
+      const position = await popupStateManager.loadIconPosition();
+      const { createMinimizeIcon } = await import('./components/IconManager');
+
+      minimizeIcon = createMinimizeIcon(() => {
+        restorePopup();
+      }, position);
+
+      document.body.appendChild(minimizeIcon);
+
+      console.log('小图标已创建', { position });
+
+      // 触觉反馈
+      if ('vibrate' in navigator) {
+        navigator.vibrate(8);
+      }
+    }
+  }, 200);
+}
+
+// 恢复弹窗
+function restorePopup() {
+  console.log('尝试恢复窗口...', {
+    hasPopup: !!currentPopup,
+    hasIcon: !!minimizeIcon,
+    isMinimized: popupStateManager.isMinimized()
+  });
+
+  if (!currentPopup) {
+    console.error('无法恢复窗口：currentPopup 不存在');
+    // 清理小图标
+    if (minimizeIcon && document.body.contains(minimizeIcon)) {
+      document.body.removeChild(minimizeIcon);
+      minimizeIcon = null;
+    }
+    popupStateManager.setMinimized(false);
+    return;
+  }
+
+  // 移除小图标
+  if (minimizeIcon) {
+    minimizeIcon.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+    minimizeIcon.style.opacity = '0';
+    minimizeIcon.style.transform = 'scale(0.5)';
+
+    setTimeout(() => {
+      if (minimizeIcon) {
+        if (minimizeIcon.cleanup) {
+          minimizeIcon.cleanup();
+        }
+        if (document.body.contains(minimizeIcon)) {
+          document.body.removeChild(minimizeIcon);
+        }
+        minimizeIcon = null;
+      }
+    }, 200);
+  }
+
+  // 显示窗口（带动画）
+  currentPopup.style.display = 'block';
+  requestAnimationFrame(() => {
+    if (currentPopup) {
+      currentPopup.style.transition = 'opacity 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+      currentPopup.style.opacity = '1';
+      currentPopup.style.transform = 'scale(1)';
+    }
+  });
+
+  popupStateManager.setVisible(true);
+  popupStateManager.setMinimized(false);
+
+  console.log('窗口已恢复');
+
+  // 触觉反馈
+  if ('vibrate' in navigator) {
+    navigator.vibrate(8);
+  }
+
+  // 自动聚焦到输入框
+  setTimeout(() => {
+    if (currentPopup) {
+      const textarea = currentPopup.querySelector('.expandable-textarea');
+      if (textarea) {
+        textarea.focus();
+      }
+    }
+  }, 350); // 等待动画完成后聚焦
+}
+
 function handlePopupCreation(selectedText, rect, hideQuestion = false, messages = null, quickActionPrompt = null) {
   if (popupStateManager.isCreating()) return;
 
@@ -348,8 +466,18 @@ function handlePopupCreation(selectedText, rect, hideQuestion = false, messages 
       document.querySelectorAll('.quick-action-buttons').forEach(n => n.parentNode && n.parentNode.removeChild(n));
     } catch(_) {}
 
+    // 清理最小化图标（如果存在）
+    if (minimizeIcon && document.body.contains(minimizeIcon)) {
+      if (minimizeIcon.cleanup) {
+        minimizeIcon.cleanup();
+      }
+      document.body.removeChild(minimizeIcon);
+      minimizeIcon = null;
+      popupStateManager.setMinimized(false);
+    }
+
     safeRemovePopup();
-    currentPopup = createPopup(selectedText, rect, hideQuestion, safeRemovePopup, messages, quickActionPrompt);
+    currentPopup = createPopup(selectedText, rect, hideQuestion, safeRemovePopup, messages, quickActionPrompt, minimizePopup);
     currentPopup.style.minWidth = '300px';
     currentPopup.style.minHeight = '200px';
 
@@ -600,22 +728,64 @@ function showQuickActionsForSelection(selection) {
     createQuickActionButtons(text, handleQuickAction, handleIconClick, handleCopyAction)
       .then(buttonsContainer => {
         if (!buttonsContainer) return;
+
+        // 保存初始位置信息
+        const initialRect = {
+          left: rect.left,
+          top: rect.top,
+          bottom: rect.bottom
+        };
+        const initialScroll = {
+          x: window.pageXOffset || document.documentElement.scrollLeft,
+          y: window.pageYOffset || document.documentElement.scrollTop
+        };
+
         // 将小容器移动到选区处，仅包裹按钮本身，并确保层级低于弹窗
         Object.assign(wrapper.style, {
           left: `${rect.left}px`,
           top: `${rect.bottom + 5}px`,
           zIndex: '2147483646'
         });
+
         // 挂载按钮
         buttonsContainer.style.position = 'static';
         wrapper.appendChild(buttonsContainer);
+
         // 显示
         wrapper.style.opacity = '1';
+
         // 记录显示时间，防止双击/三击的下一次 mousedown 立即移除
         quickActionsShownAt = Date.now();
+
+        // 🎯 添加滚动监听器，更新工具栏和高亮层位置
+        const handleScroll = () => {
+          const currentScrollX = window.pageXOffset || document.documentElement.scrollLeft;
+          const currentScrollY = window.pageYOffset || document.documentElement.scrollTop;
+
+          const deltaX = currentScrollX - initialScroll.x;
+          const deltaY = currentScrollY - initialScroll.y;
+
+          // 更新工具栏位置
+          if (wrapper && wrapper.parentNode) {
+            wrapper.style.left = `${initialRect.left - deltaX}px`;
+            wrapper.style.top = `${initialRect.bottom + 5 - deltaY}px`;
+          }
+
+          // 更新高亮层位置
+          updateSelectionHighlight();
+        };
+
+        // 保存滚动处理器引用，以便后续清理
+        wrapper._scrollHandler = handleScroll;
+        window.addEventListener('scroll', handleScroll, true);
+
         // 初始化拖拽功能
         if (buttonsContainer.initDrag) {
           buttonsContainer.initDrag();
+        }
+        // 自动聚焦输入框（延迟执行以保留选区）
+        if (buttonsContainer.initFocus) {
+          buttonsContainer.initFocus();
         }
         // 不再主动恢复选区，严格不干预浏览器的选择状态
       })
@@ -790,9 +960,23 @@ function getReliableSelectedText() {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "toggleChat") {
     try {
-      // 如果弹窗已经存在,关闭它(销毁会话)
-      if (popupStateManager.isVisible() && currentPopup) {
-        safeRemovePopup();
+      // 如果弹窗已经存在或已最小化,关闭它(销毁会话)
+      if (currentPopup || popupStateManager.isMinimized()) {
+        // 清理最小化图标
+        if (minimizeIcon && document.body.contains(minimizeIcon)) {
+          if (minimizeIcon.cleanup) {
+            minimizeIcon.cleanup();
+          }
+          document.body.removeChild(minimizeIcon);
+          minimizeIcon = null;
+        }
+
+        // 强制清理弹窗（即使已最小化）
+        safeRemovePopup(true);
+
+        // 强制重置所有状态（包括最小化状态）
+        popupStateManager.setMinimized(false);
+        popupStateManager.setVisible(false);
         return;
       }
 
@@ -830,20 +1014,20 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
   } else if (request.action === "showHideChat") {
     try {
+      // 首先检查是否已最小化（即使 currentPopup 可能为 null）
+      if (popupStateManager.isMinimized() && minimizeIcon) {
+        // 如果已最小化，恢复窗口
+        restorePopup();
+        return;
+      }
+
       // 显示/隐藏窗口(保留会话状态)
       if (currentPopup) {
         const isCurrentlyVisible = currentPopup.style.display !== 'none';
 
         if (isCurrentlyVisible) {
-          // 隐藏窗口(添加动画)
-          currentPopup.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
-          currentPopup.style.opacity = '0';
-          currentPopup.style.transform = 'translateY(8px) scale(0.98)';
-
-          setTimeout(() => {
-            currentPopup.style.display = 'none';
-            popupStateManager.setVisible(false);
-          }, 200);
+          // 最小化窗口（而不是简单隐藏）
+          minimizePopup();
         } else {
           // 显示窗口(添加动画)
           currentPopup.style.display = 'block';
@@ -852,6 +1036,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             currentPopup.style.transform = 'translateY(0) scale(1)';
           });
           popupStateManager.setVisible(true);
+
+          // 自动聚焦到输入框
+          setTimeout(() => {
+            if (currentPopup) {
+              const textarea = currentPopup.querySelector('.expandable-textarea');
+              if (textarea) {
+                textarea.focus();
+              }
+            }
+          }, 100);
         }
         return;
       }
@@ -930,12 +1124,27 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     // 使用更可靠的方法获取选中文本
     sendResponse({ selectedText: getReliableSelectedText() });
   } else if (request.action === "closeChat") {
-    safeRemovePopup();
+    // 清理最小化图标
+    if (minimizeIcon && document.body.contains(minimizeIcon)) {
+      if (minimizeIcon.cleanup) {
+        minimizeIcon.cleanup();
+      }
+      document.body.removeChild(minimizeIcon);
+      minimizeIcon = null;
+    }
+
+    // 强制移除弹窗
+    safeRemovePopup(true);
+    popupStateManager.setMinimized(false);
+    popupStateManager.setVisible(false);
   }
 });
 
 // 隐藏快捷按钮
 function hideQuickActions() {
+  // 移除选区高亮层
+  removeSelectionHighlight();
+
   // 兼容旧容器（全屏遮罩）
   const container = document.getElementById('fixed-quick-actions-container');
   if (container) {
@@ -946,8 +1155,16 @@ function hideQuickActions() {
 
   // 新容器：精确定位的小包裹器，出现会优先移除
   const wrapper = document.getElementById('quick-actions-wrapper');
-  if (wrapper && wrapper.parentNode) {
-    try { wrapper.parentNode.removeChild(wrapper); } catch (_) {}
+  if (wrapper) {
+    // 🎯 清理滚动监听器
+    if (wrapper._scrollHandler) {
+      window.removeEventListener('scroll', wrapper._scrollHandler, true);
+      delete wrapper._scrollHandler;
+    }
+
+    if (wrapper.parentNode) {
+      try { wrapper.parentNode.removeChild(wrapper); } catch (_) {}
+    }
     if (currentQuickActions === wrapper) currentQuickActions = null;
   }
 }

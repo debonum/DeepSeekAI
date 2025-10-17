@@ -1126,6 +1126,34 @@
   box-sizing: border-box;
 }
 
+/* MathJax 容器与文本溢出保护（避免消息气泡溢出与站点样式干扰） */
+#ai-response mjx-container {
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+}
+
+#ai-response mjx-container[display="true"] {
+  display: block !important;
+  margin: 12px 0 !important;
+}
+
+#ai-response mjx-container[display="false"] {
+  display: inline-block !important;
+  vertical-align: middle !important;
+}
+
+#ai-response .ai-answer,
+#ai-response .content-container {
+  word-wrap: break-word !important;
+  overflow-wrap: anywhere !important;
+  white-space: normal !important;
+}
+
+#ai-response mjx-container * {
+  line-height: 1.35 !important;
+}
+
 /* 优化暗色模式下的样式 */
 .theme-adaptive.dark-mode .ai-answer {
   background-color: var(--ai-answer-bg);
@@ -1561,7 +1589,7 @@
 .quick-action-button {
   width: 28px !important;
   height: 28px !important;
-  padding: 4px;
+  padding: 0;
   border-radius: 6px;
   transition: all 0.2s ease;
   opacity: 0.7;
@@ -1569,6 +1597,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
 }
 
 .quick-action-button:hover {
@@ -1577,11 +1606,24 @@
   transform: scale(1.1);
 }
 
-.quick-action-button img {
-  width: 100%;
-  height: 100%;
+/* 确保icon-wrapper在按钮中居中 */
+.quick-action-button .icon-wrapper {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  margin: 0;
+}
+
+.quick-action-button img,
+.quick-action-button svg {
+  width: 18px !important;
+  height: 18px !important;
   object-fit: contain;
-  filter: var(--text-primary-filter, none);
+  display: block;
+  flex-shrink: 0;
 }
 
 .language-select {
@@ -1686,9 +1728,17 @@
   }
 }
 
-/* 暗色模式图标适配 */
-.theme-adaptive.dark-mode .quick-action-button img {
-  filter: invert(1) brightness(0.9);
+/* 暗色模式图标适配 - 确保可读性 */
+.theme-adaptive.dark-mode .quick-action-button img,
+.theme-adaptive.dark-mode .quick-action-button svg {
+  filter: brightness(0) invert(1);
+  opacity: 0.9;
+}
+
+.theme-adaptive.dark-mode .quick-action-button:hover img,
+.theme-adaptive.dark-mode .quick-action-button:hover svg {
+  opacity: 1;
+  filter: brightness(0) invert(1);
 }
 
 /* Loading icon 样式 */
@@ -2172,4 +2222,164 @@
   -webkit-user-select: text !important;
   -moz-user-select: text !important;
   -ms-user-select: text !important;
+}
+
+/* ==================== 最小化功能样式 ==================== */
+
+/* 最小化按钮样式 - 与关闭按钮保持一致 */
+.minimize-button {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  margin: 0;
+  transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+  position: absolute;
+  right: 44px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  min-height: 24px;
+  max-width: 24px;
+  max-height: 24px;
+  line-height: 1;
+  outline: none;
+  box-sizing: content-box;
+  z-index: 10;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  border-radius: 6px;
+}
+
+.minimize-button:hover {
+  background-color: rgba(0, 0, 0, 0.06) !important;
+  transform: translateY(-50%) scale(1.08) !important;
+  opacity: 1;
+}
+
+.minimize-button:active {
+  background-color: rgba(0, 0, 0, 0.08) !important;
+  transform: translateY(-50%) scale(1) !important;
+}
+
+.minimize-button .minimize-icon {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  color: var(--text-secondary);
+  transition: transform 0.15s ease, color 0.15s ease;
+  padding: 0;
+  z-index: 10;
+}
+
+.minimize-button .minimize-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* 最小化小图标样式 */
+#ai-minimize-icon {
+  position: fixed;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15), 0 4px 24px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  z-index: 2147483647;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+  background: var(--bg-primary);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 2px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#ai-minimize-icon:hover {
+  transform: scale(1.15);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2), 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+#ai-minimize-icon:active {
+  transform: scale(1.05);
+}
+
+#ai-minimize-icon img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* 最小化图标进入动画 */
+@keyframes minimize-icon-appear {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.minimize-icon-enter {
+  animation: minimize-icon-appear 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 暗黑模式下的最小化图标样式 */
+.theme-adaptive.dark-mode #ai-minimize-icon {
+  background: var(--bg-primary);
+  border-color: var(--border-color);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3), 0 4px 24px rgba(0, 0, 0, 0.2);
+}
+
+.theme-adaptive.dark-mode #ai-minimize-icon:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* 主题适配 - 确保最小化按钮和图标支持主题切换 */
+.theme-adaptive .minimize-button {
+  color: var(--text-secondary);
+}
+
+.theme-adaptive .minimize-button:hover .minimize-icon {
+  color: #007aff; /* iOS 蓝色，与关闭按钮保持一致 */
+}
+
+/* 暗黑模式下最小化按钮的适配 */
+.theme-adaptive.dark-mode .minimize-button:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.theme-adaptive.dark-mode .minimize-button:active {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.theme-adaptive.dark-mode .minimize-button:hover .minimize-icon {
+  color: #0a84ff; /* 暗黑模式下的 iOS 蓝色 */
+}
+
+/* 拖拽时的视觉反馈 */
+#ai-minimize-icon.dragging {
+  cursor: grabbing;
+  transition: none;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25), 0 16px 48px rgba(0, 0, 0, 0.2);
 }

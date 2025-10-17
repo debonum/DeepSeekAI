@@ -81,6 +81,100 @@ const saveLastLanguage = (language) => {
   chrome.storage.sync.set({ lastLanguage: language });
 };
 
+// 创建选区高亮层（伪造选区视觉效果）
+function createSelectionHighlight() {
+  // 移除旧的高亮层
+  const oldHighlight = document.getElementById('ai-selection-highlight-overlay');
+  if (oldHighlight) oldHighlight.remove();
+
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) return null;
+
+  const range = selection.getRangeAt(0);
+  const rects = range.getClientRects();
+  if (!rects || rects.length === 0) return null;
+
+  // 检测暗色模式
+  const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const highlightColor = isDarkMode
+    ? 'rgba(10, 132, 255, 0.25)'  // 暗色模式：更亮的蓝色
+    : 'rgba(0, 122, 255, 0.2)';   // 亮色模式：标准蓝色
+
+  // 获取页面滚动偏移
+  const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+  const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+
+  // 创建高亮容器 - 使用 absolute 定位跟随页面滚动
+  const overlay = document.createElement('div');
+  overlay.id = 'ai-selection-highlight-overlay';
+  overlay.style.cssText = `
+    position: absolute;
+    pointer-events: none;
+    z-index: 2147483645;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  `;
+
+  // 保存初始位置信息用于更新
+  overlay._initialRects = Array.from(rects).map(rect => ({
+    left: rect.left,
+    top: rect.top,
+    width: rect.width,
+    height: rect.height
+  }));
+  overlay._initialScroll = { x: scrollX, y: scrollY };
+  overlay._highlightColor = highlightColor;
+
+  // 为每个矩形区域创建高亮块
+  Array.from(rects).forEach(rect => {
+    const highlight = document.createElement('div');
+    highlight.style.cssText = `
+      position: absolute;
+      left: ${rect.left + scrollX}px;
+      top: ${rect.top + scrollY}px;
+      width: ${rect.width}px;
+      height: ${rect.height}px;
+      background: ${highlightColor};
+      border-radius: 2px;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      mix-blend-mode: multiply;
+    `;
+    overlay.appendChild(highlight);
+  });
+
+  document.body.appendChild(overlay);
+  return overlay;
+}
+
+// 更新高亮层位置（滚动时调用）
+// ⚠️ 注意：使用 absolute 定位的高亮层会自动跟随文档滚动
+// 这个函数实际上不需要做任何事，因为位置已经是文档坐标了
+function updateSelectionHighlight() {
+  // absolute 定位的元素会自动跟随文档滚动，无需手动更新
+  // 保留此函数只是为了兼容调用，但实际上是空操作
+  return;
+}
+
+// 导出更新高亮层位置的函数
+export { updateSelectionHighlight };
+
+// 移除选区高亮层（导出供外部使用）
+export function removeSelectionHighlight() {
+  const overlay = document.getElementById('ai-selection-highlight-overlay');
+  if (overlay) {
+    // 淡出动画
+    overlay.style.opacity = '0';
+    setTimeout(() => {
+      if (overlay.parentNode) {
+        overlay.remove();
+      }
+    }, 200);
+  }
+}
+
 export async function createQuickActionButtons(
   selectedText,
   handleActionClick,
@@ -93,10 +187,22 @@ export async function createQuickActionButtons(
   // 关闭快捷栏的小工具，避免与会话窗口并存
   const closeQAB = () => {
     try {
+      // 移除高亮层
+      removeSelectionHighlight();
+
       const wrapper = document.getElementById('quick-actions-wrapper');
-      if (wrapper && wrapper.parentNode) {
-        wrapper.parentNode.removeChild(wrapper);
+      if (wrapper) {
+        // 🎯 清理滚动监听器
+        if (wrapper._scrollHandler) {
+          window.removeEventListener('scroll', wrapper._scrollHandler, true);
+          delete wrapper._scrollHandler;
+        }
+
+        if (wrapper.parentNode) {
+          wrapper.parentNode.removeChild(wrapper);
+        }
       }
+
       const legacy = document.getElementById('fixed-quick-actions-container');
       if (legacy) {
         legacy.style.opacity = '0';
@@ -200,14 +306,26 @@ export async function createQuickActionButtons(
       position: relative;
     }
 
+    /* icon-wrapper在按钮中完全居中 */
+    .quick-action-button .icon-wrapper {
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      padding: 0;
+      margin: 0;
+    }
+
     /* 按钮图标 - 精致尺寸 */
     .quick-action-button img,
     .quick-action-button svg {
       width: 20px !important;
       height: 20px !important;
-      opacity: 0.7;
+      opacity: 0.8;
       transition: all 0.2s ease;
       flex-shrink: 0;
+      display: block;
     }
 
     /* 悬停效果 - 微妙变化 */
@@ -377,7 +495,7 @@ export async function createQuickActionButtons(
       75% { transform: translateX(2px); }
     }
 
-    /* Logo容器 - 可拖拽的简洁展示 */
+    /* Logo容器 - 可拖拽的极简展示 */
     .quick-action-logo {
       width: 100%;
       height: 40px;
@@ -391,12 +509,12 @@ export async function createQuickActionButtons(
       margin-bottom: 4px;
       user-select: none;
       -webkit-user-select: none;
-      transition: background-color 0.2s ease;
+      transition: opacity 0.2s ease;
     }
 
     .quick-action-logo:active {
       cursor: grabbing;
-      background: rgba(0, 122, 255, 0.05);
+      opacity: 0.7;
     }
 
     /* 拖拽状态 */
@@ -438,19 +556,33 @@ export async function createQuickActionButtons(
       }
 
       .quick-action-button {
-        background: linear-gradient(135deg, rgba(58, 58, 60, 0.4), rgba(58, 58, 60, 0.7));
-        border-color: rgba(255, 255, 255, 0.06);
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        background: rgba(58, 58, 60, 0.6);
+        border: 0.5px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
       }
 
       .quick-action-button:hover {
-        background: linear-gradient(135deg, rgba(10, 132, 255, 0.15), rgba(10, 132, 255, 0.2));
-        box-shadow: 0 6px 16px rgba(10, 132, 255, 0.3);
-        border-color: rgba(10, 132, 255, 0.3);
+        background: rgba(10, 132, 255, 0.2);
+        box-shadow: 0 4px 12px rgba(10, 132, 255, 0.3);
+        border-color: rgba(10, 132, 255, 0.4);
       }
 
       .quick-action-button:active {
-        background: linear-gradient(135deg, rgba(10, 132, 255, 0.2), rgba(10, 132, 255, 0.3));
+        background: rgba(10, 132, 255, 0.3);
+        transform: scale(0.95);
+      }
+
+      /* 暗色模式下图标颜色反转，确保可见性 */
+      .quick-action-button img,
+      .quick-action-button svg {
+        filter: brightness(0) invert(1);
+        opacity: 0.9;
+      }
+
+      .quick-action-button:hover img,
+      .quick-action-button:hover svg {
+        opacity: 1;
+        filter: brightness(0) invert(1) drop-shadow(0 0 2px rgba(10, 132, 255, 0.5));
       }
 
       .custom-prompt-input {
@@ -485,10 +617,15 @@ export async function createQuickActionButtons(
         background-color: rgba(10, 132, 255, 0.15);
       }
 
+      /* Logo容器暗色模式 - 保持完全透明 */
       .quick-action-logo {
-        background: linear-gradient(135deg, rgba(58, 58, 60, 0.6), rgba(68, 68, 70, 0.8));
-        border-color: rgba(255, 255, 255, 0.06);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        background: transparent;
+        border: none;
+        box-shadow: none;
+      }
+
+      .quick-action-logo:active {
+        opacity: 0.7;
       }
     }
   `;
@@ -548,6 +685,7 @@ export async function createQuickActionButtons(
       button.onclick = (e) => {
         e.preventDefault();
         e.stopPropagation();
+        removeSelectionHighlight(); // 移除高亮层
         closeQAB();
         const range = window.getSelection().getRangeAt(0);
         const rect = range.getBoundingClientRect();
@@ -575,6 +713,7 @@ export async function createQuickActionButtons(
       button.onclick = (e) => {
         e.preventDefault();
         e.stopPropagation();
+        removeSelectionHighlight(); // 移除高亮层
         closeQAB();
         handleActionClick(action, selectedText);
       };
@@ -599,6 +738,7 @@ export async function createQuickActionButtons(
 
           action.prompt = `Act as an AI assistant with MBTI persona ISTJ-INFJ, functioning as a professional multilingual translation engine that provides the ${lang.native} version of user-given content while preserving the original format (such as poetry, code, glossaries). If no target language is specified, ask proactively. The translation MUST be accurate and natural in ${lang.native}. Output only the translated text directly without any additional explanation or clarification.`;
 
+          removeSelectionHighlight(); // 移除高亮层
           closeQAB();
           handleActionClick(action, selectedText);
           menu.style.display = "none";
@@ -607,13 +747,26 @@ export async function createQuickActionButtons(
         menu.appendChild(option);
       });
 
-      wrapper.addEventListener("mouseenter", () => {
-        menu.style.display = "grid";
-      });
+      let hideTimeout = null;
 
-      wrapper.addEventListener("mouseleave", () => {
-        menu.style.display = "none";
-      });
+      const showMenu = () => {
+        if (hideTimeout) {
+          clearTimeout(hideTimeout);
+          hideTimeout = null;
+        }
+        menu.style.display = "grid";
+      };
+
+      const hideMenu = () => {
+        hideTimeout = setTimeout(() => {
+          menu.style.display = "none";
+        }, 150);
+      };
+
+      wrapper.addEventListener("mouseenter", showMenu);
+      wrapper.addEventListener("mouseleave", hideMenu);
+      menu.addEventListener("mouseenter", showMenu);
+      menu.addEventListener("mouseleave", hideMenu);
 
       wrapper.appendChild(button);
       wrapper.appendChild(menu);
@@ -625,6 +778,7 @@ export async function createQuickActionButtons(
       button.onclick = (e) => {
         e.preventDefault();
         e.stopPropagation();
+        removeSelectionHighlight(); // 移除高亮层
         handleActionClick(action, selectedText);
       };
 
@@ -668,6 +822,7 @@ export async function createQuickActionButtons(
           title: "问答",
           prompt: customPrompt
         };
+        removeSelectionHighlight(); // 移除高亮层
         handleActionClick(customAction, selectedText);
       } else {
         // 错误提示
@@ -726,6 +881,7 @@ export async function createQuickActionButtons(
       };
 
       try {
+        removeSelectionHighlight(); // 移除高亮层
         closeQAB();
         handleActionClick(customAction, selectedText);
       } catch (err) {
@@ -741,6 +897,39 @@ export async function createQuickActionButtons(
   customInputWrapper.appendChild(customInput);
   customInputWrapper.appendChild(sendButton);
   container.appendChild(customInputWrapper);
+
+  // 自动聚焦输入框的逻辑 - 保存为初始化函数
+  container.initFocus = function() {
+    // 使用 requestAnimationFrame + setTimeout 确保 DOM 完全渲染后再聚焦
+    // 这样可以避免与选区保存产生冲突
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        try {
+          // 检查输入框是否可见且可用
+          if (!customInput || customInput.disabled) return;
+          if (!document.body.contains(customInput)) return;
+
+          // 🎯 关键：在聚焦前创建高亮层，伪造选区视觉效果
+          const highlightOverlay = createSelectionHighlight();
+
+          // 使用 preventScroll 避免页面滚动
+          customInput.focus({ preventScroll: true });
+
+          // 可选：将光标移到末尾
+          if (typeof customInput.setSelectionRange === 'function') {
+            const len = customInput.value.length;
+            customInput.setSelectionRange(len, len);
+          }
+
+          // 保存高亮层引用，以便后续清理
+          container.highlightOverlay = highlightOverlay;
+        } catch (err) {
+          // 静默失败，不影响用户体验
+          console.debug('Auto-focus input failed:', err);
+        }
+      }, 100); // 100ms 延迟足够让选区保存完成
+    });
+  };
 
   // 初始化拖拽功能 - 返回初始化函数而不是立即执行
   container.initDrag = function() {

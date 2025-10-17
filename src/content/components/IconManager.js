@@ -28,7 +28,9 @@ export function createIcon(x, y) {
 export function createSvgIcon(iconName, title) {
   const wrapper = document.createElement("div");
   wrapper.className = "icon-wrapper tooltip";
-  wrapper.style.display = "inline-block";
+  wrapper.style.display = "flex";
+  wrapper.style.alignItems = "center";
+  wrapper.style.justifyContent = "center";
 
   const icon = document.createElement("img");
   icon.style.width = "18px";
@@ -38,6 +40,8 @@ export function createSvgIcon(iconName, title) {
   icon.style.cursor = "pointer";
   icon.style.transition = "all 0.2s ease";
   icon.style.opacity = "1";
+  icon.style.display = "block";
+  icon.style.flexShrink = "0";
   icon.style.setProperty('--icon-color', document.body.classList.contains('theme-adaptive dark-mode') ? '#ffffff' : '#000000');
 
   icon.addEventListener("mousedown", () => {
