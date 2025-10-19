@@ -1,341 +1,460 @@
-import MarkdownIt from "markdown-it";
-import hljs from "highlight.js/lib/core";
-import javascript from "highlight.js/lib/languages/javascript";
-import typescript from "highlight.js/lib/languages/typescript";
-import json from "highlight.js/lib/languages/json";
-import xml from "highlight.js/lib/languages/xml";
-import bash from "highlight.js/lib/languages/bash";
-import python from "highlight.js/lib/languages/python";
-import markdown from "highlight.js/lib/languages/markdown";
-import java from "highlight.js/lib/languages/java";
-import cpp from "highlight.js/lib/languages/cpp";
-import c from "highlight.js/lib/languages/c";
-import csharp from "highlight.js/lib/languages/csharp";
-import go from "highlight.js/lib/languages/go";
-import php from "highlight.js/lib/languages/php";
-import ruby from "highlight.js/lib/languages/ruby";
-import swift from "highlight.js/lib/languages/swift";
-import kotlin from "highlight.js/lib/languages/kotlin";
-import rust from "highlight.js/lib/languages/rust";
-import yaml from "highlight.js/lib/languages/yaml";
-import sql from "highlight.js/lib/languages/sql";
-import css from "highlight.js/lib/languages/css";
+import { marked } from "marked";
+import hljs from "highlight.js";
+import DOMPurify from "dompurify";
+import katex from "katex";
+import "katex/dist/katex.min.css";
 
-// 仅注册常用语言，减少体积
-hljs.registerLanguage('javascript', javascript);
-hljs.registerLanguage('typescript', typescript);
-hljs.registerLanguage('json', json);
-hljs.registerLanguage('xml', xml);
-hljs.registerLanguage('bash', bash);
-hljs.registerLanguage('python', python);
-hljs.registerLanguage('md', markdown);
-hljs.registerLanguage('markdown', markdown);
-hljs.registerLanguage('java', java);
-hljs.registerLanguage('cpp', cpp);
-hljs.registerLanguage('c', c);
-hljs.registerLanguage('csharp', csharp);
-hljs.registerLanguage('go', go);
-hljs.registerLanguage('php', php);
-hljs.registerLanguage('ruby', ruby);
-hljs.registerLanguage('swift', swift);
-hljs.registerLanguage('kotlin', kotlin);
-hljs.registerLanguage('rust', rust);
-hljs.registerLanguage('yaml', yaml);
-hljs.registerLanguage('yml', yaml);
-hljs.registerLanguage('sql', sql);
-hljs.registerLanguage('css', css);
-// 延迟加载 mathjax，仅在检测到数学公式时再引入插件
+const isBrowserEnvironment = typeof window !== "undefined" && typeof document !== "undefined";
+const MATH_PLACEHOLDER_PREFIX = "__MATH_PLACEHOLDER_";
 
-// 使用 WeakMap 来缓存已处理过的数学公式
-const mathCache = new WeakMap();
-const processedTexts = new Map();
+let activeMathPlaceholders = null;
 
-// 使用 Memoization 优化预处理数学公式
-const memoizedPreprocessMath = (() => {
-  const cache = new Map();
-  return (text) => {
-    if (cache.has(text)) {
-      return cache.get(text);
+const escapeHtml = (input) => {
+  if (!input) return "";
+  return input
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+};
+
+const isEscaped = (source, index) => {
+  let escapeCount = 0;
+  for (let position = index - 1; position >= 0; position -= 1) {
+    if (source[position] === "\\") {
+      escapeCount += 1;
+    } else {
+      break;
     }
-    const result = preprocessMath(text);
-    cache.set(text, result);
-    return result;
-  };
-})();
-
-// 预处理数学公式
-function preprocessMath(text) {
-  // 使用正则表达式优化：减少重复处理
-  const patterns = {
-    brackets: /[{([})\]]/g,
-    blockFormula: /\\\[([\s\S]*?)\\\]/g,
-    inlineFormula: /\\\(([\s\S]*?)\\\)/g,
-    subscripts: /(\d+|[a-zA-Z])([_^])(\d+)(?!\})/g,
-    specialSymbols: /\\(pm|mp|times|div|gamma|ln|int|infty|leq|geq|neq|approx)\b/g,
-  };
-
-  // 优化括号匹配检查
-  const checkBrackets = (str) => {
-    const stack = [];
-    const pairs = { '{': '}', '[': ']', '(': ')' };
-    for (const char of str.match(patterns.brackets) || []) {
-      if ('{(['.includes(char)) {
-        stack.push(char);
-      } else if (stack.length === 0 || pairs[stack.pop()] !== char) {
-        return false;
-      }
-    }
-    return stack.length === 0;
-  };
-
-  // 批量处理文本替换
-  let processed = text
-    .replace(/\n{3,}/g, '\n\n')
-    .replace(/[ \t]+$/gm, '');
-
-  // 优化块级公式处理
-  processed = processed.replace(patterns.blockFormula, (_, p1) =>
-    `\n$$${p1.trim().replace(/\n\s+/g, '\n')}$$\n`
-  );
-
-  // 优化行内公式处理
-  processed = processed.replace(patterns.inlineFormula, (_, p1) =>
-    `$${p1.trim()}$`
-  );
-
-  // 优化上下标处理
-  processed = processed.replace(patterns.subscripts, '$1$2{$3}');
-
-  // 使用 Map 优化特殊字符替换
-  const specialChars = new Map([
-    ['∫', '\\int '],
-    ['±', '\\pm '],
-    ['∓', '\\mp '],
-    ['×', '\\times '],
-    ['÷', '\\div '],
-    ['∞', '\\infty '],
-    ['≤', '\\leq '],
-    ['≥', '\\geq '],
-    ['≠', '\\neq '],
-    ['≈', '\\approx ']
-  ]);
-
-  // 批量处理特殊字符
-  for (const [char, replacement] of specialChars) {
-    processed = processed.replaceAll(char, replacement);
   }
+  return escapeCount % 2 === 1;
+};
 
-  return processed;
-}
-
-// 创建 MarkdownIt 实例并优化配置
-const md = new MarkdownIt({
-  html: true,
-  linkify: true,
-  typographer: true,
-  breaks: true,
-  highlight: (str, lang) => {
-    if (!lang || !hljs.getLanguage(lang)) {
-      return `<div class="code-wrap">${md.utils.escapeHtml(str)}</div>`;
+const findFirstUnescapedSequence = (source, sequence) => {
+  let searchStart = 0;
+  while (searchStart < source.length) {
+    const index = source.indexOf(sequence, searchStart);
+    if (index === -1) return -1;
+    if (!isEscaped(source, index)) {
+      return index;
     }
+    searchStart = index + 1;
+  }
+  return -1;
+};
+
+const findClosingSequence = (source, sequence, startIndex) => {
+  let searchStart = startIndex;
+  while (searchStart < source.length) {
+    const index = source.indexOf(sequence, searchStart);
+    if (index === -1) return -1;
+    if (!isEscaped(source, index)) {
+      return index;
+    }
+    searchStart = index + 1;
+  }
+  return -1;
+};
+
+const registerMathPlaceholder = (content, displayMode) => {
+  if (!activeMathPlaceholders) return content;
+  const placeholderIndex = activeMathPlaceholders.push({
+    content: content.trim(),
+    displayMode
+  }) - 1;
+  return `${MATH_PLACEHOLDER_PREFIX}${placeholderIndex}__`;
+};
+
+const renderMathWithKatex = (expression, displayMode) => {
+  if (!expression) return "";
+  try {
+    const rendered = katex.renderToString(expression, {
+      displayMode,
+      throwOnError: false,
+      strict: "warn",
+      output: "html",
+      trust: false
+    });
+    if (displayMode) {
+      return `<div class="math-block">${rendered}</div>`;
+    }
+    return `<span class="math-inline">${rendered}</span>`;
+  } catch (error) {
+    console.warn("KaTeX rendering failed:", error);
+    const fallback = escapeHtml(expression);
+    return displayMode
+      ? `<div class="math-block">${fallback}</div>`
+      : `<span class="math-inline">${fallback}</span>`;
+  }
+};
+
+const restoreMathPlaceholders = (html, placeholders) => {
+  if (!placeholders?.length) return html;
+  const placeholderRegex = new RegExp(`${MATH_PLACEHOLDER_PREFIX}(\\d+)__`, "g");
+  return html.replace(placeholderRegex, (match, indexString) => {
+    const index = Number.parseInt(indexString, 10);
+    const entry = Number.isNaN(index) ? null : placeholders[index];
+    if (!entry) {
+      return match;
+    }
+    return renderMathWithKatex(entry.content, entry.displayMode);
+  });
+};
+
+marked.setOptions({
+  breaks: true,
+  gfm: true,
+  highlight(code, language) {
     try {
-      return `<div class="code-wrap">${hljs.highlight(str, { language: lang }).value}</div>`;
-    } catch {
-      return `<div class="code-wrap">${md.utils.escapeHtml(str)}</div>`;
+      if (language && hljs.getLanguage(language)) {
+        return hljs.highlight(code, { language }).value;
+      }
+      return hljs.highlightAuto(code).value;
+    } catch (error) {
+      console.warn("highlight.js failed to highlight code block:", error);
+      return code;
     }
   }
 });
 
-// 优化 mathjax 配置
-const mathjaxOptions = {
-  tex: {
-    inlineMath: [['$', '$']],
-    displayMath: [['$$', '$$']],
-    processEscapes: true,
-    processEnvironments: true,
-    packages: ['base', 'ams', 'noerrors', 'noundefined']
+const mathBlockExtension = {
+  name: "mathBlock",
+  level: "block",
+  start(src) {
+    const dollarIndex = src.indexOf("$$");
+    const bracketIndex = src.indexOf("\\[");
+    if (dollarIndex === -1 && bracketIndex === -1) return undefined;
+    const indices = [dollarIndex, bracketIndex].filter((index) => index >= 0);
+    return indices.length ? Math.min(...indices) : undefined;
   },
-  options: {
-    skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
-    ignoreHtmlClass: 'tex2jax_ignore',
-    processHtmlClass: 'tex2jax_process'
+  tokenizer(src) {
+    const dollarMatch = /^ {0,3}\$\$([\s\S]+?)\$\$(?:\s*\n+|$)/.exec(src);
+    if (dollarMatch) {
+      return {
+        type: "mathBlock",
+        raw: dollarMatch[0],
+        text: dollarMatch[1],
+        displayMode: true
+      };
+    }
+
+    const bracketMatch = /^ {0,3}\\\[([\s\S]+?)\\\](?:\s*\n+|$)/.exec(src);
+    if (bracketMatch) {
+      return {
+        type: "mathBlock",
+        raw: bracketMatch[0],
+        text: bracketMatch[1],
+        displayMode: true
+      };
+    }
+
+    return undefined;
   },
-  chtml: {
-    scale: 1,
-    minScale: .5,
-    mtextInheritFont: true,
-    merrorInheritFont: true
+  renderer(token) {
+    return registerMathPlaceholder(token.text, true);
   }
 };
 
-let mathPluginEnabled = false; // 仅在需要时启用一次
+const mathInlineExtension = {
+  name: "mathInline",
+  level: "inline",
+  start(src) {
+    const dollarIndex = findFirstUnescapedSequence(src, "$");
+    const parenIndex = findFirstUnescapedSequence(src, "\\(");
 
-function shouldRenderMath(text) {
-  // 检测 $$...$$ 或 $...$
-  return /\$\$[\s\S]+?\$\$/.test(text) || /(^|[^$])\$([^$]+)\$(?!\$)/.test(text);
-}
+    if (dollarIndex === -1 && parenIndex === -1) return undefined;
+    if (dollarIndex === -1) return parenIndex;
+    if (parenIndex === -1) return dollarIndex;
+    return Math.min(dollarIndex, parenIndex);
+  },
+  tokenizer(src) {
+    if (src.startsWith("\\(")) {
+      const closingIndex = findClosingSequence(src, "\\)", 2);
+      if (closingIndex === -1) return undefined;
+      const raw = src.slice(0, closingIndex + 2);
+      const text = raw.slice(2, -2);
+      return {
+        type: "mathInline",
+        raw,
+        text,
+        displayMode: false
+      };
+    }
 
-// 优化渲染方法
-const originalRender = md.render.bind(md);
-md.render = function(text) {
+    if (src[0] !== "$") return undefined;
+    if (src.startsWith("$$")) return undefined;
+
+    let position = 1;
+    while (position < src.length) {
+      if (src[position] === "$" && !isEscaped(src, position)) {
+        const raw = src.slice(0, position + 1);
+        const text = raw.slice(1, -1);
+        if (!text.trim()) return undefined;
+        return {
+          type: "mathInline",
+          raw,
+          text,
+          displayMode: false
+        };
+      }
+      position += 1;
+    }
+
+    return undefined;
+  },
+  renderer(token) {
+    return registerMathPlaceholder(token.text, false);
+  }
+};
+
+marked.use({ extensions: [mathBlockExtension, mathInlineExtension] });
+
+const sanitizeHtml = (html) => {
+  if (!isBrowserEnvironment) return html;
+
   try {
-    // 使用缓存的预处理结果
-    const preprocessedText = memoizedPreprocessMath(text);
-
-    if (processedTexts.has(preprocessedText)) {
-      return processedTexts.get(preprocessedText);
-    }
-
-    // 使用 Promise 和 requestAnimationFrame 优化渲染时机
-    const renderPromise = new Promise(async (resolve) => {
-      // 如需数学渲染，按需加载插件（代码分割）
-      if (!mathPluginEnabled && shouldRenderMath(preprocessedText)) {
-        try {
-          const { default: mathjax3 } = await import(/* webpackChunkName: "mathjax3" */ "markdown-it-mathjax3");
-          md.use(mathjax3, mathjaxOptions);
-          mathPluginEnabled = true;
-        } catch (e) {
-          console.warn('MathJax plugin load failed, fallback to plain text:', e);
-        }
-      }
-
-      requestAnimationFrame(() => {
-        const result = originalRender(preprocessedText)
-          .replace(/\$\$([\s\S]+?)\$\$/g, (_, p1) =>
-            `<div class="math-block">$$${p1}$$</div>`
-          )
-          .replace(/\$([^$]+?)\$/g, (_, p1) =>
-            `<span class="math-inline">$${p1}$</span>`
-          );
-
-        processedTexts.set(preprocessedText, result);
-        resolve(result);
-      });
+    return DOMPurify.sanitize(html, {
+      ADD_ATTR: ["target", "rel", "aria-label"],
+      ALLOWED_URI_REGEXP: /^(?:(?:https?|ftp|mailto|tel|data):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i
     });
-
-    return renderPromise;
   } catch (error) {
-    console.error('渲染错误:', error);
-    return originalRender(text);
+    console.warn("DOMPurify failed to sanitize HTML:", error);
+    return html;
   }
 };
 
-// 优化代码块渲染器
-md.renderer.rules.fence = (() => {
-  const defaultFence = md.renderer.rules.fence;
+export function render(text) {
+  if (!text) return "";
 
-  return function(tokens, idx, options, env, self) {
-    const token = tokens[idx];
-    const code = token.content.trim();
-    const lang = token.info.trim();
+  activeMathPlaceholders = [];
+  let html = "";
 
-    const rawHtml = defaultFence(tokens, idx, options, env, self);
+  try {
+    html = marked.parse(text, { async: false });
+  } catch (error) {
+    console.warn("Markdown render failed:", error);
+    activeMathPlaceholders = null;
+    return sanitizeHtml(text);
+  }
 
-    return `
-      <div class="code-block-wrapper">
-        <pre class="code-wrap">${rawHtml}</pre>
-        <button class="copy-button" data-code="${encodeURIComponent(code)}">
-          <img src="${chrome.runtime.getURL("icons/copy.svg")}" alt="Copy" class="copy-icon" />
-        </button>
-      </div>
-    `.trim();
-  };
-})();
+  const placeholders = activeMathPlaceholders;
+  activeMathPlaceholders = null;
 
-// 使用事件委托处理复制按钮点击
-document.addEventListener('click', async function(event) {
-  const copyButton = event.target.closest('.copy-button');
-  if (!copyButton) return;
+  const sanitized = sanitizeHtml(html);
+  return restoreMathPlaceholders(sanitized, placeholders);
+}
 
-  event.preventDefault();
-  event.stopPropagation();
+const ensureCodeBlockWrapper = (preElement) => {
+  if (!isBrowserEnvironment || !preElement?.parentElement) return null;
 
-  const code = decodeURIComponent(copyButton.dataset.code);
-  if (code) {
+  if (preElement.parentElement.classList.contains("code-block-wrapper")) {
+    return preElement.parentElement;
+  }
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "code-block-wrapper";
+  preElement.parentElement.insertBefore(wrapper, preElement);
+  wrapper.appendChild(preElement);
+
+  return wrapper;
+};
+
+const getCopyIconUrl = () => {
+  if (typeof chrome !== "undefined" && chrome?.runtime?.getURL) {
     try {
-      await navigator.clipboard.writeText(code);
-
-      // 复制成功的视觉反馈
-      copyButton.classList.add('copied');
-
-      // 更新复制按钮文本/图标
-      const copyIcon = copyButton.querySelector('.copy-icon');
-      if (copyIcon) {
-        // 使用check.svg图标
-        copyButton.innerHTML = `<img src="${chrome.runtime.getURL("icons/check.svg")}" alt="Copied" class="copy-icon copied-icon" />`;
-      }
-
-      // 2秒后恢复原始状态
-      setTimeout(() => {
-        copyButton.classList.remove('copied');
-        copyButton.innerHTML = `<img src="${chrome.runtime.getURL("icons/copy.svg")}" alt="Copy" class="copy-icon" />`;
-      }, 2000);
-
+      return chrome.runtime.getURL("icons/copy.svg");
     } catch (error) {
-      console.error('Failed to copy:', error);
+      console.warn("Failed to load copy icon via chrome.runtime.getURL:", error);
     }
-  } else {
-    console.warn('No code text found to copy');
   }
-}, true);
+  return "";
+};
 
-// 添加全局处理函数，在AI响应完成后才显示复制按钮
-export function initCopyButtonsVisibility() {
-  // 监听DOM变化，处理流式响应过程中的代码块
-  const observer = new MutationObserver((mutations) => {
-    mutations.forEach(mutation => {
-      if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-        mutation.addedNodes.forEach(node => {
-          if (node.nodeType === Node.ELEMENT_NODE) {
-            // 查找新添加的代码块
-            const codeBlocks = node.querySelectorAll ? node.querySelectorAll('.code-block-wrapper') : [];
-            codeBlocks.forEach(block => {
-              // 隐藏复制按钮直到代码完成加载
-              const button = block.querySelector('.copy-button');
-              if (button) {
-                button.style.display = 'none';
-              }
-            });
-          }
-        });
+const bindCopyButton = (button, codeElement) => {
+  if (!button || button.dataset.bound === "true") return;
+
+  const label = button.querySelector(".copy-label");
+  const success = button.querySelector(".copy-success");
+
+  button.dataset.bound = "true";
+
+  button.addEventListener("click", async (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const codeText = codeElement?.innerText ?? codeElement?.textContent ?? "";
+    if (!codeText) return;
+
+    const resetState = (text = "Copy") => {
+      button.classList.remove("copied");
+      if (label) label.textContent = text;
+      if (success) success.style.visibility = "hidden";
+    };
+
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(codeText);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = codeText;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
       }
-    });
-  });
 
-  // 观察AI响应容器
-  const aiResponseContainer = document.getElementById('ai-response');
-  if (aiResponseContainer) {
-    observer.observe(aiResponseContainer, {
-      childList: true,
-      subtree: true
-    });
-  }
+      button.classList.add("copied");
+      if (label) label.textContent = "Copied";
+      if (success) success.style.visibility = "visible";
 
-  return observer;
-}
-
-// 检查代码块是否已完成渲染（在AI响应完成后调用）
-export function showCodeCopyButtons() {
-  const aiResponseContainer = document.getElementById('ai-response');
-  if (!aiResponseContainer) return;
-
-  // 查找所有代码块中的复制按钮
-  const copyButtons = aiResponseContainer.querySelectorAll('.code-block-wrapper .copy-button');
-
-  // 显示所有复制按钮
-  copyButtons.forEach(button => {
-    if (button.style.display === 'none') {
-      // 先保持透明并逐渐淡入，避免突然出现
-      button.style.opacity = '0';
-      button.style.display = '';
-
-      // 使用requestAnimationFrame确保样式变化已经应用
-      requestAnimationFrame(() => {
-        button.style.transition = 'opacity 0.3s ease';
-        button.style.opacity = '';
-      });
+      setTimeout(() => resetState(), 2000);
+    } catch (error) {
+      console.warn("Copy to clipboard failed:", error);
+      resetState("Copy failed");
+      setTimeout(() => resetState(), 2000);
     }
   });
+};
+
+export function showCodeCopyButtons(root = null) {
+  if (!isBrowserEnvironment) return;
+
+  const rootElement = root ?? document;
+  if (!rootElement) return;
+
+  const codeBlocks = rootElement.querySelectorAll("pre code");
+  const iconUrl = getCopyIconUrl();
+
+  codeBlocks.forEach((codeElement) => {
+    const pre = codeElement.parentElement;
+    if (!pre) return;
+
+    const wrapper = ensureCodeBlockWrapper(pre);
+    if (!wrapper) return;
+
+    let button = wrapper.querySelector(".copy-button");
+    if (!button) {
+      button = document.createElement("button");
+      button.type = "button";
+      button.className = "copy-button";
+      button.setAttribute("aria-label", "Copy code block");
+
+      if (iconUrl) {
+        const iconImage = document.createElement("img");
+        iconImage.src = iconUrl;
+        iconImage.alt = "Copy code";
+        button.appendChild(iconImage);
+      }
+
+      const label = document.createElement("span");
+      label.className = "copy-label";
+      label.textContent = "Copy";
+      button.appendChild(label);
+
+      const success = document.createElement("span");
+      success.className = "copy-success";
+      success.textContent = "✓";
+      success.style.visibility = "hidden";
+      button.appendChild(success);
+
+      wrapper.appendChild(button);
+    }
+
+    bindCopyButton(button, codeElement);
+  });
 }
 
-export { md };
+export function initCopyButtonsVisibility(container) {
+  if (!isBrowserEnvironment || !container) return null;
+  if (container.dataset.copyButtonsInitialized === "true") return null;
+
+  container.dataset.copyButtonsInitialized = "true";
+
+  let scheduled = false;
+  const scheduleUpdate = () => {
+    if (scheduled) return;
+    scheduled = true;
+    requestAnimationFrame(() => {
+      scheduled = false;
+      showCodeCopyButtons(container);
+    });
+  };
+
+  const observer = new MutationObserver((mutations) => {
+    if (mutations.some((mutation) => mutation.addedNodes.length > 0 || mutation.removedNodes.length > 0)) {
+      scheduleUpdate();
+    }
+  });
+
+  observer.observe(container, { childList: true, subtree: true });
+
+  const handleInteraction = () => scheduleUpdate();
+  container.addEventListener("mouseenter", handleInteraction, { passive: true });
+  container.addEventListener("focusin", handleInteraction, { passive: true });
+  container.addEventListener("scroll", scheduleUpdate, { passive: true });
+
+  scheduleUpdate();
+
+  const cleanup = () => {
+    observer.disconnect();
+    container.removeEventListener("mouseenter", handleInteraction);
+    container.removeEventListener("focusin", handleInteraction);
+    container.removeEventListener("scroll", scheduleUpdate);
+    delete container.dataset.copyButtonsInitialized;
+  };
+
+  return { observer, cleanup };
+}
+
+export function isMathBalanced(text) {
+  if (!text) return true;
+
+  const tokenRegex = /\\\[|\\\]|\\\(|\\\)|\$\$|\$/g;
+  let inlineDollarOpen = false;
+  let blockDollarOpen = false;
+  let parenDepth = 0;
+  let bracketDepth = 0;
+
+  let match;
+  while ((match = tokenRegex.exec(text)) !== null) {
+    const token = match[0];
+    const prevChar = match.index > 0 ? text[match.index - 1] : "";
+
+    if (prevChar === "\\") {
+      continue;
+    }
+
+    switch (token) {
+      case "$$":
+        blockDollarOpen = !blockDollarOpen;
+        break;
+      case "$":
+        inlineDollarOpen = !inlineDollarOpen;
+        break;
+      case "\\(":
+        parenDepth += 1;
+        break;
+      case "\\)":
+        parenDepth -= 1;
+        if (parenDepth < 0) return false;
+        break;
+      case "\\[":
+        bracketDepth += 1;
+        break;
+      case "\\]":
+        bracketDepth -= 1;
+        if (bracketDepth < 0) return false;
+        break;
+      default:
+        break;
+    }
+  }
+
+  return !inlineDollarOpen && !blockDollarOpen && parenDepth === 0 && bracketDepth === 0;
+}
+
+export const md = { render };

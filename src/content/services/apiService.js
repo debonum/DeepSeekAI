@@ -1,5 +1,5 @@
 import { getAllowAutoScroll, scrollToBottom } from "../utils/scrollManager";
-import { md, showCodeCopyButtons } from "../utils/markdownRenderer";
+import { render, showCodeCopyButtons, isMathBalanced } from "../utils/markdownRenderer";
 
 // 全局变量用于存储对话历史
 let messages = [];
@@ -53,7 +53,7 @@ async function processRenderQueue(responseElement, ps, aiResponseContainer) {
 
       const reasoningInner = reasoningContentElement.querySelector('.reasoning-content-inner');
       if (reasoningInner) {
-        const reasoningHtml = await md.render(currentChunk.reasoningContent);
+        const reasoningHtml = render(currentChunk.reasoningContent);
         reasoningInner.innerHTML = reasoningHtml;
       }
     }
@@ -67,8 +67,15 @@ async function processRenderQueue(responseElement, ps, aiResponseContainer) {
         responseElement.appendChild(contentElement);
       }
 
-      const contentHtml = await md.render(currentChunk.content);
-      contentElement.innerHTML = contentHtml;
+      const text = currentChunk.content;
+      // 流式期间：如果文本中包含数学且尚未闭合，则暂缓渲染，避免中间态错乱
+      const containsMath = /\$|\\\(|\\\[/.test(text);
+      if (containsMath && !isMathBalanced(text)) {
+        // 仅在不平衡时跳过这次渲染，等待后续更完整的片段
+      } else {
+        const contentHtml = render(text);
+        contentElement.innerHTML = contentHtml;
+      }
     }
 
     // 使用requestAnimationFrame优化滚动和更新
