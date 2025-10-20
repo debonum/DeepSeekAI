@@ -187,12 +187,28 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
+        let sseBuffer = '';
 
         try {
           while (true) {
             const { done, value } = await reader.read();
 
             if (done) {
+              // Flush any remaining event
+              if (sseBuffer.trim()) {
+                const event = sseBuffer;
+                sseBuffer = '';
+                // Process final event
+                const dataLines = event.split('\n').filter(l => l.startsWith('data: '));
+                const payload = dataLines.map(l => l.slice(6)).join('\n');
+                if (sender?.tab?.id) {
+                  chrome.tabs.sendMessage(sender.tab.id, {
+                    type: "streamResponse",
+                    response: { data: `data: ${payload}\n\n`, ok: true, done: false }
+                  });
+                }
+              }
+
               if (sender?.tab?.id) {
                 chrome.tabs.sendMessage(sender.tab.id, {
                   type: "streamResponse",
@@ -202,28 +218,37 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
               break;
             }
 
-            const chunk = decoder.decode(value);
-            const lines = chunk.split('\n');
+            sseBuffer += decoder.decode(value, { stream: true });
 
-            for (const line of lines) {
-              if (line.trim() === '') continue;
-              if (!line.startsWith('data: ')) continue;
+            // Extract complete SSE events separated by blank line (\n\n)
+            let sepIndex;
+            while ((sepIndex = sseBuffer.indexOf('\n\n')) !== -1) {
+              const event = sseBuffer.slice(0, sepIndex);
+              sseBuffer = sseBuffer.slice(sepIndex + 2);
 
-              const data = line.slice(6);
-              if (data === '[DONE]') {
+              if (!event.trim()) continue;
+
+              // Collect all data lines for the event
+              const dataLines = event.split('\n').filter(l => l.startsWith('data: '));
+              if (dataLines.length === 0) continue;
+
+              const payload = dataLines.map(l => l.slice(6)).join('\n');
+
+              if (payload === '[DONE]') {
                 if (sender?.tab?.id) {
                   chrome.tabs.sendMessage(sender.tab.id, {
                     type: "streamResponse",
                     response: { data: 'data: [DONE]\n\n', ok: true, done: true }
                   });
                 }
-                break;
+                // Continue to drain but mark done for content
+                continue;
               }
 
               if (sender?.tab?.id) {
                 chrome.tabs.sendMessage(sender.tab.id, {
                   type: "streamResponse",
-                  response: { data: line + '\n\n', ok: true, done: false }
+                  response: { data: `data: ${payload}\n\n`, ok: true, done: false }
                 });
               }
             }
@@ -404,4 +429,3 @@ chrome.runtime.onInstalled.addListener((details) => {
     });
   }
 });
-

@@ -231,7 +231,114 @@ export function render(text) {
   let html = "";
 
   try {
-    html = marked.parse(text, { async: false });
+    // 预处理：宽容修复常见的“类中文 Markdown”输入瑕疵
+    // - 将行内出现的 "*   xxx" 规范为换行后的列表项
+    // - 将常见标签样式 "**关键：" / "业务**：" 补全为 "**关键：** " / "**业务：** "
+    // - 清理无意义的多星号前缀，如 "****："
+    const normalizeMarkdown = (input) => {
+      if (!input) return "";
+      let s = String(input).replace(/\r\n?/g, "\n");
+
+      // 0) 去除零宽字符，避免数学/高亮渲染异常
+      s = s.replace(/[\u200B-\u200D\uFEFF]/g, "");
+
+      // 0.1) 在规范化前暂时屏蔽数学片段，避免对数学内容误改
+      const MATH_TOKEN = "__MDNORM_MATH_";
+      const mathChunks = [];
+      const maskMath = (src) => {
+        let out = "";
+        let i = 0;
+        while (i < src.length) {
+          // $$...$$
+          if (src.startsWith("$$", i)) {
+            const end = findClosingSequence(src, "$$", i + 2);
+            if (end !== -1) {
+              const raw = src.slice(i, end + 2);
+              const token = `${MATH_TOKEN}${mathChunks.length}__`;
+              mathChunks.push(raw);
+              out += token;
+              i = end + 2;
+              continue;
+            }
+          }
+          // \\[...\\]
+          if (src.startsWith("\\[", i)) {
+            const end = findClosingSequence(src, "\\]", i + 2);
+            if (end !== -1) {
+              const raw = src.slice(i, end + 2);
+              const token = `${MATH_TOKEN}${mathChunks.length}__`;
+              mathChunks.push(raw);
+              out += token;
+              i = end + 2;
+              continue;
+            }
+          }
+          // \\(...\\)
+          if (src.startsWith("\\(", i)) {
+            const end = findClosingSequence(src, "\\)", i + 2);
+            if (end !== -1) {
+              const raw = src.slice(i, end + 2);
+              const token = `${MATH_TOKEN}${mathChunks.length}__`;
+              mathChunks.push(raw);
+              out += token;
+              i = end + 2;
+              continue;
+            }
+          }
+          // $...$ (但排除 $$)
+          if (src[i] === '$' && src[i + 1] !== '$' && !isEscaped(src, i)) {
+            const end = findClosingSequence(src, '$', i + 1);
+            if (end !== -1) {
+              const raw = src.slice(i, end + 1);
+              const token = `${MATH_TOKEN}${mathChunks.length}__`;
+              mathChunks.push(raw);
+              out += token;
+              i = end + 1;
+              continue;
+            }
+          }
+          out += src[i];
+          i += 1;
+        }
+        return out;
+      };
+      const unmaskMath = (src) => src.replace(new RegExp(`${MATH_TOKEN}(\\d+)__`, 'g'), (_, n) => mathChunks[Number(n)] ?? _);
+      s = maskMath(s);
+
+      // 1) 补全加粗标签（仅中文关键字，避免数字等被误命中）："**关键：" => "**关键：** "
+      //    仅当其后未紧跟 ** 时进行闭合，避免重复闭合导致 "****"
+      s = s.replace(/(\*\*)([\u4e00-\u9fa5]{1,10})([：:])(?!\*\*)/g, "**$2$3** ");
+
+      // 2) 补全加粗标签（右侧起始）："业务**：" => "**业务：** "，同样避免已存在的闭合
+      s = s.replace(/([\u4e00-\u9fa5]{1,10})\*\*([：:])(?!\*\*)/g, "**$1$2** ");
+
+      // 3) 去除无效的多星号标签："****：" => "："
+      s = s.replace(/\*{3,}\s*([：:])/g, "$1");
+
+      // 3.1) 清理与中文标点挨着的星号（如 "，*"、"*，"、"，*，"）
+      s = s.replace(/([，。；：、])\*+(?=[，。；：、])/g, "$1");
+      s = s.replace(/([，。；：、])\*+/g, "$1");
+      s = s.replace(/\*+([，。；：、])/g, "$1");
+
+      // 3.2) 行首多个星号包裹的标题形式："****总结：" => "**总结：** "
+      s = s.replace(/(^|\n)\s*\*{3,}\s*([\u4e00-\u9fa5A-Za-z0-9]{1,24})([：:])(?!\*\*)/g, "$1**$2$3** ");
+
+      // 4) 将行内的列表标记规范到新行："… *   项" => "…\n* 项"
+      s = s.replace(/([^\n])\s\*\s{2,}(?=\S)/g, "$1\n* ");
+
+      // 5) 多个列表项黏在一行时，拆到多行："* a * b" => "* a\n* b"
+      s = s.replace(/(?!^)\s\*\s+(?=\S)/gm, "\n* ");
+
+      // 6) 去掉行尾悬空星号（无成对强调）："...**\n" 或 "...*\n" => "...\n"
+      s = s.replace(/(^|\n)([^\n*]*?)\*\*\s*$/gm, "$1$2");
+      s = s.replace(/(^|\n)([^\n*]*?)\*\s*$/gm, "$1$2");
+
+      // 恢复数学片段
+      return unmaskMath(s);
+    };
+
+    const normalized = normalizeMarkdown(text);
+    html = marked.parse(normalized, { async: false });
   } catch (error) {
     console.warn("Markdown render failed:", error);
     activeMathPlaceholders = null;
