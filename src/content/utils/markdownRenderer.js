@@ -1,5 +1,7 @@
 import { marked } from "marked";
-import hljs from "highlight.js";
+// Use the common language bundle so tokens are actually highlighted
+// This avoids needing to manually register languages and keeps size reasonable
+import hljs from "highlight.js/lib/common";
 import DOMPurify from "dompurify";
 import katex from "katex";
 import "katex/dist/katex.min.css";
@@ -502,6 +504,37 @@ export function showCodeCopyButtons(root = null) {
   codeBlocks.forEach((codeElement) => {
     const pre = codeElement.parentElement;
     if (!pre) return;
+
+    // Ensure highlight.js root class for theming (light/dark)
+    // Our CSS expects `.theme-adaptive pre.hljs` and `.theme-adaptive .hljs ...`
+    // Adding the class to <pre> provides a stable ancestor for token rules.
+    if (!pre.classList.contains("hljs")) pre.classList.add("hljs");
+    // Also add to <code> to maximize compatibility with token scoping.
+    if (!codeElement.classList.contains("hljs")) codeElement.classList.add("hljs");
+
+    // Highlight in-place if not already tokenized
+    try {
+      const alreadyTokenized = codeElement.querySelector('[class^="hljs-"]');
+      if (!alreadyTokenized && codeElement.textContent) {
+        // Prefer declared language; fallback to auto-detect
+        const langMatch = Array.from(codeElement.classList).find(c => c.startsWith('language-'));
+        if (langMatch) {
+          const lang = langMatch.replace('language-', '');
+          if (hljs.getLanguage(lang)) {
+            const { value } = hljs.highlight(codeElement.textContent, { language: lang, ignoreIllegals: true });
+            codeElement.innerHTML = value;
+          } else {
+            const { value } = hljs.highlightAuto(codeElement.textContent);
+            codeElement.innerHTML = value;
+          }
+        } else {
+          const { value } = hljs.highlightAuto(codeElement.textContent);
+          codeElement.innerHTML = value;
+        }
+      }
+    } catch (err) {
+      console.warn('hljs highlight failed:', err);
+    }
 
     const wrapper = ensureCodeBlockWrapper(pre);
     if (!wrapper) return;
