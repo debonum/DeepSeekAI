@@ -123,7 +123,7 @@ export function resizeMoveListener(event) {
   }
 }
 
-export function createDragHandle(removeCallback) {
+export function createDragHandle(removeCallback, minimizeCallback) {
   const dragHandle = document.createElement("div");
   Object.assign(dragHandle.style, {
     position: "absolute",
@@ -246,7 +246,7 @@ export function createDragHandle(removeCallback) {
   closeTooltip.textContent = "关闭窗口";
   closeTooltip.style.right = "16px";
   closeTooltip.style.top = "45px";
-  dragHandle.appendChild(closeTooltip);
+  // 提示元素需紧跟其触发元素，便于 CSS 邻接选择器生效
 
   closeButton.addEventListener("mouseenter", () => {
     // 悬停时变为苹果蓝色并轻微放大
@@ -311,16 +311,112 @@ export function createDragHandle(removeCallback) {
     }
   });
 
+  // 最小化按钮（在关闭按钮左侧）
+  const minimizeButton = document.createElement("button");
+  minimizeButton.className = "minimize-button tooltip-trigger";
+  Object.assign(minimizeButton.style, {
+    display: "none",
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    padding: "8px",
+    margin: "0",
+    transition: "all 0.2s cubic-bezier(0.25, 1, 0.5, 1)",
+    position: "absolute",
+    right: "42px",
+    top: "50%",
+    transform: "translateY(-50%) scale(1)",
+    width: "24px",
+    height: "24px",
+    minWidth: "24px",
+    minHeight: "24px",
+    maxWidth: "24px",
+    maxHeight: "24px",
+    lineHeight: "1",
+    outline: "none",
+    boxSizing: "content-box",
+    zIndex: "10",
+    appearance: "none",
+    WebkitAppearance: "none",
+    MozAppearance: "none",
+    borderRadius: "6px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center"
+  });
+
+  const minimizeIcon = document.createElement("div");
+  minimizeIcon.className = "minimize-icon";
+  minimizeIcon.innerHTML = `
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block">
+      <path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+  `;
+  Object.assign(minimizeIcon.style, {
+    width: "16px",
+    height: "16px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+    color: "var(--text-secondary)",
+    transition: "transform 0.15s ease, color 0.15s ease",
+    padding: "0",
+    zIndex: "10"
+  });
+  minimizeButton.appendChild(minimizeIcon);
+
+  const minimizeTooltip = document.createElement("div");
+  minimizeTooltip.className = "tool-tip";
+  minimizeTooltip.textContent = "最小化";
+  minimizeTooltip.style.right = "56px"; // 相对 closeTooltip 左移
+  minimizeTooltip.style.top = "45px";
+  // 同样，保持与触发元素相邻
+
+  minimizeButton.addEventListener("mouseenter", () => {
+    minimizeIcon.style.transform = "scale(1.1)";
+    minimizeIcon.style.color = "var(--accent-color, #007aff)";
+  });
+  minimizeButton.addEventListener("mouseleave", () => {
+    minimizeIcon.style.transform = "scale(1)";
+    minimizeIcon.style.color = "var(--text-secondary)";
+  });
+  minimizeButton.addEventListener("mousedown", (e) => {
+    e.stopPropagation();
+    minimizeIcon.style.transform = "scale(1.2)";
+    minimizeButton.style.transform = "translateY(-50%)";
+    minimizeButton.style.top = "50%";
+    if ('vibrate' in navigator) navigator.vibrate(8);
+  });
+  minimizeButton.addEventListener("mouseup", () => {
+    minimizeIcon.style.transform = "scale(1.1)";
+    minimizeButton.style.transform = "translateY(-50%)";
+  });
+  minimizeButton.addEventListener("click", (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    minimizeButton.style.transform = "translateY(-50%)";
+    minimizeIcon.style.transform = "scale(1)";
+    if (typeof minimizeCallback === 'function') {
+      minimizeCallback();
+    }
+  });
+
   dragHandle.addEventListener("mouseenter", () => {
     closeButton.style.display = "flex";
+    minimizeButton.style.display = "flex";
   });
 
   dragHandle.addEventListener("mouseleave", () => {
     closeButton.style.display = "none";
+    minimizeButton.style.display = "none";
   });
 
   dragHandle.appendChild(titleContainer);
   dragHandle.appendChild(closeButton);
+  dragHandle.appendChild(closeTooltip);
+  dragHandle.appendChild(minimizeButton);
+  dragHandle.appendChild(minimizeTooltip);
 
   // 添加徽标，表示扩展的身份
   dragHandle.addEventListener("dblclick", (e) => {
