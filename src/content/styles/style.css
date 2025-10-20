@@ -1169,8 +1169,8 @@
 
 .theme-adaptive .math-block {
   display: block;
-  margin: 1.25em 0;
-  padding: 6px 0;
+  margin: 1.5em 0;                /* 更舒展的上下间距 */
+  padding: 8px 0;                 /* 轻微内边距，增强呼吸感 */
   text-align: center;
   overflow-x: auto;
   overflow-y: hidden;
@@ -1181,7 +1181,79 @@
   display: inline-flex;
   align-items: center;
   vertical-align: middle;
-  margin: 0 0.2em;
+  margin: 0 0.32em;               /* 略增水平留白，避免拥挤 */
+  padding: 0 1px;                 /* 防止与中文字间距过紧 */
+}
+
+/* KaTeX 内部排版与换行控制，避免被容器的 anywhere 规则打断 */
+.theme-adaptive .math-block .katex,
+.theme-adaptive .math-inline .katex {
+  line-height: 1.55 !important;   /* 提升可读性 */
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+  white-space: normal !important;
+}
+
+/* 列表中的公式上下间距更友好 */
+.theme-adaptive li > .math-block {
+  margin-top: 0.6em;
+  margin-bottom: 0.8em;
+}
+
+/* 列表场景整体间距与行高（仅作用于扩展容器内）*/
+.theme-adaptive .ai-answer ul,
+.theme-adaptive .ai-answer ol,
+.theme-adaptive .content-container ul,
+.theme-adaptive .content-container ol {
+  margin: 0.6em 1.2em;            /* 增加列表上下与左右留白 */
+}
+
+.theme-adaptive .ai-answer li,
+.theme-adaptive .content-container li {
+  margin: 0.35em 0;               /* 增加相邻条目间距 */
+  line-height: 1.7;               /* 提升可读性与竖直呼吸 */
+}
+
+/* 含有公式的列表项再增加一点垂直留白 */
+.theme-adaptive .ai-answer li:has(.katex),
+.theme-adaptive .content-container li:has(.katex) {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+/* 相邻公式之间增加间距 */
+.theme-adaptive .math-block + .math-block {
+  margin-top: 1em;
+}
+
+/* 公式与段落之间的过渡留白 */
+.theme-adaptive p + .math-block,
+.theme-adaptive .math-block + p,
+.theme-adaptive ul + .math-block,
+.theme-adaptive .math-block + ul,
+.theme-adaptive ol + .math-block,
+.theme-adaptive .math-block + ol {
+  margin-top: 0.9em;
+}
+
+/* 非 LaTeX 的“纯文本公式”块（由渲染器包裹） */
+.theme-adaptive .plain-math {
+  font-variant-ligatures: none;          /* 避免数学符号被连字 */
+  letter-spacing: 0.2px;                 /* 轻微字距，提升辨识度 */
+  line-height: 1.6;                      /* 更舒适的行高 */
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+}
+
+/* 列表中的“纯文本公式”间距 */
+.theme-adaptive li > .plain-math {
+  margin-top: 0.5em;
+  margin-bottom: 0.7em;
+}
+
+/* 相邻“纯文本公式”之间的间距 */
+.theme-adaptive .plain-math + .plain-math {
+  margin-top: 0.9em;
 }
 
 /* MathJax 特定样式 */

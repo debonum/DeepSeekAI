@@ -239,8 +239,15 @@ export function render(text) {
       if (!input) return "";
       let s = String(input).replace(/\r\n?/g, "\n");
 
-      // 0) 去除零宽字符，避免数学/高亮渲染异常
-      s = s.replace(/[\u200B-\u200D\uFEFF]/g, "");
+      // 0) 去除不可见/异常空白，避免数学/高亮渲染异常
+      //    - ZERO WIDTH: \u200B-\u200D, \uFEFF
+      //    - WORD JOINER: \u2060
+      //    - NBSP & NNBSP: \u00A0, \u202F
+      //    - En/Em/Thin/Hair spaces: \u2000-\u200A
+      //    - Line/Paragraph separators: \u2028, \u2029
+      s = s.replace(/[\u200B-\u200D\uFEFF\u2060\u00A0\u202F\u2000-\u200A\u2028\u2029]/g, " ");
+      // 注意：不要折叠行尾的两个空格（Markdown 的显式换行），也不要折叠前导缩进
+      // 因而不进行全局空白折叠，保留作者意图
 
       // 0.1) 在规范化前暂时屏蔽数学片段，避免对数学内容误改
       const MATH_TOKEN = "__MDNORM_MATH_";
@@ -323,6 +330,13 @@ export function render(text) {
       // 3.2) 行首多个星号包裹的标题形式："****总结：" => "**总结：** "
       s = s.replace(/(^|\n)\s*\*{3,}\s*([\u4e00-\u9fa5A-Za-z0-9]{1,24})([：:])(?!\*\*)/g, "$1**$2$3** ");
 
+      // 3.3) 纠正以单星号开头的标签行："*思考："/"* 符号说明：" => "**思考：** " 等
+      const labelWords = "思考|符号说明|意义|应用|复杂性|背景";
+      s = s.replace(new RegExp(`(^|\\n)\\s*\\*\\s*(${labelWords})([：:])(?!\\*\\*)`, 'g'), "$1**$2$3** ");
+
+      // 3.4) 纠正行内紧贴或带空格的 "*思考："："…0*思考：" 或 "…0 * 思考：" => 换行并加粗
+      s = s.replace(new RegExp(`(\\S)\\s*\\*\\s*(${labelWords})([：:])`, 'g'), "$1\n**$2$3** ");
+
       // 4) 将行内的列表标记规范到新行："… *   项" => "…\n* 项"
       s = s.replace(/([^\n])\s\*\s{2,}(?=\S)/g, "$1\n* ");
 
@@ -333,8 +347,57 @@ export function render(text) {
       s = s.replace(/(^|\n)([^\n*]*?)\*\*\s*$/gm, "$1$2");
       s = s.replace(/(^|\n)([^\n*]*?)\*\s*$/gm, "$1$2");
 
-      // 恢复数学片段
-      return unmaskMath(s);
+      // 7) 将疑似“纯Unicode数学行”包裹为块级公式以获得更好的版式
+      //    仅针对未使用 LaTeX 定界符的行，例如：∫Ω dω = ∫∂Ω ω、Rμν − 1/2 R gμν + …
+      const wrapPlainMathLines = (src) => {
+        const lines = src.split("\n");
+        const mathHeavy = /[∫∑∏√∞≈≠≤≥±∇∂⋅·×÷→←↦≡⊂⊃∈∉πμνρσΓΖΛΘΨΦΩωαβγδεζηθικλμνξοπρστυφχψω⁰¹²³⁴⁵⁶⁷⁸⁹₀₁₂₃₄₅₆₇₈₉]/;
+        const fenceOrHtml = /^(\s*```|\s*<[^>]+>)/;
+        const listOrQuote = /^(\s*[\-*+]\s+|\s*\d+\.|\s*>\s*)/;
+        let inDisplayBracket = false; // \[ ... \]
+        let inDisplayDollar = false;  // $$ ... $$
+
+        const startsBracket = /^\s*\\\[\s*$/;
+        const endsBracket = /^\s*\\\]\s*$/;
+        const lineHasDollars = /(^|[^$])\$\$([^$]|$)/; // 一行出现 $$ 即切换
+
+        return lines.map((line) => {
+          const trimmed = line.trim();
+
+          if (fenceOrHtml.test(trimmed)) return line; // 代码/HTML
+
+          // 处理 LaTeX 块环境 \[ ... \]
+          if (startsBracket.test(trimmed)) {
+            inDisplayBracket = true;
+            return line;
+          }
+          if (inDisplayBracket) {
+            if (endsBracket.test(trimmed)) inDisplayBracket = false;
+            return line; // 块内不处理
+          }
+
+          // 处理 $$ ... $$
+          if (lineHasDollars.test(line)) {
+            inDisplayDollar = !inDisplayDollar;
+            return line;
+          }
+          if (inDisplayDollar) return line; // 块内不处理
+
+          // 跳过 inline LaTeX （$ ... $ / \( ... \)）的行
+          if (/\$[^$].*\$/.test(line) || /\\\(.*\\\)/.test(line)) return line;
+
+          // 只在明显“数学密集”且非列表前缀的独立行上包裹
+          if (trimmed && !listOrQuote.test(trimmed) && mathHeavy.test(trimmed)) {
+            return `<div class=\"math-block plain-math\">${escapeHtml(trimmed)}</div>`;
+          }
+          return line;
+        }).join("\n");
+      };
+
+      // 恢复数学片段并处理纯Unicode数学行
+       s = unmaskMath(s);
+       s = wrapPlainMathLines(s);
+       return s;
     };
 
     const normalized = normalizeMarkdown(text);
