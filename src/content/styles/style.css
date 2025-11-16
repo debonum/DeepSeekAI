@@ -71,6 +71,9 @@
   --font-weight-normal: 400;
   --font-weight-medium: 500;
   --font-weight-bold: 600;
+  --input-field-height: 48px;
+  --input-line-height: var(--line-height-base);
+  --input-vertical-padding: calc((var(--input-field-height) - var(--input-line-height) * 1em) / 2);
 
   /* 应用基础样式 */
   background-color: var(--bg-primary);
@@ -127,10 +130,16 @@
 .theme-adaptive textarea {
   font-family: var(--font-family) !important;
   font-size: var(--font-size-base) !important;
-  line-height: var(--line-height-base) !important;
   font-weight: var(--font-weight-normal) !important;
   -webkit-font-smoothing: antialiased !important;
   -moz-osx-font-smoothing: grayscale !important;
+}
+
+/* 段落类元素维持统一行高 */
+.theme-adaptive p,
+.theme-adaptive span,
+.theme-adaptive div {
+  line-height: var(--line-height-base) !important;
 }
 
 /* 暗色模式样式 */
@@ -303,12 +312,12 @@
   width: 100%;
   min-height: 48px;
   max-height: 120px;
-  padding: 0 52px 0 16px;
+  padding: var(--input-vertical-padding) 52px var(--input-vertical-padding) 16px;
   margin: 0;
   box-sizing: border-box !important;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
   font-size: 15px !important;
-  line-height: 48px !important;
+  line-height: var(--input-line-height); /* comfortable default; JS tightens when multiline */
   background-color: var(--input-bg);
   color: var(--text-primary);
   border: 1.5px solid var(--border-color);

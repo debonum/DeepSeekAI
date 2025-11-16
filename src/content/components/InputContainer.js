@@ -4,6 +4,16 @@ import { addIconsToElement } from './IconManager';
 import { isDarkMode } from '../utils/themeManager';
 import { focusInputIfSafe } from '../utils/focusManager';
 
+const INPUT_SINGLE_LINE_HEIGHT = "48px";
+const INPUT_MULTILINE_LINE_HEIGHT = "1.3";
+const INPUT_MULTILINE_PADDING = "8px 52px 8px 16px";
+
+const resetTextareaLayout = (textarea) => {
+  textarea.style.height = INPUT_SINGLE_LINE_HEIGHT;
+  textarea.style.lineHeight = "";
+  textarea.style.padding = "";
+};
+
 export const createQuestionInputContainer = (aiResponseContainer) => {
   const container = document.createElement("div");
   container.className = "input-container-wrapper";
@@ -119,9 +129,7 @@ const setupTextarea = (textarea) => {
     if (!element.value.trim()) {
       // 对于空内容，恢复单行样式
       element.style.transition = 'none';
-      element.style.height = '48px';
-      element.style.lineHeight = '48px';
-      element.style.padding = '0 52px 0 16px';
+      resetTextareaLayout(element);
 
       // 恢复过渡效果
       setTimeout(() => {
@@ -143,8 +151,8 @@ const setupTextarea = (textarea) => {
 
       if (hasMultipleLines) {
         // 多行文本时切换到正常的 line-height 和 padding
-        element.style.lineHeight = '1.3';
-        element.style.padding = '8px 52px 8px 16px'; // 减小padding
+        element.style.lineHeight = INPUT_MULTILINE_LINE_HEIGHT;
+        element.style.padding = INPUT_MULTILINE_PADDING; // 减小padding
 
         // 清除之前设置的高度以获得准确的scrollHeight
         element.style.height = '0px';
@@ -152,21 +160,8 @@ const setupTextarea = (textarea) => {
         const newHeight = Math.min(Math.max(40, element.scrollHeight), 100); // 降低最小和最大高度
         element.style.height = `${newHeight}px`;
       } else {
-        // 单行文本保持单行样式，但允许高度稍微扩展以容纳长文本
-        element.style.lineHeight = '48px';
-        element.style.padding = '0 52px 0 16px';
-
-        // 对于单行长文本，计算是否需要稍微增加高度
-        const textWidth = element.value.length * 8; // 估算字符宽度
-        const availableWidth = element.offsetWidth - 68; // 减去padding
-
-        if (textWidth > availableWidth) {
-          // 文本太长，需要稍微增加高度
-          element.style.height = '48px';
-        } else {
-          // 正常单行高度
-          element.style.height = '48px';
-        }
+        // 单行文本恢复默认布局，保持舒适的占位提示位置
+        resetTextareaLayout(element);
       }
 
       // 确保父容器也调整高度
@@ -287,9 +282,7 @@ const setupTextarea = (textarea) => {
     textarea.style.borderColor = 'var(--border-color)';
 
     if (!event.target.value) {
-      event.target.style.height = '48px';
-      event.target.style.lineHeight = '48px';
-      event.target.style.padding = '0 52px 0 16px';
+      resetTextareaLayout(event.target);
     }
   });
 
@@ -591,9 +584,7 @@ const sendQuestion = (textarea, aiResponseContainer) => {
 
     // 立即清空输入框
     textarea.value = "";
-    textarea.style.height = "48px";
-    textarea.style.lineHeight = "48px";
-    textarea.style.padding = "0 52px 0 16px";
+    resetTextareaLayout(textarea);
 
     // 重置父容器高度
     const containerElement = textarea.closest('.input-container');

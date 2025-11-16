@@ -240,14 +240,6 @@ export function createDragHandle(removeCallback, minimizeCallback) {
 
   closeButton.appendChild(closeIcon);
 
-  // 添加关闭按钮工具提示
-  const closeTooltip = document.createElement("div");
-  closeTooltip.className = "tool-tip";
-  closeTooltip.textContent = "关闭窗口";
-  closeTooltip.style.right = "16px";
-  closeTooltip.style.top = "45px";
-  // 提示元素需紧跟其触发元素，便于 CSS 邻接选择器生效
-
   closeButton.addEventListener("mouseenter", () => {
     // 悬停时变为苹果蓝色并轻微放大
     closeIcon.style.transform = "scale(1.1)";
@@ -366,13 +358,6 @@ export function createDragHandle(removeCallback, minimizeCallback) {
   });
   minimizeButton.appendChild(minimizeIcon);
 
-  const minimizeTooltip = document.createElement("div");
-  minimizeTooltip.className = "tool-tip";
-  minimizeTooltip.textContent = "最小化";
-  minimizeTooltip.style.right = "56px"; // 相对 closeTooltip 左移
-  minimizeTooltip.style.top = "45px";
-  // 同样，保持与触发元素相邻
-
   minimizeButton.addEventListener("mouseenter", () => {
     minimizeIcon.style.transform = "scale(1.1)";
     minimizeIcon.style.color = "var(--accent-color, #007aff)";
@@ -414,9 +399,7 @@ export function createDragHandle(removeCallback, minimizeCallback) {
 
   dragHandle.appendChild(titleContainer);
   dragHandle.appendChild(closeButton);
-  dragHandle.appendChild(closeTooltip);
   dragHandle.appendChild(minimizeButton);
-  dragHandle.appendChild(minimizeTooltip);
 
   // 添加徽标，表示扩展的身份
   dragHandle.addEventListener("dblclick", (e) => {
