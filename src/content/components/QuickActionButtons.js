@@ -280,7 +280,7 @@ export async function createQuickActionButtons(
     .quick-action-buttons-container {
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
+      gap: 14px;
       width: 100%;
       justify-content: center;
       user-select: none;
@@ -498,7 +498,7 @@ export async function createQuickActionButtons(
     /* Logo容器 - 可拖拽的极简展示 */
     .quick-action-logo {
       width: 100%;
-      height: 40px;
+      height: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
