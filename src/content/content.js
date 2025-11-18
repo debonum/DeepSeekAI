@@ -765,6 +765,7 @@ function showQuickActionsForSelection(selection, anchorPoint) {
     const rect = anchorRect || boundingRect;
     const text = selectionManager.getSavedText();
     wrapper.innerHTML = '';
+    wrapper.dataset.manualPosition = 'false';
 
     createQuickActionButtons(text, handleQuickAction, handleIconClick, handleCopyAction)
       .then(buttonsContainer => {
@@ -800,6 +801,9 @@ function showQuickActionsForSelection(selection, anchorPoint) {
 
         // 🎯 添加滚动监听器，更新工具栏和高亮层位置
         const handleScroll = () => {
+          if (!wrapper || wrapper.dataset.manualPosition === 'true') {
+            return;
+          }
           const currentScrollX = window.pageXOffset || document.documentElement.scrollLeft;
           const currentScrollY = window.pageYOffset || document.documentElement.scrollTop;
 

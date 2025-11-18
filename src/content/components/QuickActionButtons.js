@@ -816,6 +816,14 @@ export async function createQuickActionButtons(
       return !!target.closest('.quick-action-button, .custom-prompt-input, .language-select, .language-option, .custom-prompt-send');
     };
 
+    const markWrapperManual = () => {
+      const wrapper = container.parentElement;
+      if (!wrapper) return;
+      if (wrapper.dataset.manualPosition !== 'true') {
+        wrapper.dataset.manualPosition = 'true';
+      }
+    };
+
     const onPointerDown = (e) => {
       // 仅处理主指针并排除交互区域
       if (e.button !== undefined && e.button !== 0) return;
@@ -862,6 +870,7 @@ export async function createQuickActionButtons(
 
       if (!hasExceededThreshold && (Math.abs(dx) > DRAG_THRESHOLD_PX || Math.abs(dy) > DRAG_THRESHOLD_PX)) {
         hasExceededThreshold = true;
+        markWrapperManual();
       }
       if (!hasExceededThreshold) return;
 
