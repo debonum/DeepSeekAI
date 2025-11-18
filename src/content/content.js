@@ -1,6 +1,6 @@
 import './styles/style.css';
 import { createSvgIcon, createIcon } from "./components/IconManager";
-import { createQuickActionButtons, removeSelectionHighlight, updateSelectionHighlight } from "./components/QuickActionButtons";
+import { createQuickActionButtons } from "./components/QuickActionButtons";
 import { createPopup } from "./popup";
 import { popupStateManager } from './utils/popupStateManager';
 
@@ -812,8 +812,6 @@ function showQuickActionsForSelection(selection, anchorPoint) {
             wrapper.style.top = `${initialRect.bottom + 5 - deltaY}px`;
           }
 
-          // 更新高亮层位置
-          updateSelectionHighlight();
         };
 
         // 保存滚动处理器引用，以便后续清理
@@ -1183,9 +1181,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 // 隐藏快捷按钮
 function hideQuickActions() {
-  // 移除选区高亮层
-  removeSelectionHighlight();
-
   // 兼容旧容器（全屏遮罩）
   const container = document.getElementById('fixed-quick-actions-container');
   if (container) {

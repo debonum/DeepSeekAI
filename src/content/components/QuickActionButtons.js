@@ -81,100 +81,6 @@ const saveLastLanguage = (language) => {
   chrome.storage.sync.set({ lastLanguage: language });
 };
 
-// 创建选区高亮层（伪造选区视觉效果）
-function createSelectionHighlight() {
-  // 移除旧的高亮层
-  const oldHighlight = document.getElementById('ai-selection-highlight-overlay');
-  if (oldHighlight) oldHighlight.remove();
-
-  const selection = window.getSelection();
-  if (!selection || selection.rangeCount === 0) return null;
-
-  const range = selection.getRangeAt(0);
-  const rects = range.getClientRects();
-  if (!rects || rects.length === 0) return null;
-
-  // 检测暗色模式
-  const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const highlightColor = isDarkMode
-    ? 'rgba(10, 132, 255, 0.25)'  // 暗色模式：更亮的蓝色
-    : 'rgba(0, 122, 255, 0.2)';   // 亮色模式：标准蓝色
-
-  // 获取页面滚动偏移
-  const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
-  const scrollY = window.pageYOffset || document.documentElement.scrollTop;
-
-  // 创建高亮容器 - 使用 absolute 定位跟随页面滚动
-  const overlay = document.createElement('div');
-  overlay.id = 'ai-selection-highlight-overlay';
-  overlay.style.cssText = `
-    position: absolute;
-    pointer-events: none;
-    z-index: 2147483645;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-  `;
-
-  // 保存初始位置信息用于更新
-  overlay._initialRects = Array.from(rects).map(rect => ({
-    left: rect.left,
-    top: rect.top,
-    width: rect.width,
-    height: rect.height
-  }));
-  overlay._initialScroll = { x: scrollX, y: scrollY };
-  overlay._highlightColor = highlightColor;
-
-  // 为每个矩形区域创建高亮块
-  Array.from(rects).forEach(rect => {
-    const highlight = document.createElement('div');
-    highlight.style.cssText = `
-      position: absolute;
-      left: ${rect.left + scrollX}px;
-      top: ${rect.top + scrollY}px;
-      width: ${rect.width}px;
-      height: ${rect.height}px;
-      background: ${highlightColor};
-      border-radius: 2px;
-      pointer-events: none;
-      transition: opacity 0.2s ease;
-      mix-blend-mode: multiply;
-    `;
-    overlay.appendChild(highlight);
-  });
-
-  document.body.appendChild(overlay);
-  return overlay;
-}
-
-// 更新高亮层位置（滚动时调用）
-// ⚠️ 注意：使用 absolute 定位的高亮层会自动跟随文档滚动
-// 这个函数实际上不需要做任何事，因为位置已经是文档坐标了
-function updateSelectionHighlight() {
-  // absolute 定位的元素会自动跟随文档滚动，无需手动更新
-  // 保留此函数只是为了兼容调用，但实际上是空操作
-  return;
-}
-
-// 导出更新高亮层位置的函数
-export { updateSelectionHighlight };
-
-// 移除选区高亮层（导出供外部使用）
-export function removeSelectionHighlight() {
-  const overlay = document.getElementById('ai-selection-highlight-overlay');
-  if (overlay) {
-    // 淡出动画
-    overlay.style.opacity = '0';
-    setTimeout(() => {
-      if (overlay.parentNode) {
-        overlay.remove();
-      }
-    }, 200);
-  }
-}
-
 export async function createQuickActionButtons(
   selectedText,
   handleActionClick,
@@ -187,9 +93,6 @@ export async function createQuickActionButtons(
   // 关闭快捷栏的小工具，避免与会话窗口并存
   const closeQAB = () => {
     try {
-      // 移除高亮层
-      removeSelectionHighlight();
-
       const wrapper = document.getElementById('quick-actions-wrapper');
       if (wrapper) {
         // 🎯 清理滚动监听器
@@ -685,7 +588,6 @@ export async function createQuickActionButtons(
       button.onclick = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        removeSelectionHighlight(); // 移除高亮层
         closeQAB();
         const range = window.getSelection().getRangeAt(0);
         const rect = range.getBoundingClientRect();
@@ -713,7 +615,6 @@ export async function createQuickActionButtons(
       button.onclick = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        removeSelectionHighlight(); // 移除高亮层
         closeQAB();
         handleActionClick(action, selectedText);
       };
@@ -738,7 +639,6 @@ export async function createQuickActionButtons(
 
           action.prompt = `Act as an AI assistant with MBTI persona ISTJ-INFJ, functioning as a professional multilingual translation engine that provides the ${lang.native} version of user-given content while preserving the original format (such as poetry, code, glossaries). If no target language is specified, ask proactively. The translation MUST be accurate and natural in ${lang.native}. Output only the translated text directly without any additional explanation or clarification.`;
 
-          removeSelectionHighlight(); // 移除高亮层
           closeQAB();
           handleActionClick(action, selectedText);
           menu.style.display = "none";
@@ -778,7 +678,6 @@ export async function createQuickActionButtons(
       button.onclick = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        removeSelectionHighlight(); // 移除高亮层
         handleActionClick(action, selectedText);
       };
 
@@ -822,7 +721,6 @@ export async function createQuickActionButtons(
           title: "问答",
           prompt: customPrompt
         };
-        removeSelectionHighlight(); // 移除高亮层
         handleActionClick(customAction, selectedText);
       } else {
         // 错误提示
@@ -881,7 +779,6 @@ export async function createQuickActionButtons(
       };
 
       try {
-        removeSelectionHighlight(); // 移除高亮层
         closeQAB();
         handleActionClick(customAction, selectedText);
       } catch (err) {
@@ -898,38 +795,8 @@ export async function createQuickActionButtons(
   customInputWrapper.appendChild(sendButton);
   container.appendChild(customInputWrapper);
 
-  // 自动聚焦输入框的逻辑 - 保存为初始化函数
-  container.initFocus = function() {
-    // 使用 requestAnimationFrame + setTimeout 确保 DOM 完全渲染后再聚焦
-    // 这样可以避免与选区保存产生冲突
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        try {
-          // 检查输入框是否可见且可用
-          if (!customInput || customInput.disabled) return;
-          if (!document.body.contains(customInput)) return;
-
-          // 🎯 关键：在聚焦前创建高亮层，伪造选区视觉效果
-          const highlightOverlay = createSelectionHighlight();
-
-          // 使用 preventScroll 避免页面滚动
-          customInput.focus({ preventScroll: true });
-
-          // 可选：将光标移到末尾
-          if (typeof customInput.setSelectionRange === 'function') {
-            const len = customInput.value.length;
-            customInput.setSelectionRange(len, len);
-          }
-
-          // 保存高亮层引用，以便后续清理
-          container.highlightOverlay = highlightOverlay;
-        } catch (err) {
-          // 静默失败，不影响用户体验
-          console.debug('Auto-focus input failed:', err);
-        }
-      }, 100); // 100ms 延迟足够让选区保存完成
-    });
-  };
+  // 自动聚焦逻辑改为 no-op，保留原生选区，不干扰复制
+  container.initFocus = function noop() {};
 
   // 初始化拖拽功能 - 返回初始化函数而不是立即执行
   container.initDrag = function() {
