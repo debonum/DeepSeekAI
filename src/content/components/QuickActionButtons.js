@@ -89,6 +89,11 @@ export async function createQuickActionButtons(
 ) {
   const container = document.createElement("div");
   container.className = "quick-action-buttons";
+  container.style.setProperty('background', '#ffffff', 'important');
+  container.style.setProperty('backdrop-filter', 'none', 'important');
+  container.style.setProperty('-webkit-backdrop-filter', 'none', 'important');
+  container.style.opacity = '1';
+  const shadowRoot = container.attachShadow({ mode: "open" });
 
   // 关闭快捷栏的小工具，避免与会话窗口并存
   const closeQAB = () => {
@@ -138,19 +143,19 @@ export async function createQuickActionButtons(
   const style = document.createElement('style');
   style.textContent = `
     /* 主容器 - 极简主义设计 */
-    .quick-action-buttons {
+    :host {
       display: flex;
       flex-direction: column;
       gap: 8px;
       padding: 12px;
       border-radius: 12px;
-      background: rgba(255, 255, 255, 0.8);
+      background: #ffffff !important;
       box-shadow:
         0 8px 32px rgba(0, 0, 0, 0.12),
         0 2px 8px rgba(0, 0, 0, 0.08);
       border: 0.5px solid rgba(0, 0, 0, 0.04);
-      backdrop-filter: blur(20px) saturate(180%);
-      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
       position: absolute;
       z-index: 2147483647;
       isolation: isolate;
@@ -158,8 +163,9 @@ export async function createQuickActionButtons(
       font-size: 13px;
       line-height: 1.4;
       box-sizing: border-box;
-      width: 340px;
-      max-width: 90vw;
+      width: 380px !important;
+      min-width: 320px;
+      max-width: 92vw;
       pointer-events: auto;
       user-select: none;
       animation: quickActionsAppear 0.3s cubic-bezier(0.2, 0, 0.2, 1) forwards;
@@ -183,7 +189,7 @@ export async function createQuickActionButtons(
     .quick-action-buttons-container {
       display: flex;
       flex-wrap: wrap;
-      gap: 14px;
+      gap: 8px;
       width: 100%;
       justify-content: center;
       user-select: none;
@@ -197,7 +203,7 @@ export async function createQuickActionButtons(
       padding: 0;
       margin: 0;
       border-radius: 50%;
-      background: rgba(245, 245, 247, 0.8);
+      background: #f5f5f7;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -233,7 +239,7 @@ export async function createQuickActionButtons(
 
     /* 悬停效果 - 微妙变化 */
     .quick-action-button:hover {
-      background: rgba(0, 122, 255, 0.1);
+      background: #e6f0ff;
       transform: scale(1.05);
     }
 
@@ -245,7 +251,7 @@ export async function createQuickActionButtons(
     /* 按下效果 - 简洁反馈 */
     .quick-action-button:active {
       transform: scale(0.95);
-      background: rgba(0, 122, 255, 0.15);
+      background: #d4e5ff;
     }
     /* 语言选择菜单 - 极简设计 */
     .language-select {
@@ -258,11 +264,9 @@ export async function createQuickActionButtons(
       overflow-y: auto;
       padding: 4px;
       border-radius: 8px;
-      background: rgba(255, 255, 255, 0.9);
+      background: #ffffff;
       border: 0.5px solid rgba(0, 0, 0, 0.06);
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-      backdrop-filter: blur(16px) saturate(180%);
-      -webkit-backdrop-filter: blur(16px) saturate(180%);
       z-index: 2147483648;
       display: none;
       user-select: none;
@@ -323,7 +327,7 @@ export async function createQuickActionButtons(
       flex: 1;
       padding: 8px 10px;
       border-radius: 8px;
-      background: rgba(245, 245, 247, 0.8);
+      background: #f5f5f7;
       border: 0.5px solid rgba(0, 0, 0, 0.06);
       color: #1d1d1f;
       font-size: 13px;
@@ -347,7 +351,7 @@ export async function createQuickActionButtons(
     /* 输入框聚焦 */
     .custom-prompt-input:focus {
       border-color: rgba(0, 122, 255, 0.4);
-      background: rgba(255, 255, 255, 0.95);
+      background: #ffffff;
       box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.1);
     }
 
@@ -421,7 +425,7 @@ export async function createQuickActionButtons(
     }
 
     /* 拖拽状态 */
-    .quick-action-buttons.dragging {
+    :host(.dragging) {
       opacity: 0.95;
       box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2), 0 4px 16px rgba(0, 0, 0, 0.15);
       transition: none;
@@ -449,8 +453,10 @@ export async function createQuickActionButtons(
 
     /* 暗色模式适配 */
     @media (prefers-color-scheme: dark) {
-      .quick-action-buttons {
-        background: rgba(28, 28, 30, 0.92);
+      :host {
+        background: rgba(28, 28, 30, 0.98) !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
         border-color: rgba(255, 255, 255, 0.06);
         box-shadow:
           0 16px 40px rgba(0, 0, 0, 0.5),
@@ -459,19 +465,19 @@ export async function createQuickActionButtons(
       }
 
       .quick-action-button {
-        background: rgba(58, 58, 60, 0.6);
+        background: #3a3a3c;
         border: 0.5px solid rgba(255, 255, 255, 0.1);
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
       }
 
       .quick-action-button:hover {
-        background: rgba(10, 132, 255, 0.2);
+        background: rgba(10, 132, 255, 0.35);
         box-shadow: 0 4px 12px rgba(10, 132, 255, 0.3);
         border-color: rgba(10, 132, 255, 0.4);
       }
 
       .quick-action-button:active {
-        background: rgba(10, 132, 255, 0.3);
+        background: rgba(10, 132, 255, 0.45);
         transform: scale(0.95);
       }
 
@@ -489,7 +495,7 @@ export async function createQuickActionButtons(
       }
 
       .custom-prompt-input {
-        background: rgba(58, 58, 60, 0.6);
+        background: #3a3a3c;
         color: rgba(255, 255, 255, 0.95);
         border-color: rgba(255, 255, 255, 0.06);
       }
@@ -499,7 +505,7 @@ export async function createQuickActionButtons(
       }
 
       .custom-prompt-input:focus {
-        background: rgba(68, 68, 70, 0.9);
+        background: #2c2c2e;
         border-color: rgba(10, 132, 255, 0.6);
       }
 
@@ -508,7 +514,7 @@ export async function createQuickActionButtons(
       }
 
       .language-select {
-        background: rgba(28, 28, 30, 0.95);
+        background: #1c1c1e;
         border-color: rgba(255, 255, 255, 0.06);
       }
 
@@ -533,13 +539,13 @@ export async function createQuickActionButtons(
     }
   `;
 
-  // 将样式添加到容器中，确保在Shadow DOM中生效
-  container.appendChild(style);
+  // 将样式添加到Shadow DOM，确保与宿主页面隔离
+  shadowRoot.appendChild(style);
 
   // 创建快捷按钮容器
   const buttonsContainer = document.createElement("div");
   buttonsContainer.className = "quick-action-buttons-container";
-  container.appendChild(buttonsContainer);
+  shadowRoot.appendChild(buttonsContainer);
 
   // 保存选中状态的通用函数
   const saveSelectionState = () => {
@@ -793,7 +799,7 @@ export async function createQuickActionButtons(
 
   customInputWrapper.appendChild(customInput);
   customInputWrapper.appendChild(sendButton);
-  container.appendChild(customInputWrapper);
+  shadowRoot.appendChild(customInputWrapper);
 
   // 自动聚焦逻辑改为 no-op，保留原生选区，不干扰复制
   container.initFocus = function noop() {};
@@ -811,8 +817,20 @@ export async function createQuickActionButtons(
     let activePointerId = null;
 
     const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
+    const getActualTarget = (event) => {
+      if (event.composedPath) {
+        const path = event.composedPath();
+        for (const node of path) {
+          if (node instanceof Element) {
+            return node;
+          }
+        }
+      }
+      return event.target;
+    };
 
     const isInInteractiveZone = (target) => {
+      if (!target || typeof target.closest !== 'function') return false;
       return !!target.closest('.quick-action-button, .custom-prompt-input, .language-select, .language-option, .custom-prompt-send');
     };
 
@@ -824,16 +842,22 @@ export async function createQuickActionButtons(
       }
     };
 
+    let pointerCaptureTarget = null;
+
     const onPointerDown = (e) => {
+      const actualTarget = getActualTarget(e);
       // 仅处理主指针并排除交互区域
       if (e.button !== undefined && e.button !== 0) return;
-      if (isInInteractiveZone(e.target)) return;
+      if (isInInteractiveZone(actualTarget)) return;
 
       const wrapper = container.parentElement;
       if (!wrapper) return;
 
       // 仅允许从 logo 或容器空白处开始拖拽
-      const isValidHandle = e.target === logoContainer || e.target.closest('.quick-action-logo') || e.target === container;
+      const isValidHandle =
+        actualTarget === logoContainer ||
+        (typeof actualTarget.closest === 'function' && actualTarget.closest('.quick-action-logo')) ||
+        actualTarget === container;
       if (!isValidHandle) return;
 
       const rect = wrapper.getBoundingClientRect();
@@ -850,7 +874,8 @@ export async function createQuickActionButtons(
       container.classList.add('dragging');
       logoContainer.style.cursor = 'grabbing';
       wrapper.style.transition = 'none';
-      try { e.target.setPointerCapture && e.target.setPointerCapture(activePointerId); } catch(_) {}
+      pointerCaptureTarget = actualTarget;
+      try { pointerCaptureTarget && pointerCaptureTarget.setPointerCapture && pointerCaptureTarget.setPointerCapture(activePointerId); } catch(_) {}
 
       if ('vibrate' in navigator) { navigator.vibrate(8); }
 
@@ -899,7 +924,12 @@ export async function createQuickActionButtons(
       }
       container.classList.remove('dragging');
       logoContainer.style.cursor = 'grab';
-      try { e.target.releasePointerCapture && e.target.releasePointerCapture(e.pointerId); } catch(_) {}
+      try {
+        if (pointerCaptureTarget && pointerCaptureTarget.releasePointerCapture) {
+          pointerCaptureTarget.releasePointerCapture(e.pointerId);
+        }
+      } catch (_) {}
+      pointerCaptureTarget = null;
 
       if ('vibrate' in navigator) { navigator.vibrate(5); }
     };
