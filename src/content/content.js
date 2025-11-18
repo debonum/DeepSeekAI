@@ -659,6 +659,7 @@ document.addEventListener("mouseup", function(e) {
   isMouseDown = false;
   if (e.button === 2) return;
   if (!isSelectionEnabled || popupStateManager.isCreating() || isHandlingIconClick) return;
+  const anchorPoint = { x: e.clientX, y: e.clientY };
   // 对点击型选中（双击/三击）等待“稳定”后再读取，确保拿到最终扩展的选区
   if (!hasMovedEnough && e.detail >= 2) {
     getStableSelection(550, 160).then((sel) => {
@@ -670,7 +671,7 @@ document.addEventListener("mouseup", function(e) {
       lastSelectionText = textNow;
       lastSelectionTime = Date.now();
       if (!selectionManager.hasSelection()) return;
-      showQuickActionsForSelection(sel);
+      showQuickActionsForSelection(sel, anchorPoint);
     });
     return;
   }
@@ -687,12 +688,50 @@ document.addEventListener("mouseup", function(e) {
     lastSelectionText = textNow;
     lastSelectionTime = Date.now();
     if (!selectionManager.hasSelection()) return;
-    showQuickActionsForSelection(sel);
+    showQuickActionsForSelection(sel, anchorPoint);
   }, delay);
 }, { passive: true });
 
+function findRangeRectNearPoint(range, anchorPoint) {
+  if (!range || !anchorPoint) return null;
+
+  const rects = Array.from(range.getClientRects()).filter(rect => rect.width || rect.height);
+  if (!rects.length) return null;
+
+  const contains = (rect) =>
+    anchorPoint.x >= rect.left &&
+    anchorPoint.x <= rect.right &&
+    anchorPoint.y >= rect.top &&
+    anchorPoint.y <= rect.bottom;
+
+  const containingRect = rects.find(contains);
+  if (containingRect) return containingRect;
+
+  const closest = rects.reduce((acc, rect) => {
+    const dx =
+      anchorPoint.x < rect.left
+        ? rect.left - anchorPoint.x
+        : anchorPoint.x > rect.right
+          ? anchorPoint.x - rect.right
+          : 0;
+    const dy =
+      anchorPoint.y < rect.top
+        ? rect.top - anchorPoint.y
+        : anchorPoint.y > rect.bottom
+          ? anchorPoint.y - rect.bottom
+          : 0;
+    const distance = Math.hypot(dx, dy);
+    if (!acc || distance < acc.distance) {
+      return { rect, distance };
+    }
+    return acc;
+  }, null);
+
+  return closest ? closest.rect : rects[0];
+}
+
 // 修改showQuickActionsForSelection函数
-function showQuickActionsForSelection(selection) {
+function showQuickActionsForSelection(selection, anchorPoint) {
   try {
     // 若在弹窗冷却时间内，禁止唤起快捷栏，避免与弹窗并存/抖动
     if (Date.now() < suppressQuickActionsUntil) {
@@ -721,7 +760,9 @@ function showQuickActionsForSelection(selection) {
     }
     const range = selectionManager.savedRange;
     if (!range) return;
-    const rect = range.getBoundingClientRect();
+    const boundingRect = range.getBoundingClientRect();
+    const anchorRect = anchorPoint ? findRangeRectNearPoint(range, anchorPoint) : null;
+    const rect = anchorRect || boundingRect;
     const text = selectionManager.getSavedText();
     wrapper.innerHTML = '';
 
