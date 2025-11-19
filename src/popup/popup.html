@@ -213,11 +213,21 @@
         opacity: 0.6;
         transition: all 0.2s ease;
         border-radius: 50%;
+        /* 重置 button 默认样式 */
+        width: 30px;
+        height: 30px;
+        min-width: unset;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
       .toggle-visibility:hover {
         opacity: 1;
         background-color: var(--background-tertiary);
+        /* 防止 button:hover 的样式覆盖定位 */
+        transform: translateY(-50%);
+        box-shadow: none;
       }
 
       .toggle-visibility .svg {
