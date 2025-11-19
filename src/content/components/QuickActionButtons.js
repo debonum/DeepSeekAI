@@ -92,6 +92,7 @@ export async function createQuickActionButtons(
   container.style.setProperty('background', '#ffffff', 'important');
   container.style.setProperty('backdrop-filter', 'none', 'important');
   container.style.setProperty('-webkit-backdrop-filter', 'none', 'important');
+  container.style.setProperty('padding', '0 12px 8px 12px');
   container.style.opacity = '1';
   const shadowRoot = container.attachShadow({ mode: "open" });
 
@@ -147,13 +148,14 @@ export async function createQuickActionButtons(
       display: flex;
       flex-direction: column;
       gap: 8px;
-      padding: 12px;
+      padding: 16px;
       border-radius: 12px;
-      background: #ffffff !important;
+      background: #f2f2f7 !important;
       box-shadow:
-        0 8px 32px rgba(0, 0, 0, 0.12),
-        0 2px 8px rgba(0, 0, 0, 0.08);
-      border: 0.5px solid rgba(0, 0, 0, 0.04);
+        0 12px 40px rgba(0, 0, 0, 0.15),
+        0 4px 12px rgba(0, 0, 0, 0.1),
+        0 0 0 1px rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(0, 0, 0, 0.08);
       backdrop-filter: none !important;
       -webkit-backdrop-filter: none !important;
       position: absolute;
@@ -405,15 +407,14 @@ export async function createQuickActionButtons(
     /* Logo容器 - 可拖拽的极简展示 */
     .quick-action-logo {
       width: 100%;
-      height: 12px;
+      height: auto;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 8px;
+      padding: 5px;
       box-sizing: border-box;
       background: transparent;
       cursor: grab;
-      margin-bottom: 4px;
       user-select: none;
       -webkit-user-select: none;
       transition: opacity 0.2s ease;
@@ -426,7 +427,7 @@ export async function createQuickActionButtons(
 
     /* 拖拽状态 */
     :host(.dragging) {
-      opacity: 0.95;
+      opacity: 1;
       box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2), 0 4px 16px rgba(0, 0, 0, 0.15);
       transition: none;
     }
@@ -454,14 +455,14 @@ export async function createQuickActionButtons(
     /* 暗色模式适配 */
     @media (prefers-color-scheme: dark) {
       :host {
-        background: rgba(28, 28, 30, 0.98) !important;
+        background: #1c1c1e !important;
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
-        border-color: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.15);
         box-shadow:
-          0 16px 40px rgba(0, 0, 0, 0.5),
-          0 4px 12px rgba(0, 0, 0, 0.3),
-          inset 0 0 0 0.5px rgba(255, 255, 255, 0.08);
+          0 20px 48px rgba(0, 0, 0, 0.6),
+          0 8px 24px rgba(0, 0, 0, 0.4),
+          inset 0 0 0 0.5px rgba(255, 255, 255, 0.1);
       }
 
       .quick-action-button {
