@@ -91,11 +91,12 @@
   -moz-osx-font-smoothing: grayscale !important;
 
   /* 确保所有子元素继承字体设置 */
-  * {
+  /* 确保所有子元素继承字体设置，但排除 Markdown 元素 */
+  *:not(h1):not(h2):not(h3):not(h4):not(h5):not(h6):not(strong):not(b):not(em):not(i):not(code):not(pre):not(mark):not(del):not(sup):not(sub) {
     font-family: inherit !important;
-    font-size: inherit !important;
-    line-height: inherit !important;
-    font-weight: inherit !important;
+    font-size: inherit;
+    line-height: inherit;
+    font-weight: inherit;
     -webkit-font-smoothing: inherit !important;
     -moz-osx-font-smoothing: inherit !important;
   }
@@ -440,6 +441,7 @@
   overflow: hidden;
   box-sizing: border-box;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  min-width: 60px; /* 防止内容过少时气泡太窄 */
 }
 
 /* 调整消息内容的间距 */
@@ -2477,4 +2479,145 @@
     background-color: #264f78; /* 深色模式下的选中色 */
     color: inherit;
   }
+}
+
+/* Markdown Heading Styles */
+.theme-adaptive h1,
+.theme-adaptive h2,
+.theme-adaptive h3,
+.theme-adaptive h4,
+.theme-adaptive h5,
+.theme-adaptive h6 {
+  margin-top: 24px;
+  margin-bottom: 16px;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+  color: var(--text-primary);
+}
+
+.theme-adaptive h1 { font-size: 2em !important; border-bottom: 1px solid var(--divider-color); padding-bottom: 0.3em; }
+.theme-adaptive h2 { font-size: 1.5em !important; border-bottom: 1px solid var(--divider-color); padding-bottom: 0.3em; }
+.theme-adaptive h3 { font-size: 1.25em !important; }
+.theme-adaptive h4 { font-size: 1em !important; }
+.theme-adaptive h5 { font-size: 0.875em !important; }
+.theme-adaptive h6 { font-size: 0.85em !important; color: var(--text-secondary); }
+
+/* Markdown Text Styles */
+.theme-adaptive strong,
+.theme-adaptive b {
+  font-weight: 600 !important;
+  color: var(--text-primary);
+}
+
+.theme-adaptive em,
+.theme-adaptive i {
+  font-style: italic !important;
+}
+
+.theme-adaptive del {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.theme-adaptive mark {
+  background-color: rgba(255, 215, 0, 0.4);
+  color: inherit;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+.theme-adaptive.dark-mode mark {
+  background-color: rgba(255, 215, 0, 0.2);
+}
+
+.theme-adaptive sup {
+  font-size: 0.75em !important;
+  vertical-align: super;
+  line-height: 0;
+}
+
+.theme-adaptive sub {
+  font-size: 0.75em !important;
+  vertical-align: sub;
+  line-height: 0;
+}
+
+/* Task List Styles */
+.theme-adaptive ul.contains-task-list {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.theme-adaptive .task-list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.theme-adaptive .task-list-item-checkbox {
+  margin-top: 0.3em;
+}
+
+/* Markdown Table Styles */
+.theme-adaptive table {
+  border-collapse: collapse;
+  width: auto; /* 改为 auto 防止在 float 容器中塌陷 */
+  max-width: 100%;
+  display: block; /* 允许横向滚动 */
+  overflow-x: auto;
+  margin: 16px 0;
+  font-size: 14px;
+  border-radius: 8px;
+  box-shadow: 0 0 0 1px var(--border-color);
+}
+
+.theme-adaptive th,
+.theme-adaptive td {
+  border: 1px solid var(--border-color);
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.theme-adaptive th {
+  background-color: var(--bg-secondary);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.theme-adaptive tr:nth-child(even) {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.theme-adaptive.dark-mode tr:nth-child(even) {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* Markdown Blockquote Styles */
+.theme-adaptive blockquote {
+  margin: 16px 0;
+  padding: 8px 16px;
+  border-left: 4px solid var(--accent-color);
+  background-color: var(--bg-secondary);
+  border-radius: 0 8px 8px 0;
+  color: var(--text-secondary);
+}
+
+.theme-adaptive blockquote p {
+  margin: 0;
+}
+
+/* Inline Code Styles */
+.theme-adaptive :not(pre) > code {
+  font-family: "SF Mono", Monaco, Menlo, Consolas, monospace;
+  font-size: 0.9em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background-color: var(--bg-secondary);
+  color: var(--accent-color);
+  border: 1px solid var(--border-color);
+}
+
+.theme-adaptive.dark-mode :not(pre) > code {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ff7b72;
 }

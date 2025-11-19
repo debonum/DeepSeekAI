@@ -15,7 +15,7 @@ const sanitizeHtml = (html) => {
   if (!isBrowserEnvironment) return html;
   try {
     return DOMPurify.sanitize(html, {
-      ADD_ATTR: ["target", "rel", "aria-label"],
+      ADD_ATTR: ["target", "rel", "aria-label", "style"],
       ALLOWED_URI_REGEXP: /^(?:(?:https?|ftp|mailto|tel|data):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i
     });
   } catch (error) {
@@ -30,8 +30,8 @@ function protectMath(text) {
 
   // Regex to match code blocks (fence or inline) OR math blocks
   // Group 1: Code (```...``` or `...`)
-  // Group 2: Math ($$...$$ or \[...\] or \(...\))
-  const regex = /((?:^|\n)```[\s\S]*?```|`[^`]*`)|(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\))/g;
+  // Group 2: Math ($$...$$ or \[...\] or \(...\) or $...$)
+  const regex = /((?:^|\n)```[\s\S]*?```|`[^`]*`)|(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\)|(?<!\\)\$[^$]+(?<!\\)\$)/g;
 
   const protectedText = text.replace(regex, (match, code, math) => {
     if (code) return code; // It's code, return as is
@@ -44,6 +44,7 @@ function protectMath(text) {
       if (math.startsWith('$$')) content = math.slice(2, -2);
       else if (math.startsWith('\\[')) content = math.slice(2, -2);
       else if (math.startsWith('\\(')) content = math.slice(2, -2);
+      else if (math.startsWith('$')) content = math.slice(1, -1);
 
       map.set(key, { content, isDisplay });
       return key;
@@ -52,6 +53,30 @@ function protectMath(text) {
   });
 
   return { protectedText, map };
+}
+
+function processMarkdownFeatures(text) {
+  // 1. Highlight: ==text== -> <mark>text</mark>
+  text = text.replace(/==([^=]+)==/g, '<mark>$1</mark>');
+
+  // 2. Subscript: ~text~ -> <sub>text</sub>
+  text = text.replace(/~([^~]+)~/g, '<sub>$1</sub>');
+
+  // 3. Superscript: ^text^ -> <sup>text</sup>
+  text = text.replace(/\^([^\^]+)\^/g, '<sup>$1</sup>');
+
+  // 4. Footnotes: [^1] -> <sup>[1]</sup> (simplified visual only)
+  text = text.replace(/\[\^(\d+)\]/g, '<sup>[$1]</sup>');
+
+  // 5. Task Lists: - [ ] or - [x]
+  // Note: This is a simple visual replacement.
+  text = text.replace(/^([\s]*)[-*+]\s+\[ \]\s+(.*)/gm, '$1<ul class="contains-task-list"><li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled> $2</li></ul>');
+  text = text.replace(/^([\s]*)[-*+]\s+\[x\]\s+(.*)/gim, '$1<ul class="contains-task-list"><li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked disabled> $2</li></ul>');
+
+  // Fix nested lists created by the regex above (naive approach)
+  text = text.replace(/<\/ul>\n<ul class="contains-task-list">/g, '');
+
+  return text;
 }
 
 function restoreMath(html, map) {
@@ -73,7 +98,9 @@ function restoreMath(html, map) {
 export function render(text) {
   if (!text) return "";
   try {
-    const { protectedText, map } = protectMath(String(text));
+    // Pre-process custom Markdown features
+    const processedText = processMarkdownFeatures(String(text));
+    const { protectedText, map } = protectMath(processedText);
     const html = mdIt.render(protectedText);
     const sanitized = sanitizeHtml(html);
     return restoreMath(sanitized, map);
