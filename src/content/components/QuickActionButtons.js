@@ -833,7 +833,17 @@ export async function createQuickActionButtons(
   customInputWrapper.appendChild(sendButton);
   shadowRoot.appendChild(customInputWrapper);
 
-  // 自动聚焦逻辑改为 no-op，保留原生选区，不干扰复制
+  // 自动聚焦逻辑 - 确保在渲染和动画开始后聚焦
+  // 使用 requestAnimationFrame 确保 DOM 已挂载
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      if (customInput && typeof customInput.focus === 'function') {
+        // 聚焦输入框
+        customInput.focus({ preventScroll: true });
+      }
+    }, 50); // 微小延迟以配合入场动画
+  });
+
   container.initFocus = function noop() {};
 
   // 初始化拖拽功能 - 返回初始化函数而不是立即执行
