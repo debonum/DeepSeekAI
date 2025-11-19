@@ -323,6 +323,8 @@ export async function getAIResponse(
       let aiResponse = "";
       let reasoningContent = "";
       let aborted = false;
+      let rawResponseChunks = [];
+      let isLogged = false;
 
       window.currentAbortController.signal.addEventListener('abort', () => {
         aborted = true;
@@ -348,6 +350,10 @@ export async function getAIResponse(
         }
 
         if (response.done) {
+          if (!isLogged) {
+            console.log("LLM Raw Response (Complete):", JSON.stringify(rawResponseChunks, null, 2));
+            isLogged = true;
+          }
           resolve({ ok: true, content: aiResponse });
           return;
         }
@@ -358,11 +364,16 @@ export async function getAIResponse(
 
           const jsonLine = line.slice(6);
           if (jsonLine === "[DONE]") {
+            if (!isLogged) {
+              console.log("LLM Raw Response (Complete):", JSON.stringify(rawResponseChunks, null, 2));
+              isLogged = true;
+            }
             resolve({ ok: true, content: aiResponse });
             return;
           }
 
           const data = JSON.parse(jsonLine);
+          rawResponseChunks.push(data);
 
           requestAnimationFrame(() => {
             if (provider === 'openrouter' && data.choices?.[0]?.delta?.reasoning) {
@@ -423,6 +434,7 @@ export async function getAIResponse(
       };
 
       // console.log(`📦 请求数据 - 模型: ${modelDisplayNameForApi}`);
+      console.log("LLM Request Body:", JSON.stringify(requestBody, null, 2));
 
       chrome.runtime.sendMessage({
         action: "proxyRequest",
