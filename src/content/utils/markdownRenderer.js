@@ -3,6 +3,9 @@ import hljs from "highlight.js/lib/common";
 import DOMPurify from "dompurify";
 
 
+import katex from "katex";
+import "katex/dist/katex.min.css";
+
 const isBrowserEnvironment = typeof window !== "undefined" && typeof document !== "undefined";
 
 // Minimal markdown-it: default rules only (no plugins, no custom rules)
@@ -21,11 +24,59 @@ const sanitizeHtml = (html) => {
   }
 };
 
+function protectMath(text) {
+  const map = new Map();
+  let index = 0;
+
+  // Regex to match code blocks (fence or inline) OR math blocks
+  // Group 1: Code (```...``` or `...`)
+  // Group 2: Math ($$...$$ or \[...\] or \(...\))
+  const regex = /((?:^|\n)```[\s\S]*?```|`[^`]*`)|(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\))/g;
+
+  const protectedText = text.replace(regex, (match, code, math) => {
+    if (code) return code; // It's code, return as is
+    if (math) {
+      const key = `@@MATH_PLACEHOLDER_${index++}@@`;
+      // Determine display mode
+      const isDisplay = math.startsWith('$$') || math.startsWith('\\[');
+      // Strip delimiters for KaTeX
+      let content = math;
+      if (math.startsWith('$$')) content = math.slice(2, -2);
+      else if (math.startsWith('\\[')) content = math.slice(2, -2);
+      else if (math.startsWith('\\(')) content = math.slice(2, -2);
+
+      map.set(key, { content, isDisplay });
+      return key;
+    }
+    return match;
+  });
+
+  return { protectedText, map };
+}
+
+function restoreMath(html, map) {
+  return html.replace(/@@MATH_PLACEHOLDER_\d+@@/g, (match) => {
+    const entry = map.get(match);
+    if (!entry) return match;
+    try {
+      return katex.renderToString(entry.content, {
+        displayMode: entry.isDisplay,
+        throwOnError: false
+      });
+    } catch (err) {
+      console.warn("KaTeX render error:", err);
+      return match;
+    }
+  });
+}
+
 export function render(text) {
   if (!text) return "";
   try {
-    const html = mdIt.render(String(text));
-    return sanitizeHtml(html);
+    const { protectedText, map } = protectMath(String(text));
+    const html = mdIt.render(protectedText);
+    const sanitized = sanitizeHtml(html);
+    return restoreMath(sanitized, map);
   } catch (error) {
     console.warn("Markdown render failed:", error);
     return sanitizeHtml(String(text));

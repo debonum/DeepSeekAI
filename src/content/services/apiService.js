@@ -115,6 +115,7 @@ export async function getAIResponse(
   onGenerationError = null
 ) {
   if (!text) return;
+  console.log("🚀 getAIResponse called with text:", text);
 
   isGenerating = true;
   window.currentAbortController = signal?.controller || new AbortController();
@@ -323,7 +324,6 @@ export async function getAIResponse(
       let aiResponse = "";
       let reasoningContent = "";
       let aborted = false;
-      let rawResponseChunks = [];
       let isLogged = false;
 
       window.currentAbortController.signal.addEventListener('abort', () => {
@@ -351,7 +351,10 @@ export async function getAIResponse(
 
         if (response.done) {
           if (!isLogged) {
-            console.log("LLM Raw Response (Complete):", JSON.stringify(rawResponseChunks, null, 2));
+            console.log("LLM Final Response:", JSON.stringify({
+              content: aiResponse,
+              reasoning_content: reasoningContent
+            }, null, 2));
             isLogged = true;
           }
           resolve({ ok: true, content: aiResponse });
@@ -365,7 +368,10 @@ export async function getAIResponse(
           const jsonLine = line.slice(6);
           if (jsonLine === "[DONE]") {
             if (!isLogged) {
-              console.log("LLM Raw Response (Complete):", JSON.stringify(rawResponseChunks, null, 2));
+              console.log("LLM Final Response:", JSON.stringify({
+                content: aiResponse,
+                reasoning_content: reasoningContent
+              }, null, 2));
               isLogged = true;
             }
             resolve({ ok: true, content: aiResponse });
@@ -373,36 +379,27 @@ export async function getAIResponse(
           }
 
           const data = JSON.parse(jsonLine);
-          rawResponseChunks.push(data);
+
+          // Synchronous accumulation
+          if (provider === 'openrouter' && data.choices?.[0]?.delta?.reasoning) {
+            reasoningContent += data.choices[0].delta.reasoning;
+            currentReasoningContent = reasoningContent;
+          } else if (data.choices?.[0]?.delta?.reasoning_content) {
+            reasoningContent += data.choices[0].delta.reasoning_content;
+            currentReasoningContent = reasoningContent;
+          }
+
+          if (data.choices?.[0]?.delta?.content) {
+            aiResponse += data.choices[0].delta.content;
+            currentContent = aiResponse;
+          }
 
           requestAnimationFrame(() => {
-            if (provider === 'openrouter' && data.choices?.[0]?.delta?.reasoning) {
-              reasoningContent += data.choices[0].delta.reasoning;
-              currentReasoningContent = reasoningContent;
-              renderQueue = [{
-                reasoningContent,
-                content: aiResponse
-              }];
-              processRenderQueue(responseElement, ps, aiResponseContainer);
-            } else if (data.choices?.[0]?.delta?.reasoning_content) {
-              reasoningContent += data.choices[0].delta.reasoning_content;
-              currentReasoningContent = reasoningContent;
-              renderQueue = [{
-                reasoningContent,
-                content: aiResponse
-              }];
-              processRenderQueue(responseElement, ps, aiResponseContainer);
-            }
-            if (data.choices?.[0]?.delta?.content) {
-              const content = data.choices[0].delta.content;
-              aiResponse += content;
-              currentContent = aiResponse;
-              renderQueue = [{
-                reasoningContent: provider === 'openrouter' || model === "r1" ? reasoningContent : "",
-                content: aiResponse
-              }];
-              processRenderQueue(responseElement, ps, aiResponseContainer);
-            }
+            renderQueue = [{
+              reasoningContent,
+              content: aiResponse
+            }];
+            processRenderQueue(responseElement, ps, aiResponseContainer);
           });
         } catch (e) {
           console.error("Error parsing JSON:", e);

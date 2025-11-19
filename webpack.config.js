@@ -53,7 +53,7 @@ module.exports = {
       new TerserPlugin({
         terserOptions: {
           compress: {
-            drop_console: true,
+            drop_console: false,
             drop_debugger: true,
             passes: 2,
             pure_getters: true,
