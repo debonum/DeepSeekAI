@@ -87,17 +87,50 @@ export async function createQuickActionButtons(
   handleMainClick,
   handleCopyAction
 ) {
+  // 🎯 核心逻辑：运用第一性原理，将"视觉选中态"与"浏览器焦点态"解耦
+  // 通过 CSS Custom Highlight API 创建独立的视觉层，确保交互时的视觉连续性
+  try {
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0 && CSS && CSS.highlights) {
+      const range = selection.getRangeAt(0);
+      const highlight = new Highlight(range);
+      CSS.highlights.set("deepseek-active-selection", highlight);
+    }
+  } catch (e) {
+    // 降级处理：如果不支持 Highlight API，则仅依赖默认行为
+    console.debug("DeepSeek: Selection highlight not supported", e);
+  }
+
+  // 🧹 添加全局点击监听器，用于在点击任意位置时清理高亮
+  // 这是为了解决"点击焦点外内容时，被选中状态一直保留"的问题
+  const clearHighlightHandler = (e) => {
+    // 如果点击的是工具栏内部，不清理
+    if (e.target.closest('.quick-action-buttons')) return;
+
+    if (CSS && CSS.highlights) {
+      CSS.highlights.delete("deepseek-active-selection");
+    }
+    // 清理后移除监听器
+    document.removeEventListener('mousedown', clearHighlightHandler, true);
+  };
+  document.addEventListener('mousedown', clearHighlightHandler, true);
+
   const container = document.createElement("div");
   container.className = "quick-action-buttons";
   container.style.setProperty('background', '#ffffff', 'important');
   container.style.setProperty('backdrop-filter', 'none', 'important');
   container.style.setProperty('-webkit-backdrop-filter', 'none', 'important');
-  container.style.setProperty('padding', '0 12px 8px 12px');
+  container.style.setProperty('padding', '6px 12px 8px 12px');
   container.style.opacity = '1';
   const shadowRoot = container.attachShadow({ mode: "open" });
 
   // 关闭快捷栏的小工具，避免与会话窗口并存
   const closeQAB = () => {
+    // 🧹 清理视觉选中态
+    if (CSS && CSS.highlights) {
+      CSS.highlights.delete("deepseek-active-selection");
+    }
+
     try {
       const wrapper = document.getElementById('quick-actions-wrapper');
       if (wrapper) {
@@ -319,8 +352,6 @@ export async function createQuickActionButtons(
       align-items: center;
       gap: 6px;
       width: 100%;
-      margin-top: 4px;
-      padding-top: 8px;
       border-top: 0.5px solid rgba(0, 0, 0, 0.06);
     }
 

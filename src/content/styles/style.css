@@ -2465,3 +2465,16 @@
   transition: none;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25), 0 16px 48px rgba(0, 0, 0, 0.2);
 }
+
+/* 选中态持久化样式 - 独立于浏览器默认选中 */
+::highlight(deepseek-active-selection) {
+  background-color: #b4d7ff; /* 浅蓝色，接近系统默认 */
+  color: inherit;
+}
+
+@media (prefers-color-scheme: dark) {
+  ::highlight(deepseek-active-selection) {
+    background-color: #264f78; /* 深色模式下的选中色 */
+    color: inherit;
+  }
+}
