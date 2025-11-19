@@ -79,6 +79,7 @@ export class SystemPromptManager {
   async saveCustomSystemPrompt() {
     try {
       const prompt = this.uiManager.getCustomSystemPromptValue();
+      const currentLang = this.i18nManager.getCurrentLang();
 
       // 验证输入
       if (!this.validatePrompt(prompt)) {
@@ -101,6 +102,7 @@ export class SystemPromptManager {
 
     } catch (error) {
       console.error('保存自定义 system prompt 失败:', error);
+      const currentLang = this.i18nManager.getCurrentLang();
       const errorMsg = currentLang === 'zh'
         ? '保存自定义系统提示词失败。请重试。'
         : 'Failed to save custom system prompt. Please try again.';
@@ -121,14 +123,8 @@ export class SystemPromptManager {
       return false;
     }
 
-    // 基本验证：不能为空
-    if (!prompt.trim()) {
-      const errorMsg = currentLang === 'zh'
-        ? '系统提示词不能为空'
-        : 'System prompt cannot be empty';
-      this.uiManager.showCustomSystemPromptValidationMessage(errorMsg, false);
-      return false;
-    }
+    // ✅ 允许空值 - 用户可以选择不使用自定义系统提示
+    // 移除了原有的"不能为空"验证
 
     return true;
   }

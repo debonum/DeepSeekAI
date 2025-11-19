@@ -313,12 +313,28 @@ export async function getAIResponse(
     // 确保每次请求都使用正确的模型名称
     // console.log(`📦 调用API - 使用模型: ${modelDisplayNameForApi}`);
 
+    // 获取自定义系统提示
+    const customSystemPrompt = settings.customSystemPrompt || '';
+
     // 构建系统提示
-    const systemPrompt = quickActionPrompt && quickActionPrompt.includes('You are a professional multilingual translation engine')
-      ? quickActionPrompt
-      : language === "auto"
+    // 🎯 关键逻辑：如果存在 quickActionPrompt，则完全使用快捷按钮的专用提示，不受自定义系统提示影响
+    // 否则，将自定义系统提示与语言设置结合使用
+    let systemPrompt = '';
+
+    if (quickActionPrompt) {
+      // 快捷按钮有自己的专用提示，直接使用，不与自定义系统提示混合
+      systemPrompt = quickActionPrompt;
+    } else {
+      // 常规对话：结合语言设置和自定义系统提示
+      const languagePrompt = language === "auto"
         ? "Detect and respond in the same language as the user's input. If the user's input is in Chinese, respond in Chinese. If the user's input is in English, respond in English, etc."
-        : `You MUST respond ONLY in ${language}.Including your reasoningContent language. This is a strict requirement. Do not use any other language except ${language}.${quickActionPrompt || ''}`;
+        : `You MUST respond ONLY in ${language}. Including your reasoningContent language. This is a strict requirement. Do not use any other language except ${language}.`;
+
+      // 如果有自定义系统提示，将其添加到语言提示之后
+      systemPrompt = customSystemPrompt
+        ? `${languagePrompt}\n\n${customSystemPrompt}`
+        : languagePrompt;
+    }
 
     const response = await new Promise((resolve, reject) => {
       let aiResponse = "";
