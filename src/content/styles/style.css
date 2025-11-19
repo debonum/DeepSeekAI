@@ -401,13 +401,13 @@
   margin-block-end: 0;
 }
 
-/* 用户问题样式 - 清爽简洁 */
+/* 用户问题样式 - Apple iMessage 风格 */
 .theme-adaptive .user-question {
   background-color: var(--user-question-bg);
   color: white;
-  padding: 12px 16px;
+  padding: 10px 16px;
   margin: 16px 16px 8px auto;
-  border-radius: 18px;
+  border-radius: 20px;
   font-size: 15px;
   line-height: 1.47;
   max-width: 75%;
@@ -420,18 +420,20 @@
   overflow: hidden;
   box-sizing: border-box;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  /* 字体平滑优化 */
+  -webkit-font-smoothing: antialiased;
 }
 
 /* AI 回答样式 - 增加呼吸感 */
 .theme-adaptive .ai-answer {
   background-color: var(--ai-answer-bg);
   color: var(--text-primary);
-  padding: 12px 16px;
+  padding: 12px 18px;
   margin: 8px 16px 16px 16px;
-  border-radius: 18px;
+  border-radius: 20px;
   font-size: 15px;
-  line-height: 1.47;
-  max-width: 80%;
+  line-height: 1.5;
+  max-width: 85%;
   border-bottom-left-radius: 4px;
   display: inline-block;
   float: left;
@@ -441,7 +443,7 @@
   overflow: hidden;
   box-sizing: border-box;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-  min-width: 60px; /* 防止内容过少时气泡太窄 */
+  min-width: 60px;
 }
 
 /* 调整消息内容的间距 */
@@ -2482,24 +2484,35 @@
 }
 
 /* Markdown Heading Styles */
+/* Markdown Heading Styles - Apple Style */
 .theme-adaptive h1,
 .theme-adaptive h2,
 .theme-adaptive h3,
 .theme-adaptive h4,
 .theme-adaptive h5,
 .theme-adaptive h6 {
-  margin-top: 24px;
-  margin-bottom: 16px;
+  margin-top: 1.5em;
+  margin-bottom: 0.8em;
   font-weight: 600 !important;
   line-height: 1.25 !important;
   color: var(--text-primary);
+  letter-spacing: -0.015em; /* Tighten tracking slightly for headings */
 }
 
-.theme-adaptive h1 { font-size: 2em !important; border-bottom: 1px solid var(--divider-color); padding-bottom: 0.3em; }
-.theme-adaptive h2 { font-size: 1.5em !important; border-bottom: 1px solid var(--divider-color); padding-bottom: 0.3em; }
-.theme-adaptive h3 { font-size: 1.25em !important; }
-.theme-adaptive h4 { font-size: 1em !important; }
-.theme-adaptive h5 { font-size: 0.875em !important; }
+.theme-adaptive h1 {
+  font-size: 1.8em !important;
+  border-bottom: 1px solid var(--divider-color);
+  padding-bottom: 0.3em;
+  margin-top: 0.5em;
+}
+.theme-adaptive h2 {
+  font-size: 1.4em !important;
+  border-bottom: 1px solid var(--divider-color);
+  padding-bottom: 0.3em;
+}
+.theme-adaptive h3 { font-size: 1.2em !important; }
+.theme-adaptive h4 { font-size: 1em !important; font-weight: 700 !important; }
+.theme-adaptive h5 { font-size: 0.9em !important; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
 .theme-adaptive h6 { font-size: 0.85em !important; color: var(--text-secondary); }
 
 /* Markdown Text Styles */
@@ -2559,47 +2572,56 @@
 }
 
 /* Markdown Table Styles */
+/* Markdown Table Styles - iOS Settings Style */
 .theme-adaptive table {
-  border-collapse: collapse;
-  width: auto; /* 改为 auto 防止在 float 容器中塌陷 */
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
   max-width: 100%;
-  display: block; /* 允许横向滚动 */
+  display: block;
   overflow-x: auto;
   margin: 16px 0;
   font-size: 14px;
-  border-radius: 8px;
-  box-shadow: 0 0 0 1px var(--border-color);
+  border-radius: 12px; /* Larger radius */
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-primary); /* Ensure background */
+  overflow: hidden; /* Clip corners */
 }
 
 .theme-adaptive th,
 .theme-adaptive td {
-  border: 1px solid var(--border-color);
-  padding: 8px 12px;
+  border: none; /* Remove default borders */
+  border-bottom: 1px solid var(--divider-color); /* Horizontal lines only */
+  padding: 12px 16px; /* More breathing room */
   text-align: left;
 }
 
 .theme-adaptive th {
   background-color: var(--bg-secondary);
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  font-size: 0.85em;
+  letter-spacing: 0.05em;
+}
+
+.theme-adaptive tr:last-child td {
+  border-bottom: none; /* Remove last border */
 }
 
 .theme-adaptive tr:nth-child(even) {
-  background-color: rgba(0, 0, 0, 0.02);
-}
-
-.theme-adaptive.dark-mode tr:nth-child(even) {
-  background-color: rgba(255, 255, 255, 0.02);
+  background-color: transparent; /* Clean look, no stripes */
 }
 
 /* Markdown Blockquote Styles */
+/* Markdown Blockquote Styles - Apple Notes Style */
 .theme-adaptive blockquote {
   margin: 16px 0;
-  padding: 8px 16px;
-  border-left: 4px solid var(--accent-color);
-  background-color: var(--bg-secondary);
-  border-radius: 0 8px 8px 0;
+  padding: 0 16px;
+  border-left: 3px solid var(--accent-color); /* Thinner, cleaner border */
+  background-color: transparent; /* Remove background for cleaner look, or use very subtle one */
   color: var(--text-secondary);
+  font-style: italic;
 }
 
 .theme-adaptive blockquote p {
@@ -2682,4 +2704,23 @@
 .theme-adaptive .ai-answer ul ul ul,
 .theme-adaptive .user-question ul ul ul {
   list-style-type: square;
+}
+
+/* Markdown Image Styles - Apple Style */
+.theme-adaptive .ai-answer img,
+.theme-adaptive .user-question img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+  margin: 12px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  display: block;
+}
+
+/* Markdown Horizontal Rule Styles */
+.theme-adaptive hr {
+  border: none;
+  border-top: 1px solid var(--divider-color);
+  margin: 24px 0;
+  width: 100%;
 }
