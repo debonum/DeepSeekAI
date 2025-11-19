@@ -165,21 +165,34 @@ const updateContent = () => {
   document.getElementById("chrome-desc").textContent = langData.chromeDesc;
   document.getElementById("edge-install").textContent = langData.edgeInstall;
   document.getElementById("edge-desc").textContent = langData.edgeDesc;
-  document.getElementById("deepseek-website").textContent =
-    langData.deepseekWebsite;
-  document.getElementById("deepseek-desc").textContent = langData.deepseekDesc;
+
+  // Handle hidden elements safely
+  if (document.getElementById("deepseek-website")) document.getElementById("deepseek-website").textContent = langData.deepseekWebsite;
+  if (document.getElementById("deepseek-desc")) document.getElementById("deepseek-desc").textContent = langData.deepseekDesc;
+
   document.getElementById("api-key").textContent = langData.apiKey;
   document.getElementById("api-desc").textContent = langData.apiDesc;
-  document.getElementById("shortcuts").textContent = langData.shortcuts;
-  document.getElementById("shortcuts-desc").textContent =
-    langData.shortcutsDesc;
+
+  if (document.getElementById("shortcuts")) document.getElementById("shortcuts").textContent = langData.shortcuts;
+  if (document.getElementById("shortcuts-desc")) document.getElementById("shortcuts-desc").textContent = langData.shortcutsDesc;
+
   document.getElementById("github").textContent = langData.github;
   document.getElementById("github-desc").textContent = langData.githubDesc;
 
-  const steps = document.querySelectorAll("#installation-steps li");
-  steps.forEach((step, index) => {
-    step.textContent = langData.installationSteps[index];
-  });
+  // Update installation steps - New Structure
+  const stepsContainer = document.getElementById("installation-steps-container");
+  if (stepsContainer) {
+    stepsContainer.innerHTML = ''; // Clear existing steps
+    langData.installationSteps.forEach((stepText) => {
+      const stepItem = document.createElement('div');
+      stepItem.className = 'step-item';
+      const stepContent = document.createElement('div');
+      stepContent.className = 'step-content';
+      stepContent.textContent = stepText;
+      stepItem.appendChild(stepContent);
+      stepsContainer.appendChild(stepItem);
+    });
+  }
 
   document.getElementById("usage").textContent = langData.usage;
   document.getElementById("quick-button").textContent = langData.quickButton;
@@ -189,7 +202,7 @@ const updateContent = () => {
   document.getElementById("shortcut-usage-desc").textContent =
     langData.shortcutUsageDesc;
 
-  // 更新快捷键说明
+  // Update shortcut descriptions
   if (document.getElementById("shortcut-key-1")) {
     document.getElementById("shortcut-key-1").textContent = langData.shortcutKey1;
   }
@@ -230,8 +243,9 @@ const updateContent = () => {
     langData.uiInteraction3;
   document.getElementById("ui-interaction-4").textContent =
     langData.uiInteraction4;
-  document.getElementById("ui-interaction-5").textContent =
-    langData.uiInteraction5;
+  // ui-interaction-5 might be missing in new design, handle safely
+  if (document.getElementById("ui-interaction-5")) document.getElementById("ui-interaction-5").textContent = langData.uiInteraction5;
+
   document.getElementById("personalization").textContent =
     langData.personalization;
   document.getElementById("personalization-1").textContent =
@@ -241,10 +255,11 @@ const updateContent = () => {
   document.getElementById("personalization-3").textContent =
     langData.personalization3;
 
-  document.getElementById("tips").textContent = langData.tips;
-  document.getElementById("tip-1").textContent = langData.tip1;
-  document.getElementById("tip-2").textContent = langData.tip2;
-  document.getElementById("tip-3").textContent = langData.tip3;
+  // Tips section might be hidden or restructured
+  if (document.getElementById("tips")) document.getElementById("tips").textContent = langData.tips;
+  if (document.getElementById("tip-1")) document.getElementById("tip-1").textContent = langData.tip1;
+  if (document.getElementById("tip-2")) document.getElementById("tip-2").textContent = langData.tip2;
+  if (document.getElementById("tip-3")) document.getElementById("tip-3").textContent = langData.tip3;
 
   document.getElementById("feedback").textContent = langData.feedback;
   document.getElementById("feedback-desc").textContent = langData.feedbackDesc;
