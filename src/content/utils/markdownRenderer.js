@@ -30,15 +30,15 @@ function protectMath(text) {
 
   // Regex to match code blocks (fence or inline) OR math blocks
   // Group 1: Code (```...``` or `...`)
-  // Group 2: Math ($$...$$ or \[...\] or \(...\) or $...$)
-  const regex = /((?:^|\n)```[\s\S]*?```|`[^`]*`)|(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\)|(?<!\\)\$[^$]+(?<!\\)\$)/g;
+  // Group 2: Math ($$...$$ or \[...\] or \(...\) or \begin{...}...\end{...} or $...$)
+  const regex = /((?:^|\n)```[\s\S]*?```|`[^`]*`|(?:^|\n)(?: {4}|\t).*)|(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\)|\\begin\s*\{([a-zA-Z]+\*?)\}[\s\S]*?\\end\s*\{\3\}|(?<!\\)\$[^$]+(?<!\\)\$)/g;
 
   const protectedText = text.replace(regex, (match, code, math) => {
     if (code) return code; // It's code, return as is
     if (math) {
       const key = `@@MATH_PLACEHOLDER_${index++}@@`;
       // Determine display mode
-      const isDisplay = math.startsWith('$$') || math.startsWith('\\[');
+      const isDisplay = math.startsWith('$$') || math.startsWith('\\[') || math.startsWith('\\begin');
       // Strip delimiters for KaTeX
       let content = math;
       if (math.startsWith('$$')) content = math.slice(2, -2);

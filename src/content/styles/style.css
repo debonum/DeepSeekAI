@@ -2621,3 +2621,65 @@
   background-color: rgba(255, 255, 255, 0.1);
   color: #ff7b72;
 }
+
+/* Markdown Link Styles */
+.theme-adaptive .ai-answer a,
+.theme-adaptive .user-question a {
+  color: var(--accent-color);
+  text-decoration: none;
+  cursor: pointer;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease;
+}
+
+.theme-adaptive .ai-answer a:hover,
+.theme-adaptive .user-question a:hover {
+  border-bottom-color: var(--accent-color);
+}
+
+/* Markdown List Styles */
+.theme-adaptive .ai-answer ul,
+.theme-adaptive .ai-answer ol,
+.theme-adaptive .user-question ul,
+.theme-adaptive .user-question ol {
+  margin: 0.8em 0;
+  padding-left: 2em; /* Ensure space for bullets/numbers */
+}
+
+.theme-adaptive .ai-answer ul,
+.theme-adaptive .user-question ul {
+  list-style-type: disc;
+}
+
+.theme-adaptive .ai-answer ol,
+.theme-adaptive .user-question ol {
+  list-style-type: decimal;
+}
+
+.theme-adaptive .ai-answer li,
+.theme-adaptive .user-question li {
+  margin: 0.4em 0;
+  line-height: 1.6;
+}
+
+/* Nested List Styles */
+.theme-adaptive .ai-answer ul ul,
+.theme-adaptive .ai-answer ol ul,
+.theme-adaptive .ai-answer ul ol,
+.theme-adaptive .ai-answer ol ol,
+.theme-adaptive .user-question ul ul,
+.theme-adaptive .user-question ol ul,
+.theme-adaptive .user-question ul ol,
+.theme-adaptive .user-question ol ol {
+  margin: 0.4em 0;
+}
+
+.theme-adaptive .ai-answer ul ul,
+.theme-adaptive .user-question ul ul {
+  list-style-type: circle;
+}
+
+.theme-adaptive .ai-answer ul ul ul,
+.theme-adaptive .user-question ul ul ul {
+  list-style-type: square;
+}
