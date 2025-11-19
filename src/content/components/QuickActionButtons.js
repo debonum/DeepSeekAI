@@ -89,6 +89,7 @@ export async function createQuickActionButtons(
 ) {
   // 🎯 核心逻辑：运用第一性原理，将"视觉选中态"与"浏览器焦点态"解耦
   // 通过 CSS Custom Highlight API 创建独立的视觉层，确保交互时的视觉连续性
+  // 注意：这只负责视觉效果，复制功能由 content.js 中的全局 copy 事件监听保证
   try {
     const selection = window.getSelection();
     if (selection && selection.rangeCount > 0 && CSS && CSS.highlights) {
@@ -747,7 +748,15 @@ export async function createQuickActionButtons(
     customInput.focus();
   }, true);
 
+  // 🎯 输入框获得焦点时的处理
+  // 不需要特殊处理，因为全局的 copy 事件监听会确保复制时恢复选区
+  customInput.addEventListener('focus', (e) => {
+    // CSS Highlight 会保持视觉效果，浏览器选区会被清除
+    // 但我们已经保存了选区，复制时会自动恢复
+  }, true);
+
   // 键盘事件
+
   customInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();

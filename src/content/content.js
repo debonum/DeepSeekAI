@@ -874,7 +874,12 @@ document.addEventListener("contextmenu", function(event) {
   if (isOnQuickActions) {
     return; // QAB内部右键，由浏览器处理
   }
-  // 外部右键，不再尝试影响原生菜单的选区
+
+  // 核心修复：右键菜单显示前，恢复浏览器原生选区
+  // 确保复制选项可用
+  if (selectionManager.hasSelection()) {
+    selectionManager.restoreSelection(true);
+  }
 }, { capture: true });
 
 // 修改捕获阶段的mousedown事件处理
@@ -1350,3 +1355,30 @@ async function handleCopyAction() {
     console.log("没有选中的文本可以复制");
   }
 }
+
+// 🎯 核心修复：全局 copy 事件监听
+// 在任何复制操作前恢复选区，确保 Ctrl+C 和右键复制都能工作
+document.addEventListener('copy', function(event) {
+  if (selectionManager.hasSelection()) {
+    const currentSelection = window.getSelection();
+    if (!currentSelection || currentSelection.isCollapsed || !currentSelection.toString().trim()) {
+      // 当前没有选区或选区为空，恢复保存的选区
+      selectionManager.restoreSelection(true);
+    }
+  }
+}, { capture: true });
+
+// 🎯 核心修复：监听 Ctrl/Cmd+C 组合键
+// 在按键触发时立即恢复选区，确保后续的 copy 事件能正确执行
+document.addEventListener('keydown', function(event) {
+  // 检测 Ctrl+C (Windows/Linux) 或 Cmd+C (Mac)
+  const isCopyShortcut = (event.ctrlKey || event.metaKey) && event.key === 'c';
+
+  if (isCopyShortcut && selectionManager.hasSelection()) {
+    const currentSelection = window.getSelection();
+    if (!currentSelection || currentSelection.isCollapsed || !currentSelection.toString().trim()) {
+      // 当前没有有效选区，恢复保存的选区
+      selectionManager.restoreSelection(true);
+    }
+  }
+}, { capture: true });

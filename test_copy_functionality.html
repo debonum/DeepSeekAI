@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>复制功能测试</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+      padding: 40px;
+      line-height: 1.8;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      color: #1d1d1f;
+      margin-bottom: 30px;
+    }
+
+    .test-section {
+      margin: 30px 0;
+      padding: 20px;
+      background: #f5f5f7;
+      border-radius: 12px;
+    }
+
+    .test-section h2 {
+      color: #0071e3;
+      font-size: 18px;
+      margin-bottom: 15px;
+    }
+
+    .test-text {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 10px 0;
+      border: 1px solid #d2d2d7;
+    }
+
+    .instructions {
+      margin-top: 15px;
+      padding: 15px;
+      background: #e8f5e9;
+      border-radius: 8px;
+      border-left: 3px solid #4caf50;
+    }
+
+    .instructions ol {
+      margin: 10px 0;
+      padding-left: 20px;
+    }
+
+    .instructions li {
+      margin: 8px 0;
+    }
+
+    code {
+      background: #1d1d1f;
+      color: #0a84ff;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧪 DeepSeek AI 快捷按钮复制功能测试</h1>
+
+  <div class="test-section">
+    <h2>测试场景 1: 基础复制 (Ctrl/Cmd+C)</h2>
+    <div class="test-text">
+      这是一段测试文本。请选中这段文字，等待快捷按钮工具栏出现，然后按 Ctrl+C (Windows) 或 Cmd+C (Mac) 进行复制。
+    </div>
+    <div class="instructions">
+      <strong>测试步骤:</strong>
+      <ol>
+        <li>选中上面的文本</li>
+        <li>等待快捷按钮工具栏出现</li>
+        <li>按下 <code>Ctrl+C</code> (或 <code>Cmd+C</code>)</li>
+        <li>在任意地方粘贴，验证是否成功复制</li>
+      </ol>
+      <strong>预期结果:</strong> 应该能成功复制选中的文本
+    </div>
+  </div>
+
+  <div class="test-section">
+    <h2>测试场景 2: 输入框焦点后复制</h2>
+    <div class="test-text">
+      人工智能正在改变世界。这段文字用于测试在工具栏输入框获得焦点后，是否仍然可以复制原始选中的内容。
+    </div>
+    <div class="instructions">
+      <strong>测试步骤:</strong>
+      <ol>
+        <li>选中上面的文本</li>
+        <li>等待快捷按钮工具栏出现</li>
+        <li>点击工具栏的输入框</li>
+        <li>输入框获得焦点后，按 <code>Ctrl+C</code></li>
+        <li>在其他地方粘贴，检查复制的内容</li>
+      </ol>
+      <strong>预期结果:</strong> 应该复制的是原始选中的文本（而不是空的或者其他内容）
+    </div>
+  </div>
+
+  <div class="test-section">
+    <h2>测试场景 3: 右键菜单复制</h2>
+    <div class="test-text">
+      DeepSeek AI 提供强大的文本处理功能。右键菜单的复制选项应该在工具栏出现后仍然可用。
+    </div>
+    <div class="instructions">
+      <strong>测试步骤:</strong>
+      <ol>
+        <li>选中上面的文本</li>
+        <li>等待快捷按钮工具栏出现</li>
+        <li>在选中的文本上右键点击</li>
+        <li>检查"复制"选项是否可用（不是灰色）</li>
+        <li>点击"复制"</li>
+        <li>在其他地方粘贴验证</li>
+      </ol>
+      <strong>预期结果:</strong> 右键菜单的复制选项应该可用，并能成功复制
+    </div>
+  </div>
+
+  <div class="test-section">
+    <h2>测试场景 4: 工具栏复制按钮</h2>
+    <div class="test-text">
+      最后一个测试：使用工具栏自带的复制按钮。这应该始终工作正常，因为它直接调用了内部的复制方法。
+    </div>
+    <div class="instructions">
+      <strong>测试步骤:</strong>
+      <ol>
+        <li>选中上面的文本</li>
+        <li>等待快捷按钮工具栏出现</li>
+        <li>点击工具栏上的复制图标按钮</li>
+        <li>在其他地方粘贴验证</li>
+      </ol>
+      <strong>预期结果:</strong> 应该能成功复制（这是对照组，应该一直工作）
+    </div>
+  </div>
+
+  <div class="test-section" style="background: #fff3cd; border-left: 3px solid #ffc107;">
+    <h2>📝 测试记录</h2>
+    <p>请在下方文本框记录测试结果：</p>
+    <textarea style="width: 100%; min-height: 150px; padding: 12px; border-radius: 8px; border: 1px solid #d2d2d7; font-family: inherit; font-size: 14px;" placeholder="测试结果记录：
+- 场景1: ✅/❌
+- 场景2: ✅/❌
+- 场景3: ✅/❌
+- 场景4: ✅/❌
+
+备注："></textarea>
+  </div>
+</body>
+</html>
