@@ -24,16 +24,67 @@ const sanitizeHtml = (html) => {
   }
 };
 
+// Regex to match code blocks (fence or inline) OR math blocks
+// Group 1: Code (```...``` or `...`)
+// Group 2: Math ($$...$$ or \[...\] or \(...\) or \begin{...}...\end{...} or $...$)
+const PROTECT_REGEX = /((?:^|\n)```[\s\S]*?```|`[^`]*`|(?:^|\n)(?: {4}|\t).*)|(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\)|\\begin\s*\{([a-zA-Z]+\*?)\}[\s\S]*?\\end\s*\{\3\}|(?<!\\)\$[^$]+(?<!\\)\$)/g;
+
+function ensureListSpacing(text) {
+  const listMarkerRegex = /^[ \t]*([-*+]|\d+[.)]) +/;
+  const lines = text.split('\n');
+  const newLines = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const isListItem = listMarkerRegex.test(line);
+
+    if (i > 0) {
+      const prevLine = lines[i - 1];
+      const prevIsListItem = listMarkerRegex.test(prevLine);
+      const prevIsBlank = /^\s*$/.test(prevLine);
+
+      // If current is list item, and previous was NOT list item and NOT blank
+      // Insert a blank line to ensure proper Markdown list rendering
+      if (isListItem && !prevIsListItem && !prevIsBlank) {
+        newLines.push('');
+      }
+    }
+    newLines.push(line);
+  }
+
+  return newLines.join('\n');
+}
+
+function preprocessMarkdown(text) {
+  let lastIndex = 0;
+  let result = "";
+  let match;
+
+  // Reset regex state
+  PROTECT_REGEX.lastIndex = 0;
+
+  while ((match = PROTECT_REGEX.exec(text)) !== null) {
+    // Process text before the match (normal text)
+    const before = text.slice(lastIndex, match.index);
+    result += ensureListSpacing(before);
+
+    // Append the match (Code or Math) as is
+    result += match[0];
+
+    lastIndex = PROTECT_REGEX.lastIndex;
+  }
+
+  // Process remaining text
+  result += ensureListSpacing(text.slice(lastIndex));
+
+  return result;
+}
+
 function protectMath(text) {
   const map = new Map();
   let index = 0;
 
-  // Regex to match code blocks (fence or inline) OR math blocks
-  // Group 1: Code (```...``` or `...`)
-  // Group 2: Math ($$...$$ or \[...\] or \(...\) or \begin{...}...\end{...} or $...$)
-  const regex = /((?:^|\n)```[\s\S]*?```|`[^`]*`|(?:^|\n)(?: {4}|\t).*)|(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\)|\\begin\s*\{([a-zA-Z]+\*?)\}[\s\S]*?\\end\s*\{\3\}|(?<!\\)\$[^$]+(?<!\\)\$)/g;
-
-  const protectedText = text.replace(regex, (match, code, math) => {
+  const protectedText = text.replace(PROTECT_REGEX, (match, code, math) => {
     if (code) return code; // It's code, return as is
     if (math) {
       const key = `@@MATH_PLACEHOLDER_${index++}@@`;
@@ -98,11 +149,22 @@ function restoreMath(html, map) {
 export function render(text) {
   if (!text) return "";
   try {
-    // Pre-process custom Markdown features
-    const processedText = processMarkdownFeatures(String(text));
+    // 0. Preprocess to ensure list spacing (fix for missing newlines)
+    const spacedText = preprocessMarkdown(String(text));
+
+    // 1. Process custom Markdown features
+    const processedText = processMarkdownFeatures(spacedText);
+
+    // 2. Protect Math
     const { protectedText, map } = protectMath(processedText);
+
+    // 3. Render Markdown
     const html = mdIt.render(protectedText);
+
+    // 4. Sanitize
     const sanitized = sanitizeHtml(html);
+
+    // 5. Restore Math
     return restoreMath(sanitized, map);
   } catch (error) {
     console.warn("Markdown render failed:", error);
