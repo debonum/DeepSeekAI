@@ -1029,12 +1029,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       }
 
       // 如果窗口不存在,创建新窗口
+      // 优先级：1. selectionManager 保存的选中文本  2. background.js 传递的 selectedText  3. 兜底获取
+      // 因为 selectionManager 在用户选中时已经保存了选区，background.js 的 executeScript 可能因时序/焦点问题获取失败
       let selectedTextContent = "";
-      if (request.selectedText) {
+
+      // 第一优先级：使用 selectionManager 保存的选中文本
+      if (selectionManager.hasSelection()) {
+        selectedTextContent = selectionManager.getSavedText();
+        lastSelectionText = selectedTextContent;
+        lastSelectionTime = Date.now();
+      }
+      // 第二优先级：如果 selectionManager 没有保存，使用 background.js 传递的文本
+      else if (request.selectedText) {
         selectedTextContent = request.selectedText;
         lastSelectionText = selectedTextContent;
         lastSelectionTime = Date.now();
-      } else {
+      }
+      // 第三优先级：兜底尝试从本地获取
+      else {
         selectedTextContent = getReliableSelectedText();
       }
 
@@ -1099,12 +1111,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       }
 
       // 如果窗口不存在,创建新窗口
+      // 优先级：1. selectionManager 保存的选中文本  2. background.js 传递的 selectedText  3. 兜底获取
+      // 因为 selectionManager 在用户选中时已经保存了选区，background.js 的 executeScript 可能因时序/焦点问题获取失败
       let selectedTextContent = "";
-      if (request.selectedText) {
+
+      // 第一优先级：使用 selectionManager 保存的选中文本
+      if (selectionManager.hasSelection()) {
+        selectedTextContent = selectionManager.getSavedText();
+        lastSelectionText = selectedTextContent;
+        lastSelectionTime = Date.now();
+      }
+      // 第二优先级：如果 selectionManager 没有保存，使用 background.js 传递的文本
+      else if (request.selectedText) {
         selectedTextContent = request.selectedText;
         lastSelectionText = selectedTextContent;
         lastSelectionTime = Date.now();
-      } else {
+      }
+      // 第三优先级：兜底尝试从本地获取
+      else {
         selectedTextContent = getReliableSelectedText();
       }
 
