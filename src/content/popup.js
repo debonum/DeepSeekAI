@@ -179,7 +179,7 @@ export function createPopup(selectedText, rect, hideQuestion = false, removeCall
   addIconsToElement(initialAnswerElement);
   aiResponseElement.appendChild(initialAnswerElement);
 
-  window.aiResponseContainer.style.paddingBottom = "10px";
+  window.aiResponseContainer.style.paddingBottom = "40px";
   window.aiResponseContainer.appendChild(aiResponseElement);
   popup.appendChild(window.aiResponseContainer);
 

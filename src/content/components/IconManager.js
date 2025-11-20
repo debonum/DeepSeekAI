@@ -112,7 +112,7 @@ export function addIconsToElement(element) {
   iconContainer.style.transition = "opacity 0.2s ease";
 
   const copyWrapper = document.createElement("div");
-  copyWrapper.className = "icon-wrapper tooltip";
+  copyWrapper.className = "icon-wrapper";
 
   const copyIconContainer = document.createElement("div");
   copyIconContainer.style.width = "16px";
@@ -129,12 +129,7 @@ export function addIconsToElement(element) {
     copySvg.style.height = "100%";
   }
 
-  const copyTooltip = document.createElement("span");
-  copyTooltip.className = "tooltiptext";
-  copyTooltip.textContent = "Copy";
-
   copyWrapper.appendChild(copyIconContainer);
-  copyWrapper.appendChild(copyTooltip);
 
   copyWrapper.addEventListener("click", (event) => {
     event.stopPropagation();
@@ -153,12 +148,10 @@ export function addIconsToElement(element) {
     navigator.clipboard.writeText(textContent).then(() => {
       copyIconContainer.style.transform = "scale(1.2)";
       copyIconContainer.title = "Copied!";
-      copyTooltip.textContent = "Copied!";
 
       setTimeout(() => {
         copyIconContainer.style.transform = "";
         copyIconContainer.title = "Copy";
-        copyTooltip.textContent = "Copy";
       }, 1000);
     });
   });
@@ -169,7 +162,7 @@ export function addIconsToElement(element) {
     const userQuestion = element.previousElementSibling;
     if (userQuestion && userQuestion.classList.contains("user-question")) {
       const regenerateWrapper = document.createElement("div");
-      regenerateWrapper.className = "icon-wrapper tooltip";
+      regenerateWrapper.className = "icon-wrapper";
 
       const regenerateIconContainer = document.createElement("div");
       regenerateIconContainer.style.width = "16px";
@@ -186,12 +179,7 @@ export function addIconsToElement(element) {
         regSvg.style.height = "100%";
       }
 
-      const regenerateTooltip = document.createElement("span");
-      regenerateTooltip.className = "tooltiptext";
-      regenerateTooltip.textContent = "Regenerate";
-
       regenerateWrapper.appendChild(regenerateIconContainer);
-      regenerateWrapper.appendChild(regenerateTooltip);
 
       regenerateWrapper.addEventListener("click", (event) => {
         event.stopPropagation();
@@ -321,7 +309,7 @@ export function updateLastAnswerIcons() {
       userQuestion && userQuestion.classList.contains("user-question")) {
     iconContainer.style.opacity = '1';
     const regenerateWrapper = document.createElement("div");
-    regenerateWrapper.className = "icon-wrapper tooltip";
+    regenerateWrapper.className = "icon-wrapper";
 
     const regenerateIconContainer = document.createElement("div");
     regenerateIconContainer.style.width = "16px";
@@ -338,12 +326,7 @@ export function updateLastAnswerIcons() {
       regSvg.style.height = "100%";
     }
 
-    const regenerateTooltip = document.createElement("span");
-    regenerateTooltip.className = "tooltiptext";
-    regenerateTooltip.textContent = "Regenerate";
-
     regenerateWrapper.appendChild(regenerateIconContainer);
-    regenerateWrapper.appendChild(regenerateTooltip);
 
     regenerateWrapper.addEventListener("click", (event) => {
       event.stopPropagation();

@@ -417,7 +417,7 @@
   word-wrap: break-word;
   word-break: break-word;
   overflow-wrap: break-word;
-  overflow: hidden;
+  overflow: visible;
   box-sizing: border-box;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
   /* 字体平滑优化 */
@@ -440,7 +440,7 @@
   word-wrap: break-word;
   word-break: break-word;
   overflow-wrap: break-word;
-  overflow: hidden;
+  overflow: visible;
   box-sizing: border-box;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   min-width: 60px;
@@ -539,13 +539,13 @@
   opacity: 0.9;
 }
 
-/* 用户消息中的图标样式 */
-.user-question .icon-container img,
+/* 用户消息中的图标样式 - 只覆盖颜色，不设置 opacity */
+.user-question .icon-container,
 .user-question .icon-container svg {
-  /* filter: brightness(10); Removed */
-  opacity: 0.9;
-  color: white; /* Ensure white color in user bubbles */
+  color: var(--text-secondary) !important; /* 覆盖继承的白色，使用和 ai-answer 相同的颜色 */
+  /* 不设置 opacity，使用默认的 0.7 (light) / 0.9 (dark) */
 }
+
 
 /* 工具提示样式 */
 .tooltip .tooltiptext {
@@ -1061,7 +1061,7 @@
 
 /* 内容区域滚动容器 - 修复滚动问题 */
 .theme-adaptive #ai-response-container {
-  height: calc(100% - 68px) !important;
+  height: calc(100% - 80px) !important;
   margin-bottom: 64px;
   background-color: var(--bg-primary);
   padding: 0 8px 32px 8px;
