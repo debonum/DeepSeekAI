@@ -5,12 +5,14 @@ import DOMPurify from "dompurify";
 
 import katex from "katex";
 import "katex/dist/katex.min.css";
+import "katex/contrib/mhchem"; // Enable chemical equation rendering
 import { ICONS } from "../components/Icons";
 
 const isBrowserEnvironment = typeof window !== "undefined" && typeof document !== "undefined";
 
 // Minimal markdown-it: default rules only (no plugins, no custom rules)
 const mdIt = new MarkdownIt({ html: true, linkify: true, breaks: true });
+mdIt.disable('code'); // Disable indented code blocks to prevent indented math from being treated as code
 
 const sanitizeHtml = (html) => {
   if (!isBrowserEnvironment) return html;
@@ -28,7 +30,7 @@ const sanitizeHtml = (html) => {
 // Regex to match code blocks (fence or inline) OR math blocks
 // Group 1: Code (```...``` or `...`)
 // Group 2: Math ($$...$$ or \[...\] or \(...\) or \begin{...}...\end{...} or $...$)
-const PROTECT_REGEX = /((?:^|\n)```[\s\S]*?```|`[^`]*`|(?:^|\n)(?: {4}|\t).*)|(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\)|\\begin\s*\{([a-zA-Z]+\*?)\}[\s\S]*?\\end\s*\{\3\}|(?<!\\)\$[^$]+(?<!\\)\$)/g;
+const PROTECT_REGEX = /((?:^|\n)```[\s\S]*?```|`[^`\n]*`)|(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\)|\\begin\s*\{([a-zA-Z]+\*?)\}[\s\S]*?\\end\s*\{\3\}|(?<!\\)\$[^$]+(?<!\\)\$)/g;
 
 function ensureListSpacing(text) {
   const listMarkerRegex = /^[ \t]*([-*+]|\d+[.)]) +/;
@@ -98,6 +100,10 @@ function protectMath(text) {
       else if (math.startsWith('\\(')) content = math.slice(2, -2);
       else if (math.startsWith('$')) content = math.slice(1, -1);
 
+      // Fix double-escaped backslashes often returned by LLMs (e.g. \\ce -> \ce, \\frac -> \frac)
+      // We only touch backslashes followed by a letter, to avoid breaking \\ (newline) followed by space/end
+      content = content.replace(/\\\\([a-zA-Z])/g, "\\$1");
+
       map.set(key, { content, isDisplay });
       return key;
     }
@@ -153,14 +159,14 @@ export function render(text) {
     // 0. Preprocess to ensure list spacing (fix for missing newlines)
     const spacedText = preprocessMarkdown(String(text));
 
-    // 1. Process custom Markdown features
-    const processedText = processMarkdownFeatures(spacedText);
+    // 1. Protect Math (First Principle: Protect fragile content first)
+    const { protectedText, map } = protectMath(spacedText);
 
-    // 2. Protect Math
-    const { protectedText, map } = protectMath(processedText);
+    // 2. Process custom Markdown features (on text with math hidden)
+    const processedText = processMarkdownFeatures(protectedText);
 
     // 3. Render Markdown
-    const html = mdIt.render(protectedText);
+    const html = mdIt.render(processedText);
 
     // 4. Sanitize
     const sanitized = sanitizeHtml(html);
