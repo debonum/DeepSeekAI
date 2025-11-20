@@ -526,19 +526,25 @@
 }
 
 /* 日间模式图标样式 */
-.theme-adaptive.light-mode .icon-container img {
-  filter: brightness(0.3);
+.theme-adaptive.light-mode .icon-container img,
+.theme-adaptive.light-mode .icon-container svg {
+  /* filter: brightness(0.3); Removed */
+  opacity: 0.7;
 }
 
 /* 夜间模式图标样式 */
-.theme-adaptive.dark-mode .icon-container img {
-  filter: invert(1) brightness(0.9);
+.theme-adaptive.dark-mode .icon-container img,
+.theme-adaptive.dark-mode .icon-container svg {
+  /* filter: invert(1) brightness(0.9); Removed */
+  opacity: 0.9;
 }
 
 /* 用户消息中的图标样式 */
-.user-question .icon-container img {
-  filter: brightness(10);
+.user-question .icon-container img,
+.user-question .icon-container svg {
+  /* filter: brightness(10); Removed */
   opacity: 0.9;
+  color: white; /* Ensure white color in user bubbles */
 }
 
 /* 工具提示样式 */
@@ -791,22 +797,21 @@
   position: absolute !important;
   top: 8px !important;
   right: 8px !important;
-  z-index: 20 !important; /* 确保在代码块内容之上 */
-  background-color: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  padding: 6px 12px;
-  font-size: 13px;
+  z-index: 20 !important;
+  background-color: transparent;
+  border: none;
+  border-radius: 4px;
+  padding: 0;
+  box-sizing: border-box;
+  width: 34px;
+  height: 34px;
   color: var(--text-secondary);
   cursor: pointer;
   opacity: 0;
   display: flex;
   align-items: center;
-  gap: 4px;
-  transform: translateY(2px);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  justify-content: center;
+  transition: all 0.2s ease;
 }
 
 .theme-adaptive .code-block-wrapper:hover .copy-button {
@@ -816,30 +821,27 @@
 
 .theme-adaptive .code-block-wrapper .copy-button:hover {
   color: var(--text-primary);
-  transform: translateY(0) scale(1.02);
-  box-shadow: var(--shadow-sm);
+  background-color: rgba(128, 128, 128, 0.1);
 }
 
 .theme-adaptive .code-block-wrapper .copy-button:active {
-  transform: translateY(1px) scale(0.98);
-  transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: scale(0.95);
 }
 
-.theme-adaptive .code-block-wrapper .copy-button img {
-  width: 14px;
-  height: 14px;
-  opacity: 0.6;
+.theme-adaptive .code-block-wrapper .copy-button svg {
+  width: 26px;
+  height: 26px;
+  opacity: 0.7;
   transition: all 0.2s ease;
 }
 
 /* 暗色模式下复制按钮的图标颜色调整 */
-.theme-adaptive.dark-mode .code-block-wrapper .copy-button img {
-  filter: invert(1) brightness(0.9);
-  opacity: 0.8;
+.theme-adaptive.dark-mode .code-block-wrapper .copy-button svg {
+  opacity: 0.9;
 }
 
-.theme-adaptive .code-block-wrapper .copy-button:hover img {
-  opacity: 0.8;
+.theme-adaptive .code-block-wrapper .copy-button:hover svg {
+  opacity: 1;
 }
 
 /* 复制成功状态 */
@@ -859,38 +861,11 @@
 }
 
 .theme-adaptive .code-block-wrapper .copy-button.copied {
-  background-color: var(--bg-secondary);
-  color: var(--accent-color);
-  border-color: var(--accent-color);
-  animation: copiedAnimation 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #4caf50; /* Green color for success */
 }
 
 /* 复制成功图标样式 */
-.theme-adaptive .code-block-wrapper .copy-button .copy-success {
-  font-size: 16px;
-  font-weight: bold;
-  color: var(--accent-color);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* 暗色模式下复制成功图标样式 */
-.theme-adaptive.dark-mode .code-block-wrapper .copy-button .copy-success {
-  color: #fff;
-}
-
-/* 复制成功后的图标样式 */
-.theme-adaptive .code-block-wrapper .copy-button .copied-icon {
-  opacity: 1 !important;
-  filter: brightness(1) sepia(1) saturate(5) hue-rotate(180deg) !important;
-}
-
-/* 暗色模式下复制成功图标样式 */
-.theme-adaptive.dark-mode .code-block-wrapper .copy-button .copied-icon {
-  filter: invert(1) brightness(0.9) sepia(1) saturate(5) hue-rotate(180deg) !important;
-  opacity: 1 !important;
-}
+/* Removed old success icon styles */
 
 .theme-adaptive .code-block-wrapper .copy-button.copied img {
   opacity: 1;
@@ -2478,7 +2453,7 @@
 
 @media (prefers-color-scheme: dark) {
   ::highlight(deepseek-active-selection) {
-    background-color: #264f78; /* 深色模式下的选中色 */
+    background-color: rgba(10, 132, 255, 0.35); /* 深色模式下的选中色 - 使用半透明以适应不同背景 */
     color: inherit;
   }
 }

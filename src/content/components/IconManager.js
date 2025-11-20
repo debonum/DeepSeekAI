@@ -2,6 +2,7 @@ import { getAIResponse } from '../services/apiService';
 import PerfectScrollbar from "perfect-scrollbar";
 import { setAllowAutoScroll } from "../utils/scrollManager";
 import { focusInputIfSafe } from '../utils/focusManager';
+import { ICONS } from './Icons';
 
 export function createIcon(x, y) {
   const icon = document.createElement("img");
@@ -32,25 +33,36 @@ export function createSvgIcon(iconName, title) {
   wrapper.style.alignItems = "center";
   wrapper.style.justifyContent = "center";
 
-  const icon = document.createElement("img");
-  icon.style.width = "18px";
-  icon.style.height = "18px";
-  icon.src = chrome.runtime.getURL(`icons/${iconName}.svg`);
-  icon.style.border = "none";
-  icon.style.cursor = "pointer";
-  icon.style.transition = "all 0.2s ease";
-  icon.style.opacity = "1";
-  icon.style.display = "block";
-  icon.style.flexShrink = "0";
-  icon.style.setProperty('--icon-color', document.body.classList.contains('theme-adaptive dark-mode') ? '#ffffff' : '#000000');
+  const iconContainer = document.createElement("div");
+  iconContainer.className = "icon-wrapper";
+  iconContainer.style.width = "20px";
+  iconContainer.style.height = "20px";
+  iconContainer.style.display = "flex";
+  iconContainer.style.alignItems = "center";
+  iconContainer.style.justifyContent = "center";
+  iconContainer.style.transition = "all 0.2s ease";
 
-  icon.addEventListener("mousedown", () => {
-    icon.style.transform = "scale(1.2)";
+  // Use inline SVG if available, otherwise fallback (though we expect all to be in ICONS)
+  if (ICONS[iconName]) {
+    iconContainer.innerHTML = ICONS[iconName];
+  } else {
+    // Fallback or empty
+    console.warn(`Icon ${iconName} not found in ICONS`);
+  }
+
+  const svgElement = iconContainer.querySelector('svg');
+  if (svgElement) {
+    svgElement.style.width = "100%";
+    svgElement.style.height = "100%";
+    svgElement.style.display = "block";
+  }
+
+  iconContainer.addEventListener("mousedown", () => {
+    iconContainer.style.transform = "scale(1.2)";
   });
 
-  icon.addEventListener("mouseup", () => {
-    icon.style.transform = "scale(1)";
-    icon.src = chrome.runtime.getURL(`icons/${iconName}.svg`);
+  iconContainer.addEventListener("mouseup", () => {
+    iconContainer.style.transform = "scale(1)";
   });
 
   const tooltip = document.createElement("span");
@@ -69,7 +81,7 @@ export function createSvgIcon(iconName, title) {
   tooltip.style.transform = "translateX(-50%)";
   tooltip.style.whiteSpace = "nowrap";
 
-  wrapper.appendChild(icon);
+  wrapper.appendChild(iconContainer);
   wrapper.appendChild(tooltip);
 
   wrapper.addEventListener("mouseenter", () => {
@@ -102,17 +114,26 @@ export function addIconsToElement(element) {
   const copyWrapper = document.createElement("div");
   copyWrapper.className = "icon-wrapper tooltip";
 
-  const copyIcon = document.createElement("img");
-  copyIcon.src = chrome.runtime.getURL("icons/copy.svg");
-  copyIcon.title = "Copy";
-  copyIcon.style.opacity = "1";
-  copyIcon.style.setProperty('--icon-color', document.body.classList.contains('theme-adaptive dark-mode') ? '#ffffff' : '#000000');
+  const copyIconContainer = document.createElement("div");
+  copyIconContainer.style.width = "16px";
+  copyIconContainer.style.height = "16px";
+  copyIconContainer.style.display = "flex";
+  copyIconContainer.style.alignItems = "center";
+  copyIconContainer.style.justifyContent = "center";
+  copyIconContainer.innerHTML = ICONS.copy;
+  copyIconContainer.title = "Copy";
+
+  const copySvg = copyIconContainer.querySelector('svg');
+  if (copySvg) {
+    copySvg.style.width = "100%";
+    copySvg.style.height = "100%";
+  }
 
   const copyTooltip = document.createElement("span");
   copyTooltip.className = "tooltiptext";
   copyTooltip.textContent = "Copy";
 
-  copyWrapper.appendChild(copyIcon);
+  copyWrapper.appendChild(copyIconContainer);
   copyWrapper.appendChild(copyTooltip);
 
   copyWrapper.addEventListener("click", (event) => {
@@ -130,13 +151,13 @@ export function addIconsToElement(element) {
       .replace(/^\n+|\n+$/g, ''); // 去除开头和结尾的换行符
 
     navigator.clipboard.writeText(textContent).then(() => {
-      copyIcon.style.transform = "scale(1.2)";
-      copyIcon.title = "Copied!";
+      copyIconContainer.style.transform = "scale(1.2)";
+      copyIconContainer.title = "Copied!";
       copyTooltip.textContent = "Copied!";
 
       setTimeout(() => {
-        copyIcon.style.transform = "";
-        copyIcon.title = "Copy";
+        copyIconContainer.style.transform = "";
+        copyIconContainer.title = "Copy";
         copyTooltip.textContent = "Copy";
       }, 1000);
     });
@@ -150,17 +171,26 @@ export function addIconsToElement(element) {
       const regenerateWrapper = document.createElement("div");
       regenerateWrapper.className = "icon-wrapper tooltip";
 
-      const regenerateIcon = document.createElement("img");
-      regenerateIcon.src = chrome.runtime.getURL("icons/regenerate.svg");
-      regenerateIcon.title = "Regenerate";
-      regenerateIcon.style.opacity = "1";
-      regenerateIcon.style.setProperty('--icon-color', document.body.classList.contains('theme-adaptive dark-mode') ? '#ffffff' : '#000000');
+      const regenerateIconContainer = document.createElement("div");
+      regenerateIconContainer.style.width = "16px";
+      regenerateIconContainer.style.height = "16px";
+      regenerateIconContainer.style.display = "flex";
+      regenerateIconContainer.style.alignItems = "center";
+      regenerateIconContainer.style.justifyContent = "center";
+      regenerateIconContainer.innerHTML = ICONS.regenerate;
+      regenerateIconContainer.title = "Regenerate";
+
+      const regSvg = regenerateIconContainer.querySelector('svg');
+      if (regSvg) {
+        regSvg.style.width = "100%";
+        regSvg.style.height = "100%";
+      }
 
       const regenerateTooltip = document.createElement("span");
       regenerateTooltip.className = "tooltiptext";
       regenerateTooltip.textContent = "Regenerate";
 
-      regenerateWrapper.appendChild(regenerateIcon);
+      regenerateWrapper.appendChild(regenerateIconContainer);
       regenerateWrapper.appendChild(regenerateTooltip);
 
       regenerateWrapper.addEventListener("click", (event) => {
@@ -270,9 +300,10 @@ export function updateLastAnswerIcons() {
   Array.from(answers).forEach(answer => {
     const iconContainer = answer.querySelector('.icon-container');
     if (iconContainer) {
-      const regenerateIcon = iconContainer.querySelector('img[src*="regenerate"]');
-      if (regenerateIcon) {
-        regenerateIcon.parentElement.remove();
+      // Check for regenerate icon by checking title or SVG content, but title is safer if we set it
+      const regenerateIconContainer = iconContainer.querySelector('div[title="Regenerate"]');
+      if (regenerateIconContainer) {
+        regenerateIconContainer.parentElement.remove();
         if (iconContainer.children.length === 0) {
           iconContainer.style.display = 'none';
         }
@@ -286,23 +317,32 @@ export function updateLastAnswerIcons() {
   const userQuestion = lastAnswer.previousElementSibling;
   const iconContainer = lastAnswer.querySelector('.icon-container');
 
-  if (iconContainer && !iconContainer.querySelector('img[src*="regenerate"]') &&
+  if (iconContainer && !iconContainer.querySelector('div[title="Regenerate"]') &&
       userQuestion && userQuestion.classList.contains("user-question")) {
     iconContainer.style.opacity = '1';
     const regenerateWrapper = document.createElement("div");
     regenerateWrapper.className = "icon-wrapper tooltip";
 
-    const regenerateIcon = document.createElement("img");
-    regenerateIcon.src = chrome.runtime.getURL("icons/regenerate.svg");
-    regenerateIcon.title = "Regenerate";
-    regenerateIcon.style.opacity = "1";
-    regenerateIcon.style.setProperty('--icon-color', document.body.classList.contains('theme-adaptive dark-mode') ? '#ffffff' : '#000000');
+    const regenerateIconContainer = document.createElement("div");
+    regenerateIconContainer.style.width = "16px";
+    regenerateIconContainer.style.height = "16px";
+    regenerateIconContainer.style.display = "flex";
+    regenerateIconContainer.style.alignItems = "center";
+    regenerateIconContainer.style.justifyContent = "center";
+    regenerateIconContainer.innerHTML = ICONS.regenerate;
+    regenerateIconContainer.title = "Regenerate";
+
+    const regSvg = regenerateIconContainer.querySelector('svg');
+    if (regSvg) {
+      regSvg.style.width = "100%";
+      regSvg.style.height = "100%";
+    }
 
     const regenerateTooltip = document.createElement("span");
     regenerateTooltip.className = "tooltiptext";
     regenerateTooltip.textContent = "Regenerate";
 
-    regenerateWrapper.appendChild(regenerateIcon);
+    regenerateWrapper.appendChild(regenerateIconContainer);
     regenerateWrapper.appendChild(regenerateTooltip);
 
     regenerateWrapper.addEventListener("click", (event) => {

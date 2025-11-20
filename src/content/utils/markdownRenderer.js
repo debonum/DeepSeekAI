@@ -5,6 +5,7 @@ import DOMPurify from "dompurify";
 
 import katex from "katex";
 import "katex/dist/katex.min.css";
+import { ICONS } from "../components/Icons";
 
 const isBrowserEnvironment = typeof window !== "undefined" && typeof document !== "undefined";
 
@@ -185,16 +186,7 @@ const ensureCodeBlockWrapper = (preElement) => {
   return wrapper;
 };
 
-const getCopyIconUrl = () => {
-  if (typeof chrome !== "undefined" && chrome?.runtime?.getURL) {
-    try {
-      return chrome.runtime.getURL("icons/copy.svg");
-    } catch (error) {
-      console.warn("Failed to load copy icon via chrome.runtime.getURL:", error);
-    }
-  }
-  return "";
-};
+
 
 const bindCopyButton = (button, codeElement) => {
   if (!button || button.dataset.bound === "true") return;
@@ -208,10 +200,11 @@ const bindCopyButton = (button, codeElement) => {
     const codeText = codeElement?.innerText ?? codeElement?.textContent ?? "";
     if (!codeText) return;
 
-    const resetState = (text = "Copy") => {
+    const resetState = () => {
       button.classList.remove("copied");
-      if (label) label.textContent = text;
-      if (success) success.style.visibility = "hidden";
+      button.innerHTML = ICONS.copy;
+      button.setAttribute("aria-label", "Copy code");
+      button.title = "Copy";
     };
 
     try {
@@ -230,12 +223,13 @@ const bindCopyButton = (button, codeElement) => {
       }
 
       button.classList.add("copied");
-      if (label) label.textContent = "Copied";
-      if (success) success.style.visibility = "visible";
+      button.innerHTML = ICONS.check;
+      button.setAttribute("aria-label", "Copied");
+      button.title = "Copied";
       setTimeout(() => resetState(), 2000);
     } catch (error) {
       console.warn("Copy to clipboard failed:", error);
-      resetState("Copy failed");
+      resetState();
       setTimeout(() => resetState(), 2000);
     }
   });
@@ -247,7 +241,7 @@ export function showCodeCopyButtons(root = null) {
   if (!rootElement) return;
 
   const codeBlocks = rootElement.querySelectorAll("pre code");
-  const iconUrl = getCopyIconUrl();
+
 
   codeBlocks.forEach((codeElement) => {
     const pre = codeElement.parentElement;
@@ -288,25 +282,9 @@ export function showCodeCopyButtons(root = null) {
       button = document.createElement("button");
       button.type = "button";
       button.className = "copy-button";
-      button.setAttribute("aria-label", "Copy code block");
-
-      if (iconUrl) {
-        const iconImage = document.createElement("img");
-        iconImage.src = iconUrl;
-        iconImage.alt = "Copy code";
-        button.appendChild(iconImage);
-      }
-
-      const label = document.createElement("span");
-      label.className = "copy-label";
-      label.textContent = "Copy";
-      button.appendChild(label);
-
-      const success = document.createElement("span");
-      success.className = "copy-success";
-      success.textContent = "✓";
-      success.style.visibility = "hidden";
-      button.appendChild(success);
+      button.setAttribute("aria-label", "Copy code");
+      button.title = "Copy";
+      button.innerHTML = ICONS.copy;
 
       wrapper.appendChild(button);
     }

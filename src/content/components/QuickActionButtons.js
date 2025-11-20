@@ -1,4 +1,5 @@
 import { createSvgIcon } from "./IconManager";
+import { ICONS } from "./Icons";
 import { watchThemeChanges } from "../utils/themeManager";
 
 const QUICK_ACTIONS = [
@@ -225,7 +226,8 @@ export async function createQuickActionButtons(
     .quick-action-buttons-container {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      flex-wrap: wrap;
+      gap: 14px;
       width: 100%;
       justify-content: center;
       user-select: none;
@@ -234,8 +236,8 @@ export async function createQuickActionButtons(
     /* 按钮基础样式 - 极简圆形 */
     .quick-action-button {
       box-sizing: border-box;
-      width: 44px;
-      height: 44px;
+      width: 35px;
+      height: 35px;
       padding: 0;
       margin: 0;
       border-radius: 50%;
@@ -249,6 +251,7 @@ export async function createQuickActionButtons(
       user-select: none;
       border: none;
       position: relative;
+      color: #1d1d1f; /* Default icon color */
     }
 
     /* icon-wrapper在按钮中完全居中 */
@@ -398,26 +401,25 @@ export async function createQuickActionButtons(
       height: 32px;
       min-width: 32px;
       border-radius: 50%;
-      background: #007aff;
-      box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+      background: #f5f5f7;
       cursor: pointer;
       transition: all 0.2s ease;
       user-select: none;
       border: none;
+      color: #1d1d1f;
     }
 
     .custom-prompt-send:hover {
       transform: scale(1.05);
-      box-shadow: 0 4px 12px rgba(0, 122, 255, 0.4);
+      background: #e5e5ea;
     }
 
     .custom-prompt-send:active {
       transform: scale(0.95);
-      box-shadow: 0 1px 4px rgba(0, 122, 255, 0.3);
     }
 
     .custom-prompt-send svg {
-      color: white;
+      color: inherit;
       transition: transform 0.15s ease;
     }
 
@@ -501,6 +503,7 @@ export async function createQuickActionButtons(
         background: #3a3a3c;
         border: 0.5px solid rgba(255, 255, 255, 0.1);
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        color: #ffffff; /* Dark mode icon color */
       }
 
       .quick-action-button:hover {
@@ -514,17 +517,17 @@ export async function createQuickActionButtons(
         transform: scale(0.95);
       }
 
-      /* 暗色模式下图标颜色反转，确保可见性 */
+      /* 暗色模式下图标颜色适配 */
       .quick-action-button img,
       .quick-action-button svg {
-        filter: brightness(0) invert(1);
+        /* filter: brightness(0) invert(1); Removed filter */
         opacity: 0.9;
       }
 
       .quick-action-button:hover img,
       .quick-action-button:hover svg {
         opacity: 1;
-        filter: brightness(0) invert(1) drop-shadow(0 0 2px rgba(10, 132, 255, 0.5));
+        /* filter: brightness(0) invert(1) drop-shadow(0 0 2px rgba(10, 132, 255, 0.5)); Removed filter */
       }
 
       .custom-prompt-input {
@@ -783,29 +786,21 @@ export async function createQuickActionButtons(
   sendButton.title = "发送";
 
   // 发送图标
-  const sendIcon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  sendIcon.setAttribute("viewBox", "0 0 24 24");
-  sendIcon.setAttribute("fill", "none");
-  sendIcon.setAttribute("width", "18");
-  sendIcon.setAttribute("height", "18");
+  const sendIconContainer = document.createElement("div");
+  sendIconContainer.style.width = "18px";
+  sendIconContainer.style.height = "18px";
+  sendIconContainer.style.display = "flex";
+  sendIconContainer.style.alignItems = "center";
+  sendIconContainer.style.justifyContent = "center";
+  sendIconContainer.innerHTML = ICONS.send;
 
-  const path1 = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  path1.setAttribute("d", "M22 2L11 13");
-  path1.setAttribute("stroke", "currentColor");
-  path1.setAttribute("stroke-width", "2");
-  path1.setAttribute("stroke-linecap", "round");
-  path1.setAttribute("stroke-linejoin", "round");
+  const sendSvg = sendIconContainer.querySelector('svg');
+  if (sendSvg) {
+    sendSvg.style.width = "100%";
+    sendSvg.style.height = "100%";
+  }
 
-  const path2 = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  path2.setAttribute("d", "M22 2L15 22L11 13L2 9L22 2Z");
-  path2.setAttribute("stroke", "currentColor");
-  path2.setAttribute("stroke-width", "2");
-  path2.setAttribute("stroke-linecap", "round");
-  path2.setAttribute("stroke-linejoin", "round");
-
-  sendIcon.appendChild(path1);
-  sendIcon.appendChild(path2);
-  sendButton.appendChild(sendIcon);
+  sendButton.appendChild(sendIconContainer);
 
   // 事件处理
   sendButton.addEventListener("mousedown", (e) => {
