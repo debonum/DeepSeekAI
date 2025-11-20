@@ -18,7 +18,8 @@ const sanitizeHtml = (html) => {
   if (!isBrowserEnvironment) return html;
   try {
     return DOMPurify.sanitize(html, {
-      ADD_ATTR: ["target", "rel", "aria-label", "style"],
+      ADD_ATTR: ["target", "rel", "aria-label", "style", "open", "class"],
+      ADD_TAGS: ["details", "summary", "kbd", "dl", "dt", "dd"],
       ALLOWED_URI_REGEXP: /^(?:(?:https?|ftp|mailto|tel|data):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i
     });
   } catch (error) {
@@ -168,8 +169,15 @@ export function render(text) {
     // 3. Render Markdown
     const html = mdIt.render(processedText);
 
+    // 3.5 Process Admonitions (GitHub Alerts)
+    // Transform <blockquote><p>[!NOTE] ... to <blockquote class="markdown-alert markdown-alert-note"><p class="markdown-alert-title">Note</p>...
+    let processedHtml = processAdmonitions(html);
+
+    // 3.6 Wrap Tables
+    processedHtml = processTables(processedHtml);
+
     // 4. Sanitize
-    const sanitized = sanitizeHtml(html);
+    const sanitized = sanitizeHtml(processedHtml);
 
     // 5. Restore Math
     return restoreMath(sanitized, map);
@@ -177,6 +185,21 @@ export function render(text) {
     console.warn("Markdown render failed:", error);
     return sanitizeHtml(String(text));
   }
+}
+
+function processAdmonitions(html) {
+  // Regex to match blockquotes starting with [!TYPE]
+  // Matches: <blockquote><p>[!NOTE] or <blockquote>\n<p>[!NOTE]
+  return html.replace(/<blockquote>\s*<p>\s*\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]/gi, (match, type) => {
+    const lowerType = type.toLowerCase();
+    const title = type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
+    return `<blockquote class="markdown-alert markdown-alert-${lowerType}"><p class="markdown-alert-title">${title}</p>`;
+  });
+}
+
+function processTables(html) {
+  // Wrap tables in a scrolling container
+  return html.replace(/<table/g, '<div class="table-wrapper"><table').replace(/<\/table>/g, '</table></div>');
 }
 
 // ——— Code block copy button utilities (kept for UX, independent of renderer) ———

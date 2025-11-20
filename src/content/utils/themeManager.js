@@ -30,62 +30,161 @@ export function isDarkMode() {
 /**
  * 分析页面颜色判断主题
  */
+/**
+ * 分析页面颜色判断主题 (基于第一性原理：视觉上的深色才是真正的深色模式)
+ * 采用"实事求是"的方法，通过采样视口中心元素的背景色来判断
+ * 如果背景色透明（如背景图），则参考文字颜色
+ */
 function analyzePageColors() {
-  const bodyBg = window.getComputedStyle(document.body).backgroundColor;
-  const htmlBg = window.getComputedStyle(document.documentElement).backgroundColor;
-  const bodyColor = window.getComputedStyle(document.body).color;
-  const htmlColor = window.getComputedStyle(document.documentElement).color;
+  // 1. 采样视口中心的元素 (抓住主要矛盾)
+  const x = window.innerWidth / 2;
+  const y = window.innerHeight / 2;
+  let element = document.elementFromPoint(x, y);
 
-  function parseColor(color) {
-    const match = color.match(/\d+/g);
-    if (!match) return null;
-
-    const [r, g, b, a = 255] = match.map(Number);
-    const isTransparent = a === 0 || (r === 0 && g === 0 && b === 0 && a < 0.1);
-
-    // 改进亮度计算，更符合人眼感知
-    // 使用相对亮度公式: https://www.w3.org/TR/WCAG20/#relativeluminancedef
-    const relativeLuminance =
-      0.2126 * (r / 255) +
-      0.7152 * (g / 255) +
-      0.0722 * (b / 255);
-
-    return {
-      r, g, b, a,
-      isTransparent,
-      brightness: relativeLuminance
-    };
+  if (!element) {
+    element = document.body;
   }
 
-  const bodyBgColor = parseColor(bodyBg);
-  const htmlBgColor = parseColor(htmlBg);
-  const bodyTextColor = parseColor(bodyColor);
-  const htmlTextColor = parseColor(htmlColor);
+  // 2. 向上遍历寻找有效的背景色和文字颜色
+  let effectiveBg = null;
+  let effectiveText = null;
+  let currentEl = element;
 
-  // 优先使用背景色判断
-  const effectiveBgColor = bodyBgColor?.isTransparent ? htmlBgColor : bodyBgColor;
+  // 限制遍历深度，避免性能问题
+  let depth = 0;
+  const MAX_DEPTH = 10;
 
-  // 如果背景色无法判断，使用文字颜色
-  const effectiveTextColor = bodyTextColor?.isTransparent ? htmlTextColor : bodyTextColor;
+  while (currentEl && depth < MAX_DEPTH) {
+    const styles = window.getComputedStyle(currentEl);
 
-  if (effectiveBgColor && !effectiveBgColor.isTransparent) {
-    return effectiveBgColor.brightness < 0.5;  // 相对亮度小于0.5认为是暗色
+    // 检查背景色
+    if (!effectiveBg) {
+      const bgColor = parseColor(styles.backgroundColor);
+      if (bgColor && !bgColor.isTransparent) {
+        effectiveBg = bgColor;
+      }
+    }
+
+    // 检查文字颜色 (作为重要参考)
+    if (!effectiveText) {
+      const textColor = parseColor(styles.color);
+      if (textColor && !textColor.isTransparent) {
+        effectiveText = textColor;
+      }
+    }
+
+    // 如果找到了背景色，通常就可以停止了，因为背景是覆盖的
+    if (effectiveBg) break;
+
+    if (currentEl === document.documentElement) break;
+    currentEl = currentEl.parentElement;
+    depth++;
   }
 
-  // 如果背景色无法判断，通过文字颜色反推
-  if (effectiveTextColor && !effectiveTextColor.isTransparent) {
-    return effectiveTextColor.brightness > 0.5;  // 文字亮意味着背景暗
+  // 3. 决策逻辑
+
+  // 优先依据：背景色
+  if (effectiveBg) {
+    // 亮度 < 0.5 为暗色
+    // 考虑到深灰色背景，0.6 是一个比较安全的阈值
+    return effectiveBg.brightness < 0.6;
   }
 
-  // 如果都无法判断，使用系统主题
+  // 次要依据：文字颜色 (当背景是图片或渐变导致背景色为透明时)
+  if (effectiveText) {
+    // 文字是浅色 (亮度 > 0.6) -> 推断背景是深色 -> 暗色模式
+    if (effectiveText.brightness > 0.6) return true;
+    // 文字是深色 (亮度 < 0.4) -> 推断背景是浅色 -> 亮色模式
+    if (effectiveText.brightness < 0.4) return false;
+  }
+
+  // 兜底：系统偏好
   return window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
+function parseColor(colorStr) {
+  if (!colorStr) return null;
+
+  // 修复：使用 [\d.]+ 匹配小数 (例如 rgba(0, 0, 0, 0.5))
+  const match = colorStr.match(/[\d.]+/g);
+  if (!match || match.length < 3) return null;
+
+  const r = parseFloat(match[0]);
+  const g = parseFloat(match[1]);
+  const b = parseFloat(match[2]);
+  const a = match.length >= 4 ? parseFloat(match[3]) : 1;
+
+  // 认为是透明的标准：alpha < 0.05
+  const isTransparent = a < 0.05;
+
+  // 相对亮度公式
+  const brightness = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+
+  return {
+    r, g, b, a,
+    isTransparent,
+    brightness
+  };
 }
 
 /**
  * 检测特定网站的主题实现
  * @returns {boolean|null} - true表示暗色，false表示亮色，null表示无法判断
  */
+/**
+ * 检测特定网站的主题实现
+ * @returns {boolean|null} - true表示暗色，false表示亮色，null表示无法判断
+ */
 function detectSpecificSiteTheme() {
+  // 0. 标准化元数据和CSS属性检查 (最优先)
+
+  // 0.1 CSS color-scheme 属性 (现代浏览器标准)
+  // https://developer.mozilla.org/en-US/docs/Web/CSS/color-scheme
+  const htmlStyle = window.getComputedStyle(document.documentElement);
+  if (htmlStyle.colorScheme === 'dark') return true;
+  // 注意：color-scheme: 'light dark' 表示支持两者，不能单纯据此判断当前是哪一个，
+  // 但如果明确只有 'dark'，那肯定是暗色。
+
+  // 0.2 meta name="color-scheme"
+  const colorSchemeMeta = document.querySelector('meta[name="color-scheme"]');
+  if (colorSchemeMeta) {
+    const content = colorSchemeMeta.getAttribute('content').toLowerCase();
+    // 如果只包含 dark，或者是 dark light 且系统是 dark
+    if (content === 'dark') return true;
+  }
+
+  // 0.3 meta name="theme-color" (很多 PWA 使用)
+  const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+  if (themeColorMeta) {
+    const content = themeColorMeta.getAttribute('content');
+    if (content) {
+      const color = parseColor(content); // 复用文件作用域内的 parseColor
+      if (color && !color.isTransparent) {
+        // 如果 theme-color 亮度低，认为是暗色模式
+        return color.brightness < 0.6;
+      }
+    }
+  }
+
+  // 1. 知名框架和库的特定标记
+
+  // Bootstrap 5.3+
+  if (document.documentElement.getAttribute('data-bs-theme') === 'dark' ||
+      document.body.getAttribute('data-bs-theme') === 'dark') {
+    return true;
+  }
+
+  // Vuetify
+  if (document.documentElement.classList.contains('v-theme--dark') ||
+      document.body.classList.contains('v-theme--dark')) {
+    return true;
+  }
+
+  // Atlassian (Jira, Confluence)
+  if (document.documentElement.getAttribute('data-color-mode') === 'dark') {
+    return true;
+  }
+
   const host = window.location.hostname;
 
   // GitHub
@@ -98,7 +197,9 @@ function detectSpecificSiteTheme() {
 
   // Google系产品
   if (host.includes('google.com') || host.includes('youtube.com')) {
-    return document.documentElement.hasAttribute('dark') || document.documentElement.hasAttribute('darktheme');
+    if (document.documentElement.hasAttribute('dark') || document.documentElement.hasAttribute('darktheme')) {
+      return true;
+    }
   }
 
   // Twitter/X
@@ -111,7 +212,9 @@ function detectSpecificSiteTheme() {
   const dataTheme = document.documentElement.getAttribute('data-theme') ||
                     document.body.getAttribute('data-theme') ||
                     document.documentElement.getAttribute('data-color-mode') ||
-                    document.body.getAttribute('data-color-mode');
+                    document.body.getAttribute('data-color-mode') ||
+                    document.documentElement.getAttribute('data-mode') ||
+                    document.body.getAttribute('data-mode');
 
   if (dataTheme) {
     return dataTheme.includes('dark');
@@ -146,26 +249,43 @@ function detectCSSVarTheme() {
   try {
     const styles = getComputedStyle(document.documentElement);
 
-    // 检查常见的CSS变量
-    const bgVar = styles.getPropertyValue('--background-color').trim() ||
-                  styles.getPropertyValue('--bg-color').trim() ||
-                  styles.getPropertyValue('--theme-background').trim();
+    // 检查常见的背景色CSS变量
+    const bgVarNames = [
+      '--background-color',
+      '--bg-color',
+      '--theme-background',
+      '--color-background',
+      '--color-bg',
+      '--surface',
+      '--bg-primary',
+      '--color-canvas-default' // GitHub
+    ];
 
-    const textVar = styles.getPropertyValue('--text-color').trim() ||
-                    styles.getPropertyValue('--color-text').trim() ||
-                    styles.getPropertyValue('--theme-text').trim();
-
-    if (bgVar) {
-      const bgColor = parseSimpleColor(bgVar);
-      if (bgColor) {
-        return bgColor.isDark;
+    for (const name of bgVarNames) {
+      const value = styles.getPropertyValue(name).trim();
+      if (value) {
+        const bgColor = parseSimpleColor(value);
+        if (bgColor) return bgColor.isDark;
       }
     }
 
-    if (textVar) {
-      const textColor = parseSimpleColor(textVar);
-      if (textColor) {
-        return !textColor.isDark; // 文字深色表示浅色主题，反之亦然
+    // 检查常见的文字颜色CSS变量
+    const textVarNames = [
+      '--text-color',
+      '--color-text',
+      '--theme-text',
+      '--color-fg',
+      '--color-foreground',
+      '--foreground',
+      '--text-primary',
+      '--color-fg-default' // GitHub
+    ];
+
+    for (const name of textVarNames) {
+      const value = styles.getPropertyValue(name).trim();
+      if (value) {
+        const textColor = parseSimpleColor(value);
+        if (textColor) return !textColor.isDark; // 文字深色表示浅色主题
       }
     }
   } catch (e) {
