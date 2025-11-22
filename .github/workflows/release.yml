@@ -1,9 +1,12 @@
-name: Auto Release Extension
+name: Release Extension
 
 on:
   push:
-    branches:
-      - main  # 或者你的主分支名称，如果是 master 请改为 master
+    tags:
+      - 'v*'  # 只在推送 v* 格式的 tag 时触发（如 v0.11.1, v1.0.0）
+
+permissions:
+  contents: write  # 需要写权限来创建 release
 
 jobs:
   release:
@@ -12,8 +15,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # 获取所有历史记录以便分析 tags
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -28,23 +29,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Get latest tag and increment version
+      - name: Get version from tag
         id: version
         run: |
-          # 获取最新的 tag，如果没有则使用 0.11.0
-          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.11.0")
-          echo "Latest tag: $LATEST_TAG"
-
-          # 解析版本号
-          IFS='.' read -r MAJOR MINOR PATCH <<< "${LATEST_TAG#v}"
-
-          # 递增 patch 版本
-          PATCH=$((PATCH + 1))
-          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
-
-          echo "New version: $NEW_VERSION"
-          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "tag=v$NEW_VERSION" >> $GITHUB_OUTPUT
+          # 从 tag 中提取版本号（去掉 v 前缀）
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
       - name: Update manifest.json version
         run: |
@@ -57,18 +48,11 @@ jobs:
         run: pnpm run build:zip
 
       - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ steps.version.outputs.tag }}
-          release_name: Release ${{ steps.version.outputs.tag }}
+          files: extension.zip
           body: |
             🚀 DeepSeek AI Extension ${{ steps.version.outputs.tag }}
-
-            ## 更新内容
-            自动构建发布版本
 
             ## 安装说明
             1. 下载下方的 `extension.zip` 文件
@@ -78,24 +62,8 @@ jobs:
             5. 点击"加载已解压的扩展程序"并选择解压后的文件夹
 
             ## Changelog
-            - Commit: ${{ github.sha }}
+            查看完整的更改历史请访问 [Commits](https://github.com/${{ github.repository }}/commits/${{ steps.version.outputs.tag }})
           draft: false
           prerelease: false
-
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./extension.zip
-          asset_name: extension.zip
-          asset_content_type: application/zip
-
-      - name: Commit version bump
-        run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git add src/manifest.json
-          git commit -m "chore: bump version to ${{ steps.version.outputs.version }}" || echo "No changes to commit"
-          git push origin HEAD:main || echo "Nothing to push"
