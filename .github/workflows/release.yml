@@ -37,6 +37,33 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
+      - name: Generate Changelog
+        id: changelog
+        run: |
+          # 获取上一个 tag
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+
+          if [ -z "$PREVIOUS_TAG" ]; then
+            echo "This is the first release"
+            CHANGELOG="🎉 首次发布"
+          else
+            echo "Generating changelog from $PREVIOUS_TAG to ${{ steps.version.outputs.tag }}"
+
+            # 生成格式化的 changelog
+            CHANGELOG=$(git log ${PREVIOUS_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges | sed 's/^/  /')
+
+            if [ -z "$CHANGELOG" ]; then
+              CHANGELOG="  - 无代码更改（仅重新打包）"
+            fi
+          fi
+
+          # 保存到 GITHUB_OUTPUT（处理多行）
+          {
+            echo 'changelog<<EOF'
+            echo "$CHANGELOG"
+            echo EOF
+          } >> $GITHUB_OUTPUT
+
       - name: Build extension
         run: pnpm run build:zip
 
@@ -45,17 +72,21 @@ jobs:
         with:
           files: extension.zip
           body: |
-            🚀 DeepSeek AI Extension ${{ steps.version.outputs.tag }}
+            🚀 **DeepSeek AI Extension ${{ steps.version.outputs.tag }}**
 
-            ## 安装说明
+            ## 📦 安装说明
             1. 下载下方的 `extension.zip` 文件
             2. 解压缩文件
             3. 在浏览器中打开扩展管理页面
             4. 启用"开发者模式"
             5. 点击"加载已解压的扩展程序"并选择解压后的文件夹
 
-            ## Changelog
-            查看完整的更改历史请访问 [Commits](https://github.com/${{ github.repository }}/commits/${{ steps.version.outputs.tag }})
+            ## 📝 更新日志
+            ${{ steps.changelog.outputs.changelog }}
+
+            ---
+
+            💡 查看完整提交历史：[点击这里](https://github.com/${{ github.repository }}/commits/${{ steps.version.outputs.tag }})
           draft: false
           prerelease: false
         env:
