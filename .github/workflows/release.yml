@@ -40,20 +40,23 @@ jobs:
       - name: Generate Changelog
         id: changelog
         run: |
-          # 获取上一个 tag
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          # 获取当前 tag
+          CURRENT_TAG="${GITHUB_REF#refs/tags/}"
+
+          # 获取上一个 tag（按版本号排序，排除当前 tag）
+          PREVIOUS_TAG=$(git tag --sort=-version:refname | grep -v "^${CURRENT_TAG}$" | head -n 1)
 
           if [ -z "$PREVIOUS_TAG" ]; then
             echo "This is the first release"
             CHANGELOG="🎉 首次发布"
           else
-            echo "Generating changelog from $PREVIOUS_TAG to ${{ steps.version.outputs.tag }}"
+            echo "Generating changelog from $PREVIOUS_TAG to $CURRENT_TAG"
 
             # 生成格式化的 changelog
-            CHANGELOG=$(git log ${PREVIOUS_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges | sed 's/^/  /')
+            CHANGELOG=$(git log ${PREVIOUS_TAG}..${CURRENT_TAG} --pretty=format:"- %s (%h)" --no-merges)
 
             if [ -z "$CHANGELOG" ]; then
-              CHANGELOG="  - 无代码更改（仅重新打包）"
+              CHANGELOG="- 无代码更改（仅重新打包）"
             fi
           fi
 
