@@ -40,9 +40,15 @@ jobs:
       - name: Update manifest.json version
         run: |
           VERSION=${{ steps.version.outputs.version }}
-          # 更新 src/manifest.json 中的版本号
-          sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"$VERSION\"/" src/manifest.json
+          # 使用 Node.js 更新 src/manifest.json 中的版本号
+          node -e "
+          const fs = require('fs');
+          const manifest = JSON.parse(fs.readFileSync('src/manifest.json', 'utf8'));
+          manifest.version = '$VERSION';
+          fs.writeFileSync('src/manifest.json', JSON.stringify(manifest, null, 2) + '\n');
+          "
           echo "Updated manifest.json to version $VERSION"
+          cat src/manifest.json | grep version
 
       - name: Build extension
         run: pnpm run build:zip
