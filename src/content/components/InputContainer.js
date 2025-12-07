@@ -3,6 +3,7 @@ import { getAIResponse } from '../services/apiService';
 import { addIconsToElement } from './IconManager';
 import { isDarkMode } from '../utils/themeManager';
 import { focusInputIfSafe } from '../utils/focusManager';
+import { getPopupElement, getAiResponseElement, getShadowContainer } from './ShadowContainer';
 
 const INPUT_SINGLE_LINE_HEIGHT = "48px";
 const INPUT_MULTILINE_LINE_HEIGHT = "1.3";
@@ -26,8 +27,9 @@ export const createQuestionInputContainer = (aiResponseContainer) => {
         <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
       <div class="loading-icon-wrapper tooltip">
-        <svg class="loading-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="7" y="7" width="10" height="10" rx="1" stroke="currentColor" stroke-width="2" fill="none" />
+      <svg class="loading-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle class="loading-spinner" cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="32 20" fill="none" />
+          <rect class="stop-button" x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor" stroke="none" />
         </svg>
         <span class="tooltiptext">Stop</span>
       </div>
@@ -70,7 +72,7 @@ export const createQuestionInputContainer = (aiResponseContainer) => {
   const updateLoadingIconStyle = () => {
     const isDarkMode = document.body.classList.contains('theme-adaptive dark-mode');
     loadingIcon.style.opacity = "0.8";
-    loadingIcon.style.stroke = isDarkMode ? 'white' : 'var(--text-primary)';
+    loadingIcon.style.color = isDarkMode ? 'white' : 'var(--text-primary)';
     // 在暗色模式下不应用亮度过滤，保持原色，在亮色模式下使用brightness控制颜色深度
     loadingIcon.style.filter = isDarkMode ? 'none' : 'brightness(0.3)';
   };
@@ -398,8 +400,8 @@ const setupLoadingIcon = (loadingIconWrapper) => {
                          document.body.classList.contains('theme-adaptive dark-mode');
 
       // 在暗色模式下使用白色，确保可见性
-      loadingIcon.style.stroke = isDarkMode ? '#fff' : 'var(--text-primary)';
-      loadingIcon.style.fill = 'none';
+      loadingIcon.style.color = isDarkMode ? '#fff' : 'var(--text-primary)';
+      // loadingIcon.style.fill = 'none'; // Removed to allow stop button fill
       loadingIcon.style.filter = isDarkMode ? 'brightness(1)' : 'brightness(0.3)';
 
       // 添加日志用于调试
@@ -450,17 +452,18 @@ const setupLoadingIcon = (loadingIconWrapper) => {
 };
 
 const setupUpdateButtonState = (container) => {
-  let currentState = !getIsGenerating(); // 用于记录当前状态，避免重复设置
+  // currentState 追踪上一次的 isGenerating 值，初始为 null 表示未初始化
+  let currentState = null;
 
   const updateSendButtonState = () => {
     const isGenerating = getIsGenerating();
 
-    // 如果状态未变化，则不更新UI
-    if ((isGenerating && !currentState) || (!isGenerating && currentState)) {
+    // 状态未变化时跳过（首次调用 currentState=null 时强制执行）
+    if (currentState === isGenerating) {
       return;
     }
 
-    currentState = !isGenerating;
+    currentState = isGenerating;
 
     const sendIcon = container.querySelector(".send-icon");
     const loadingIconWrapper = container.querySelector(".loading-icon-wrapper");
@@ -494,8 +497,8 @@ const setupUpdateButtonState = (container) => {
                            document.querySelector('.theme-adaptive.dark-mode') ||
                            document.body.classList.contains('theme-adaptive dark-mode');
 
-        loadingIcon.style.stroke = isDarkMode ? '#fff' : 'var(--text-primary)';
-        loadingIcon.style.fill = 'none';
+        loadingIcon.style.color = isDarkMode ? '#fff' : 'var(--text-primary)';
+        // loadingIcon.style.fill = 'none'; // Removed
         loadingIcon.style.filter = isDarkMode ? 'brightness(1)' : 'brightness(0.3)';
       }, 150);
 
@@ -521,10 +524,11 @@ const setupUpdateButtonState = (container) => {
         // 强制重绘以应用初始状态
         void sendIcon.offsetWidth;
 
-        // 应用过渡动画
+        // 应用过渡动画，重置为默认非激活状态
         sendIcon.style.transition = 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)';
         sendIcon.style.opacity = '0.6';
         sendIcon.style.transform = 'translateY(-50%) scale(1)';
+        sendIcon.style.color = 'var(--text-secondary)';
 
         if (textarea.value.trim()) {
           sendIcon.style.opacity = '0.8';
@@ -551,12 +555,13 @@ const sendQuestion = (textarea, aiResponseContainer) => {
     textarea.style.transition = 'height 0.2s ease, background-color 0.2s ease';
 
     // 立即创建用户问题并添加到聊天区域
-    const aiResponseElement = document.getElementById("ai-response");
+    const aiResponseElement = getAiResponseElement();
 
     const userQuestionDiv = document.createElement('div');
     userQuestionDiv.className = 'user-question';
     const userQuestionP = document.createElement('p');
     userQuestionP.textContent = question;
+    userQuestionP.style.color = 'white';  // 直接设置内联样式，确保颜色正确
     userQuestionDiv.appendChild(userQuestionP);
     addIconsToElement(userQuestionDiv);
 
@@ -620,7 +625,7 @@ const sendQuestion = (textarea, aiResponseContainer) => {
             answerElement.style.backgroundColor = originalColor;
           }, 1000);
         }
-        requestAnimationFrame(() => focusInputIfSafe(document.getElementById('ai-popup')));
+        requestAnimationFrame(() => focusInputIfSafe(getPopupElement()));
       };
 
       const onGenerationError = () => {

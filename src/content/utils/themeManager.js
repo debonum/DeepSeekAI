@@ -153,16 +153,20 @@ function detectSpecificSiteTheme() {
     if (content === 'dark') return true;
   }
 
-  // 0.3 meta name="theme-color" (很多 PWA 使用)
+  // 0.3 meta name="theme-color" 
+  // 注意：theme-color 只是浏览器地址栏/系统UI颜色提示，不能作为页面主题的决定性依据
+  // 很多网站设置 theme-color 为白色是为了配合品牌色，但页面本身可能是暗色的
+  // 因此仅当 theme-color 明确是深色时才判定为暗色模式，亮色则继续检测
   const themeColorMeta = document.querySelector('meta[name="theme-color"]');
   if (themeColorMeta) {
     const content = themeColorMeta.getAttribute('content');
     if (content) {
-      const color = parseColor(content); // 复用文件作用域内的 parseColor
-      if (color && !color.isTransparent) {
-        // 如果 theme-color 亮度低，认为是暗色模式
-        return color.brightness < 0.6;
+      const color = parseColor(content);
+      if (color && !color.isTransparent && color.brightness < 0.4) {
+        // 只有明确深色 (brightness < 0.4) 才返回暗色模式
+        return true;
       }
+      // 亮色 theme-color 不作为决定性依据，继续后续检测
     }
   }
 

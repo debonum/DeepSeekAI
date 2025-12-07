@@ -14,7 +14,6 @@ export class UiManager {
       modelSelect: document.getElementById("model"),
       selectionEnabled: document.getElementById("selectionEnabled"),
       rememberWindowSize: document.getElementById("rememberWindowSize"),
-      pinWindow: document.getElementById("pinWindow"),
       customApiUrl: document.getElementById("customApiUrl"),
       customApiUrlInput: document.getElementById("customApiUrlInput"),
       customProviderNameInput: document.getElementById("customProviderNameInput"),

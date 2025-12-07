@@ -117,7 +117,6 @@ class PopupManager {
       this.uiManager.elements.providerSelect.value = currentProvider;
       this.uiManager.elements.selectionEnabled.checked = settings.selectionEnabled;
       this.uiManager.elements.rememberWindowSize.checked = settings.rememberWindowSize;
-      this.uiManager.elements.pinWindow.checked = settings.pinWindow;
 
       // 只清空API密钥输入框，不清空自定义API地址输入框
       this.uiManager.setApiKeyValue('');

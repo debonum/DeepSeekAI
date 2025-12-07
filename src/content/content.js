@@ -1,8 +1,12 @@
-import './styles/style.css';
+// 不再全局注入样式，改用 Shadow DOM 隔离
+// import './styles/style.css';
 import { createSvgIcon, createIcon } from "./components/IconManager";
 import { createQuickActionButtons } from "./components/QuickActionButtons";
 import { createPopup } from "./popup";
 import { popupStateManager } from './utils/popupStateManager';
+import { ensureShadowContainer, getShadowContainer, destroyShadowContainer } from './components/ShadowContainer';
+// CSS 作为字符串导入，用于注入到 Shadow DOM
+import popupStyles from './styles/style.css?raw';
 
 // 选区保持管理器
 class SelectionPreservationManager {
@@ -173,11 +177,12 @@ function isRapidMultiClick(event) {
   }
 }
 
-const link = document.createElement("link");
-link.rel = "stylesheet";
-link.type = "text/css";
-link.href = chrome.runtime.getURL("style.css");
-document.head.appendChild(link);
+// 样式不再注入到页面 head，改用 Shadow DOM 隔离
+// const link = document.createElement("link");
+// link.rel = "stylesheet";
+// link.type = "text/css";
+// link.href = chrome.runtime.getURL("style.css");
+// document.head.appendChild(link);
 
 // 加载设置
 chrome.storage.sync.get(['selectionEnabled', 'rememberWindowSize', 'windowSize'], function(data) {
@@ -303,12 +308,14 @@ function safeRemovePopup(forceRemove = false) {
       delete currentPopup._removeThemeListener;
     }
 
-    // 使用 try-catch 包装 DOM 操作
+    // 使用 try-catch 包装 DOM 操作 - 从 Shadow DOM 容器移除
     try {
-      if (document.body.contains(currentPopup)) {
+      const shadowContainer = getShadowContainer();
+      const popupParent = shadowContainer?.container || document.body;
+      if (popupParent.contains(currentPopup)) {
         // 在移除之前先将内容清空，避免触发不必要的事件
         currentPopup.innerHTML = '';
-        document.body.removeChild(currentPopup);
+        popupParent.removeChild(currentPopup);
       }
     } catch (e) {
       console.warn('Error removing popup from DOM:', e);
@@ -319,11 +326,13 @@ function safeRemovePopup(forceRemove = false) {
     currentPopup = null;
   } catch (error) {
     console.warn('Failed to remove popup:', error);
-    // 确保在出错时也能重置所有状态
-    if (document.body.contains(currentPopup)) {
+    // 确保在出错时也能重置所有状态 - 从 Shadow DOM 容器移除
+    const shadowContainer = getShadowContainer();
+    const popupParent = shadowContainer?.container || document.body;
+    if (popupParent.contains(currentPopup)) {
       try {
         currentPopup.innerHTML = '';
-        document.body.removeChild(currentPopup);
+        popupParent.removeChild(currentPopup);
       } catch (e) {
         console.warn('Error removing popup in catch block:', e);
       }
@@ -495,7 +504,9 @@ function handlePopupCreation(selectedText, rect, hideQuestion = false, messages 
       });
     }
 
-    document.body.appendChild(currentPopup);
+    // 使用 Shadow DOM 容器挂载弹窗，实现样式隔离
+    const shadowContainer = ensureShadowContainer(popupStyles);
+    shadowContainer.container.appendChild(currentPopup);
     popupStateManager.setVisible(true);  // 更新状态
     // 打开弹窗后，短时间抑制快捷按钮再次唤起
     suppressQuickActionsUntil = Date.now() + 500;
@@ -953,13 +964,37 @@ document.addEventListener('mousedown', async (event) => {
   // 如果没有当前弹窗，直接返回
   if (!currentPopup) return;
 
-  // 检查是否启用了固定窗口
-  const isPinned = await chrome.storage.sync.get('pinWindow').then(result => result.pinWindow || false);
+  // 检查是否启用了临时固定（窗口固定按钮）
+  const isTempPinned = currentPopup._isTempPinned || false;
 
-  // 如果启用了固定窗口，直接返回
-  if (isPinned) return;
+  // 如果启用了固定，直接返回
+  if (isTempPinned) return;
 
-  // 检查点击区域
+  // 检查点击区域 - 支持 Shadow DOM
+  // 首先检查是否点击在 Shadow DOM 宿主元素上
+  const shadowHost = document.getElementById('deepseek-shadow-host');
+  if (shadowHost && (event.target === shadowHost || shadowHost.contains(event.target))) {
+    // 点击在 Shadow DOM 宿主元素上，不关闭
+    return;
+  }
+
+  // 检查是否点击在 Shadow DOM 内部的弹窗上
+  // 由于事件来自 document，我们需要使用 composedPath 来检测 Shadow DOM 内部的元素
+  const composedPath = event.composedPath ? event.composedPath() : [];
+  const isClickInShadow = composedPath.some(el => {
+    if (el.id === 'ai-popup') return true;
+    if (el.id === 'deepseek-shadow-host') return true;
+    if (el.classList && (
+      el.classList.contains('icon-wrapper') ||
+      el.classList.contains('icon-container') ||
+      el.classList.contains('regenerate-icon')
+    )) return true;
+    return false;
+  });
+
+  if (isClickInShadow) return;
+
+  // 传统检查（针对非 Shadow DOM 元素）
   const isClickInside = event.target.closest('#ai-popup') ||
                        event.target.closest('.icon-wrapper') ||
                        event.target.closest('.icon-container') ||

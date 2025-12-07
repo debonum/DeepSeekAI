@@ -1,6 +1,6 @@
 import { createSvgIcon } from "./IconManager";
 import { ICONS } from "./Icons";
-import { watchThemeChanges } from "../utils/themeManager";
+import { isDarkMode, watchThemeChanges } from "../utils/themeManager";
 
 const QUICK_ACTIONS = [
   {
@@ -486,92 +486,97 @@ export async function createQuickActionButtons(
       /* 继承正常按钮样式 */
     }
 
-    /* 暗色模式适配 */
-    @media (prefers-color-scheme: dark) {
-      :host {
-        background: #1c1c1e !important;
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        box-shadow:
-          0 20px 48px rgba(0, 0, 0, 0.6),
-          0 8px 24px rgba(0, 0, 0, 0.4),
-          inset 0 0 0 0.5px rgba(255, 255, 255, 0.1);
-      }
+    /* 暗色模式适配 - 使用类名而非媒体查询，与主窗口主题检测保持一致 */
+    :host(.dark-mode) {
+      background: #1c1c1e !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow:
+        0 20px 48px rgba(0, 0, 0, 0.6),
+        0 8px 24px rgba(0, 0, 0, 0.4),
+        inset 0 0 0 0.5px rgba(255, 255, 255, 0.1);
+    }
 
-      .quick-action-button {
-        background: #3a3a3c;
-        border: 0.5px solid rgba(255, 255, 255, 0.1);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-        color: #ffffff; /* Dark mode icon color */
-      }
+    :host(.dark-mode) .quick-action-button {
+      background: #3a3a3c;
+      border: 0.5px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      color: #ffffff; /* Dark mode icon color */
+    }
 
-      .quick-action-button:hover {
-        background: rgba(10, 132, 255, 0.35);
-        box-shadow: 0 4px 12px rgba(10, 132, 255, 0.3);
-        border-color: rgba(10, 132, 255, 0.4);
-      }
+    :host(.dark-mode) .quick-action-button:hover {
+      background: rgba(10, 132, 255, 0.35);
+      box-shadow: 0 4px 12px rgba(10, 132, 255, 0.3);
+      border-color: rgba(10, 132, 255, 0.4);
+    }
 
-      .quick-action-button:active {
-        background: rgba(10, 132, 255, 0.45);
-        transform: scale(0.95);
-      }
+    :host(.dark-mode) .quick-action-button:active {
+      background: rgba(10, 132, 255, 0.45);
+      transform: scale(0.95);
+    }
 
-      /* 暗色模式下图标颜色适配 */
-      .quick-action-button img,
-      .quick-action-button svg {
-        /* filter: brightness(0) invert(1); Removed filter */
-        opacity: 0.9;
-      }
+    /* 暗色模式下图标颜色适配 */
+    :host(.dark-mode) .quick-action-button img,
+    :host(.dark-mode) .quick-action-button svg {
+      opacity: 0.9;
+    }
 
-      .quick-action-button:hover img,
-      .quick-action-button:hover svg {
-        opacity: 1;
-        /* filter: brightness(0) invert(1) drop-shadow(0 0 2px rgba(10, 132, 255, 0.5)); Removed filter */
-      }
+    :host(.dark-mode) .quick-action-button:hover img,
+    :host(.dark-mode) .quick-action-button:hover svg {
+      opacity: 1;
+    }
 
-      .custom-prompt-input {
-        background: #3a3a3c;
-        color: rgba(255, 255, 255, 0.95);
-        border-color: rgba(255, 255, 255, 0.06);
-      }
+    :host(.dark-mode) .custom-prompt-input {
+      background: #3a3a3c;
+      color: rgba(255, 255, 255, 0.95);
+      border-color: rgba(255, 255, 255, 0.06);
+    }
 
-      .custom-prompt-input::placeholder {
-        color: rgba(235, 235, 245, 0.5);
-      }
+    :host(.dark-mode) .custom-prompt-input::placeholder {
+      color: rgba(235, 235, 245, 0.5);
+    }
 
-      .custom-prompt-input:focus {
-        background: #2c2c2e;
-        border-color: rgba(10, 132, 255, 0.6);
-      }
+    :host(.dark-mode) .custom-prompt-input:focus {
+      background: #2c2c2e;
+      border-color: rgba(10, 132, 255, 0.6);
+    }
 
-      .custom-input-wrapper {
-        border-top-color: rgba(255, 255, 255, 0.06);
-      }
+    :host(.dark-mode) .custom-input-wrapper {
+      border-top-color: rgba(255, 255, 255, 0.06);
+    }
 
-      .language-select {
-        background: #1c1c1e;
-        border-color: rgba(255, 255, 255, 0.06);
-      }
+    :host(.dark-mode) .language-select {
+      background: #1c1c1e;
+      border-color: rgba(255, 255, 255, 0.06);
+    }
 
-      .language-option {
-        color: rgba(255, 255, 255, 0.95);
-      }
+    :host(.dark-mode) .language-option {
+      color: rgba(255, 255, 255, 0.95);
+    }
 
-      .language-option:hover {
-        background-color: rgba(10, 132, 255, 0.15);
-      }
+    :host(.dark-mode) .language-option:hover {
+      background-color: rgba(10, 132, 255, 0.15);
+    }
 
-      /* Logo容器暗色模式 - 保持完全透明 */
-      .quick-action-logo {
-        background: transparent;
-        border: none;
-        box-shadow: none;
-      }
+    /* Logo容器暗色模式 - 保持完全透明 */
+    :host(.dark-mode) .quick-action-logo {
+      background: transparent;
+      border: none;
+      box-shadow: none;
+    }
 
-      .quick-action-logo:active {
-        opacity: 0.7;
-      }
+    :host(.dark-mode) .quick-action-logo:active {
+      opacity: 0.7;
+    }
+
+    :host(.dark-mode) .custom-prompt-send {
+      background: #3a3a3c;
+      color: #ffffff;
+    }
+
+    :host(.dark-mode) .custom-prompt-send:hover {
+      background: #4a4a4c;
     }
   `;
 
@@ -994,6 +999,27 @@ export async function createQuickActionButtons(
       document.removeEventListener('pointerup', onPointerUp, true);
     };
   };
+
+  // 🎯 主题同步：使用与主窗口相同的页面主题检测机制（而非系统主题）
+  const applyQuickActionsTheme = (isDark) => {
+    if (isDark) {
+      container.classList.add('dark-mode');
+    } else {
+      container.classList.remove('dark-mode');
+    }
+  };
+
+  // 初始化主题
+  const currentTheme = isDarkMode();
+  applyQuickActionsTheme(currentTheme);
+
+  // 监听页面主题变化
+  const removeThemeListener = watchThemeChanges((isDark) => {
+    applyQuickActionsTheme(isDark);
+  });
+
+  // 保存清理函数
+  container.cleanupTheme = removeThemeListener;
 
   return container;
 }

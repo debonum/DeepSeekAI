@@ -63,7 +63,7 @@
         font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text",
           "Helvetica Neue", sans-serif;
         margin: 0;
-        padding: 20px;
+        padding: 16px;
         width: 360px;
         height: auto;
         color: var(--text-primary);
@@ -97,7 +97,7 @@
       }
 
       .header span {
-        font-size: 18px;
+        font-size: 16px;
         font-weight: 600;
         color: var(--accent-color);
         letter-spacing: -0.01em;
@@ -106,14 +106,14 @@
       .section {
         background-color: var(--background-secondary);
         border-radius: 14px;
-        padding: 18px 20px;
+        padding: 12px 16px;
         margin-bottom: 16px;
         box-shadow: var(--card-shadow);
         transition: all 0.2s ease;
       }
 
       .section-title {
-        font-size: 15px;
+        font-size: 13px;
         font-weight: 600;
         color: var(--text-primary);
         margin-bottom: 10px;
@@ -169,7 +169,7 @@
 
       .api-key-container label,
       .api-url-container label {
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 500;
         margin-bottom: 6px;
         color: var(--text-secondary);
@@ -177,14 +177,14 @@
 
       input {
         flex: 1;
-        padding: 10px 35px 10px 12px;
-        font-size: 14px;
-        border-radius: 10px;
+        padding: 6px 30px 6px 10px;
+        font-size: 13px;
+        border-radius: 8px;
         background-color: var(--input-background);
         border: 1px solid var(--border-color);
         transition: all 0.2s ease;
         color: var(--text-primary);
-        height: 40px;
+        height: 32px;
       }
 
       input::placeholder {
@@ -257,26 +257,26 @@
       }
 
       .language-switch label {
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 500;
         color: var(--text-primary);
       }
 
       select {
         min-width: 100px;
-        padding: 8px 30px 8px 12px;
-        font-size: 14px;
+        padding: 6px 25px 6px 10px;
+        font-size: 13px;
         border: 1px solid var(--border-color);
-        border-radius: 10px;
+        border-radius: 8px;
         background-color: var(--input-background);
         color: var(--text-primary);
         -webkit-appearance: none;
         appearance: none;
         background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
         background-repeat: no-repeat;
-        background-position: right 10px center;
-        background-size: 14px;
-        height: 40px;
+        background-position: right 8px center;
+        background-size: 12px;
+        height: 32px;
         transition: all 0.2s ease;
       }
 
@@ -449,13 +449,13 @@
         background-color: var(--accent-color);
         color: white;
         border: none;
-        border-radius: 10px;
-        padding: 12px 16px;
+        border-radius: 8px;
+        padding: 8px 12px;
         cursor: pointer;
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 500;
         transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-        height: 40px;
+        height: 32px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -641,15 +641,15 @@
       }
 
       .selection-switch label {
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 500;
         color: var(--text-primary);
       }
 
       .switch-wrapper {
         position: relative;
-        width: 52px;
-        height: 32px;
+        width: 44px;
+        height: 24px;
       }
 
       .switch-input {
@@ -660,8 +660,8 @@
         position: absolute;
         top: 0;
         left: 0;
-        width: 52px;
-        height: 32px;
+        width: 44px;
+        height: 24px;
         border-radius: 32px;
         background-color: var(--switch-bg-off);
         cursor: pointer;
@@ -671,8 +671,8 @@
       .switch-label:before {
         content: "";
         position: absolute;
-        width: 28px;
-        height: 28px;
+        width: 20px;
+        height: 20px;
         border-radius: 50%;
         top: 2px;
         left: 2px;
@@ -1660,20 +1660,6 @@
               class="switch-input"
             />
             <label for="rememberWindowSize" class="switch-label"></label>
-          </div>
-        </div>
-
-        <div class="selection-switch">
-          <label
-            for="pinWindow"
-            id="pinWindowLabel"
-            class="switch-label-text"
-            data-tooltip="When enabled, clicking outside the window won't close it"
-            >Pin Window</label
-          >
-          <div class="switch-wrapper">
-            <input type="checkbox" id="pinWindow" class="switch-input" />
-            <label for="pinWindow" class="switch-label"></label>
           </div>
         </div>
 

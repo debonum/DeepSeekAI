@@ -23,8 +23,16 @@ module.exports = {
         exclude: /node_modules/
       },
       {
+        // 普通 CSS 导入（注入到页面）
         test: /\.css$/,
+        resourceQuery: { not: [/raw/] },
         use: ["style-loader", "css-loader"],
+      },
+      {
+        // CSS 字符串导入（用于 Shadow DOM）
+        test: /\.css$/,
+        resourceQuery: /raw/,
+        type: 'asset/source',
       }
     ],
   },

@@ -244,12 +244,6 @@ export class EventManager {
       (e) => this.managers.storageManager.saveRememberWindowSize(e.target.checked)
     );
 
-    // Pin window toggle
-    this.managers.uiManager.elements.pinWindow.addEventListener(
-      "change",
-      (e) => this.managers.storageManager.savePinWindow(e.target.checked)
-    );
-
     // Shortcut settings
     document.getElementById('shortcutSettings').addEventListener(
       'click',

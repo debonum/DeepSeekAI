@@ -1,4 +1,5 @@
 import { popupStateManager } from './popupStateManager';
+import { getPopupElement } from '../components/ShadowContainer';
 
 function isElementEditable(element) {
   if (!element) return false;
@@ -19,7 +20,7 @@ function isPopupRenderable(popup) {
 }
 
 export function focusInputIfSafe(popup) {
-  const targetPopup = popup || document.getElementById('ai-popup');
+  const targetPopup = popup || getPopupElement();
 
   if (document.visibilityState !== 'visible') return;
   if (typeof document.hasFocus === 'function' && !document.hasFocus()) return;
@@ -48,5 +49,3 @@ export function focusInputIfSafe(popup) {
     requestAnimationFrame(() => { setTimeout(tryFocus, 120); });
   }
 }
-
-

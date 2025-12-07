@@ -2,9 +2,9 @@
 .theme-adaptive {
   /* 基础颜色 - iOS风格配色 */
   --bg-primary: rgba(255, 255, 255, 0.95);
-  --bg-secondary: rgba(242, 242, 247, 0.9);
-  --text-primary: #000000;
-  --text-secondary: #8e8e93;
+  --bg-secondary: rgba(242, 242, 247, 0.8); /* Slightly more transparent */
+  --text-primary: #1d1d1f; /* Soft Apple-like black */
+  --text-secondary: #86868b;
 
   /* 交互元素 - iOS蓝 */
   --accent-color: #007aff;
@@ -28,20 +28,20 @@
   --input-bg: rgba(242, 242, 247, 0.9);
   --ai-answer-bg: rgba(242, 242, 247, 0.7);
   --user-question-bg: #007aff;
-  --code-block-bg: rgba(242, 242, 247, 0.8);
+  --code-block-bg: #fafafa; /* One Light 背景 */
   --code-block-border: rgba(60, 60, 67, 0.1);
 
-  /* 代码高亮颜色 - 明亮模式 */
-  --code-comment: #707F8C;
-  --code-keyword: #AD3DA4;
-  --code-string: #D12F1B;
-  --code-number: #1C00CF;
-  --code-type: #3F6E75;
-  --code-function: #326D74;
-  --code-variable: #0B4FB6;
-  --code-operator: #0B4FB6;
-  --code-class: #3F6E75;
-  --code-builtin: #3F6E75;
+  /* 代码高亮颜色 - One Light (舒适护眼) */
+  --code-comment: #a0a1a7;
+  --code-keyword: #a626a4;
+  --code-string: #50a14f;
+  --code-number: #986801;
+  --code-type: #c18401;
+  --code-function: #4078f2;
+  --code-variable: #383a42;
+  --code-operator: #0184bc;
+  --code-class: #c18401;
+  --code-builtin: #0184bc;
 
   /* 数学公式颜色 */
   --math-color: var(--text-primary);
@@ -147,8 +147,8 @@
 .theme-adaptive.dark-mode {
   /* 基础颜色 - iOS暗色模式 */
   --bg-primary: rgba(28, 28, 30, 0.95);
-  --bg-secondary: rgba(44, 44, 46, 0.9);
-  --text-primary: #ffffff;
+  --bg-secondary: rgba(44, 44, 46, 0.85);
+  --text-primary: #f5f5f7; /* Soft Apple-like white */
   --text-secondary: #98989d;
 
   /* 交互元素 */
@@ -173,20 +173,20 @@
   --input-bg: rgba(58, 58, 60, 0.8);
   --ai-answer-bg: rgba(58, 58, 60, 0.7);
   --user-question-bg: #0a84ff;
-  --code-block-bg: rgba(44, 44, 46, 0.8);
+  --code-block-bg: #282c34; /* One Dark 背景 */
   --code-block-border: rgba(255, 255, 255, 0.1);
 
-  /* 代码高亮颜色 - 暗色模式 */
-  --code-comment: #7F8C98;
-  --code-keyword: #FF7AB2;
-  --code-string: #FF8170;
-  --code-number: #D9C97C;
-  --code-type: #78C2B3;
-  --code-function: #6BDFFF;
-  --code-variable: #5482FF;
-  --code-operator: #FF7AB2;
-  --code-class: #78C2B3;
-  --code-builtin: #78C2B3;
+  /* 代码高亮颜色 - One Dark Pro (舒适暗色) */
+  --code-comment: #5c6370;
+  --code-keyword: #c678dd;
+  --code-string: #98c379;
+  --code-number: #d19a66;
+  --code-type: #e5c07b;
+  --code-function: #61afef;
+  --code-variable: #abb2bf;
+  --code-operator: #56b6c2;
+  --code-class: #e5c07b;
+  --code-builtin: #56b6c2;
 
   /* 数学公式颜色 */
   --math-color: var(--text-primary);
@@ -401,10 +401,18 @@
   margin-block-end: 0;
 }
 
+/* 用户问题内的段落必须是白色 - 使用多重选择器提高优先级 */
+.theme-adaptive .user-question p,
+.user-question p,
+#ai-popup .user-question p,
+#ai-response .user-question p {
+  color: white !important;
+}
+
 /* 用户问题样式 - Apple iMessage 风格 */
 .theme-adaptive .user-question {
   background-color: var(--user-question-bg);
-  color: white;
+  color: white !important;
   padding: 10px 16px;
   margin: 16px 16px 8px auto;
   border-radius: 20px;
@@ -412,7 +420,7 @@
   line-height: 1.47;
   max-width: 75%;
   border-bottom-right-radius: 4px;
-  display: inline-block;
+  /* display: inline-block; Removed to fix lint: ignored due to float */
   float: right;
   word-wrap: break-word;
   word-break: break-word;
@@ -435,7 +443,7 @@
   line-height: 1.5;
   max-width: 85%;
   border-bottom-left-radius: 4px;
-  display: inline-block;
+  /* display: inline-block; Removed to fix lint */
   float: left;
   word-wrap: break-word;
   word-break: break-word;
@@ -603,8 +611,8 @@
   overflow: visible;
   padding: 16px;
   font-family: "SF Mono", Monaco, Menlo, Consolas, "Ubuntu Mono", monospace;
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 14px; /* 提升字号 */
+  line-height: 1.6; /* 增加行间距 */
   letter-spacing: 0;
   white-space: pre-wrap !important;
   word-wrap: break-word !important;
@@ -651,11 +659,10 @@
   margin: 0;
   padding: 16px;
   font-family: "SF Mono", Monaco, Menlo, Consolas, monospace;
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 14px; /* 提升字号 */
+  line-height: 1.6; /* 增加行间距 */
   overflow-x: auto;
-  border-radius: 12px;
-  color: inherit;  /* 继承父元素的文本颜色 */
+  border-radius: 12px; /* 更圆润的边角 */
 }
 
 .code-block-wrapper code {
@@ -668,20 +675,20 @@
 
 /* 明亮模式代码高亮 */
 .theme-adaptive .hljs {
-  color: #24292f;  /* GitHub 风格的基础文本颜色 */
+  color: var(--code-variable);
   background: transparent;
 }
 
 .theme-adaptive .hljs-comment,
 .theme-adaptive .hljs-quote {
-  color: #6e7781;  /* 更深的注释颜色 */
+  color: var(--code-comment);
   font-style: italic;
 }
 
 .theme-adaptive .hljs-keyword,
 .theme-adaptive .hljs-selector-tag,
 .theme-adaptive .hljs-subst {
-  color: #cf222e;  /* 关键字使用红色 */
+  color: var(--code-keyword);
   font-weight: 600;
 }
 
@@ -690,106 +697,122 @@
 .theme-adaptive .hljs-variable,
 .theme-adaptive .hljs-template-variable,
 .theme-adaptive .hljs-tag .hljs-attr {
-  color: #0550ae;  /* 数字和变量使用蓝色 */
+  color: var(--code-number);
 }
 
 .theme-adaptive .hljs-string,
 .theme-adaptive .hljs-doctag {
-  color: #0a3069;  /* 字符串使用深蓝色 */
+  color: var(--code-string);
 }
 
 .theme-adaptive .hljs-title,
 .theme-adaptive .hljs-section,
 .theme-adaptive .hljs-selector-id {
-  color: #8250df;  /* 标题和选择器使用紫色 */
+  color: var(--code-function);
   font-weight: 600;
 }
 
 .theme-adaptive .hljs-type,
 .theme-adaptive .hljs-class .hljs-title {
-  color: #953800;  /* 类型使用棕色 */
+  color: var(--code-type);
   font-weight: 600;
 }
 
 .theme-adaptive .hljs-regexp,
 .theme-adaptive .hljs-link {
-  color: #116329;  /* 正则表达式使用绿色 */
+  color: var(--code-string);
 }
 
 .theme-adaptive .hljs-symbol,
 .theme-adaptive .hljs-bullet {
-  color: #0550ae;  /* 符号使用蓝色 */
+  color: var(--code-number);
 }
 
 .theme-adaptive .hljs-built_in,
 .theme-adaptive .hljs-builtin-name {
-  color: #8250df;  /* 内置函数使用紫色 */
+  color: var(--code-builtin);
 }
 
 .theme-adaptive .hljs-meta {
-  color: #6e7781;  /* 元信息使用灰色 */
+  color: var(--code-comment);
 }
 
 .theme-adaptive .hljs-deletion {
-  color: #cf222e;  /* 删除的内容使用红色 */
+  background: #ffebe9;
+  color: #cf222e;
 }
 
 .theme-adaptive .hljs-addition {
-  color: #116329;  /* 添加的内容使用绿色 */
+  background: #e6ffec;
+  color: #116329;
 }
 
 /* 暗色模式代码高亮 */
 .theme-adaptive.dark-mode .hljs {
-  color: var(--text-primary);
+  color: var(--code-variable);
 }
 
 .theme-adaptive.dark-mode .hljs-comment,
 .theme-adaptive.dark-mode .hljs-quote {
-  color: #7ec699;
+  color: var(--code-comment);
   font-style: italic;
 }
 
 .theme-adaptive.dark-mode .hljs-keyword,
 .theme-adaptive.dark-mode .hljs-selector-tag,
 .theme-adaptive.dark-mode .hljs-subst {
-  color: #4aa8ff;
+  color: var(--code-keyword);
   font-weight: bold;
 }
 
 .theme-adaptive.dark-mode .hljs-number,
 .theme-adaptive.dark-mode .hljs-literal,
-.theme-adaptive .hljs-variable,
-.theme-adaptive .hljs-template-variable,
-.theme-adaptive .hljs-built_in,
-.theme-adaptive .hljs-type {
-  color: #bd93f9;
+.theme-adaptive.dark-mode .hljs-variable,
+.theme-adaptive.dark-mode .hljs-template-variable,
+.theme-adaptive.dark-mode .hljs-built_in,
+.theme-adaptive.dark-mode .hljs-type {
+  color: var(--code-number);
 }
 
 .theme-adaptive.dark-mode .hljs-string,
-.theme-adaptive.dark-mode .hljs-doctag,
-.theme-adaptive.dark-mode .hljs-addition,
+.theme-adaptive.dark-mode .hljs-doctag {
+  color: var(--code-string);
+}
+
 .theme-adaptive.dark-mode .hljs-title,
 .theme-adaptive.dark-mode .hljs-section,
-.theme-adaptive.dark-mode .hljs-selector-id,
+.theme-adaptive.dark-mode .hljs-selector-id {
+  color: var(--code-function);
+}
+
 .theme-adaptive.dark-mode .hljs-selector-class,
 .theme-adaptive.dark-mode .hljs-regexp,
 .theme-adaptive.dark-mode .hljs-attribute {
-  color: #ff7b72;
+  color: var(--code-string);
 }
 
 .theme-adaptive.dark-mode .hljs-symbol,
 .theme-adaptive.dark-mode .hljs-bullet,
 .theme-adaptive.dark-mode .hljs-link {
-  color: #bd93f9;
+  color: var(--code-number);
 }
 
-.theme-adaptive.dark-mode .hljs-deletion,
+.theme-adaptive.dark-mode .hljs-deletion {
+  background: rgba(218, 54, 51, 0.2);
+  color: #ffa198;
+}
+
+.theme-adaptive.dark-mode .hljs-addition {
+  background: rgba(35, 134, 54, 0.2);
+  color: #7ee787;
+}
+
 .theme-adaptive.dark-mode .hljs-meta {
-  color: #8b949e;
+  color: var(--code-comment);
 }
 
 .theme-adaptive.dark-mode .hljs-function {
-  color: #4aa8ff;
+  color: var(--code-function);
 }
 
 /* 复制按钮样式优化 */
@@ -1011,22 +1034,22 @@
 
 .theme-adaptive .close-button:hover {
   opacity: 1;
-  background-color: rgba(0, 0, 0, 0.06) !important;
+  background-color: transparent !important;
   transform: translateY(-50%) scale(1.08) !important;
 }
 
 .theme-adaptive .close-button:active {
   opacity: 1;
-  background-color: rgba(0, 0, 0, 0.1) !important;
+  background-color: transparent !important;
   transform: translateY(-50%) scale(0.92) !important;
 }
 
 .theme-adaptive.dark-mode .close-button:hover {
-  background-color: rgba(255, 255, 255, 0.1) !important;
+  background-color: transparent !important;
 }
 
 .theme-adaptive.dark-mode .close-button:active {
-  background-color: rgba(255, 255, 255, 0.15) !important;
+  background-color: transparent !important;
 }
 
 .close-button .close-icon {
@@ -1802,6 +1825,7 @@
 }
 
 /* Loading icon 样式 */
+/* Loading icon 样式 */
 .loading-icon-wrapper {
   position: absolute;
   right: 12px;
@@ -1828,8 +1852,19 @@
 .loading-icon {
   width: 20px;
   height: 20px;
+  /* Removed animation from container so stop button stays static */
+  /* colors are handled via JS or specific classes */
+}
+
+/* Spinner element rotates */
+.loading-spinner {
+  transform-origin: center;
   animation: rotate 1s linear infinite;
-  color: var(--text-secondary);
+}
+
+/* Stop button stays static */
+.stop-button {
+  transition: fill 0.2s ease;
 }
 
 /* 暗色模式下loading图标样式 */
@@ -1838,7 +1873,7 @@
   opacity: 0.9;
 }
 
-.loading-icon.active {
+.loading-icon.active .loading-spinner {
   animation: rotate 1s linear infinite;
 }
 
@@ -2188,7 +2223,7 @@
   background-color: var(--user-question-bg);
   border-radius: 12px;
   margin-bottom: 16px;
-  color: white;
+  color: white !important;
 }
 
 .selected-content {
@@ -2202,7 +2237,7 @@
 
 .selected-content p {
   margin: 0;
-  color: white;
+  color: white !important;
   opacity: 0.6;
 }
 
@@ -2215,7 +2250,7 @@
   font-size: 18px;
   line-height: 1.5;
   font-weight: 600;
-  color: white;
+  color: white !important;
 }
 
 .theme-adaptive.dark-mode .combined-content {
@@ -2317,13 +2352,13 @@
 }
 
 .minimize-button:hover {
-  background-color: rgba(0, 0, 0, 0.06) !important;
+  background-color: transparent !important;
   transform: translateY(-50%) scale(1.08) !important;
   opacity: 1;
 }
 
 .minimize-button:active {
-  background-color: rgba(0, 0, 0, 0.08) !important;
+  background-color: transparent !important;
   transform: translateY(-50%) scale(1) !important;
 }
 
@@ -2427,11 +2462,11 @@
 
 /* 暗黑模式下最小化按钮的适配 */
 .theme-adaptive.dark-mode .minimize-button:hover {
-  background-color: rgba(255, 255, 255, 0.1) !important;
+  background-color: transparent !important;
 }
 
 .theme-adaptive.dark-mode .minimize-button:active {
-  background-color: rgba(255, 255, 255, 0.15) !important;
+  background-color: transparent !important;
 }
 
 .theme-adaptive.dark-mode .minimize-button:hover .minimize-icon {
@@ -2466,29 +2501,52 @@
 .theme-adaptive h4,
 .theme-adaptive h5,
 .theme-adaptive h6 {
-  margin-top: 1.5em;
+  margin-top: 2em; /* Increase top margin for better section separation */
   margin-bottom: 0.8em;
   font-weight: 600 !important;
-  line-height: 1.25 !important;
+  line-height: 1.3 !important;
   color: var(--text-primary);
-  letter-spacing: -0.015em; /* Tighten tracking slightly for headings */
+  letter-spacing: -0.02em; /* Tighter tracking for headlines */
 }
 
 .theme-adaptive h1 {
-  font-size: 1.8em !important;
+  font-size: 1.7em !important;
   border-bottom: 1px solid var(--divider-color);
-  padding-bottom: 0.3em;
-  margin-top: 0.5em;
+  padding-bottom: 0.4em;
+  margin-top: 0.5em; /* First heading shouldn't have huge top margin */
+  letter-spacing: -0.025em;
 }
+
 .theme-adaptive h2 {
-  font-size: 1.4em !important;
-  border-bottom: 1px solid var(--divider-color);
-  padding-bottom: 0.3em;
+  font-size: 1.45em !important;
+  border-bottom: none; /* Cleaner look without border for h2 */
+  padding-bottom: 0;
+  margin-top: 1.8em;
 }
-.theme-adaptive h3 { font-size: 1.2em !important; }
-.theme-adaptive h4 { font-size: 1em !important; font-weight: 700 !important; }
-.theme-adaptive h5 { font-size: 0.9em !important; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
-.theme-adaptive h6 { font-size: 0.85em !important; color: var(--text-secondary); }
+
+.theme-adaptive h3 {
+  font-size: 1.25em !important;
+  font-weight: 600 !important;
+}
+
+.theme-adaptive h4 {
+  font-size: 1.1em !important;
+  font-weight: 600 !important;
+}
+
+.theme-adaptive h5 {
+  font-size: 0.95em !important;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700 !important;
+}
+
+.theme-adaptive h6 {
+  font-size: 0.9em !important;
+  color: var(--text-secondary);
+  font-weight: 500 !important;
+}
 
 /* Markdown Text Styles */
 .theme-adaptive strong,
@@ -2582,15 +2640,16 @@
 }
 
 .theme-adaptive th {
-  background-color: var(--bg-secondary);
+  background-color: transparent; /* Remove background for cleaner look */
   font-weight: 600;
   color: var(--text-secondary);
   text-transform: uppercase;
-  font-size: 0.8em;
-  letter-spacing: 0.05em;
+  font-size: 0.75em;
+  letter-spacing: 0.08em;
   white-space: nowrap;
   position: sticky;
   top: 0;
+  border-bottom: 2px solid var(--divider-color); /* Stronger separator */
 }
 
 .theme-adaptive tr:last-child td {
@@ -2607,15 +2666,18 @@
 
 /* Markdown Blockquote Styles */
 /* Markdown Blockquote Styles - Enhanced */
+  /* Markdown Blockquote Styles - Modern Callout Style */
 .theme-adaptive blockquote {
-  margin: 20px 0;
-  padding: 16px 20px;
-  border-left: 4px solid var(--accent-color);
+  margin: 24px 0;
+  padding: 16px 24px;
+  border-left: 3px solid var(--accent-color);
   background-color: var(--bg-secondary);
-  border-radius: 0 12px 12px 0;
+  border-radius: 8px; /* Slightly tighter radius */
   color: var(--text-primary);
-  font-style: italic;
+  font-style: normal; /* Remove italic for better readability */
   position: relative;
+  /* Add subtle shadow for depth */
+  box-shadow: 0 2px 5px rgba(0,0,0,0.03);
 }
 
 .theme-adaptive blockquote p {
@@ -2687,9 +2749,9 @@
 
 .theme-adaptive .ai-answer li,
 .theme-adaptive .user-question li {
-  margin: 0.5em 0;
-  line-height: 1.6;
-  padding-left: 0.2em;
+  margin: 0.7em 0; /* Increased spacing between list items */
+  line-height: 1.65;
+  padding-left: 0.3em;
 }
 
 /* Nested List Styles */
@@ -2735,9 +2797,10 @@
 .theme-adaptive hr {
   border: none;
   height: 1px;
-  background: linear-gradient(to right, transparent, var(--divider-color), transparent);
-  margin: 32px 0;
+  background-color: var(--divider-color); /* Solid but light color */
+  margin: 40px 0; /* More spacing around separator */
   width: 100%;
+  opacity: 0.6;
 }
 
 /* Collapsible Sections (details/summary) */

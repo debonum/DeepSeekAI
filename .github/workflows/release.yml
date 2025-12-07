@@ -50,15 +50,15 @@ jobs:
 
           if [ -z "$PREVIOUS_TAG" ]; then
             echo "This is the first release"
-            CHANGELOG="🎉 首次发布"
+            CHANGELOG="🎉 First Release / 首次发布"
           else
             echo "Generating changelog from $PREVIOUS_TAG to $CURRENT_TAG"
 
-            # 生成格式化的 changelog
-            CHANGELOG=$(git log ${PREVIOUS_TAG}..${CURRENT_TAG} --pretty=format:"- %s (%h)" --no-merges)
+            # 生成详细的 changelog，包含完整提交信息
+            CHANGELOG=$(git log ${PREVIOUS_TAG}..${CURRENT_TAG} --pretty=format:"- **%s** ([%h](https://github.com/${{ github.repository }}/commit/%H))" --no-merges)
 
             if [ -z "$CHANGELOG" ]; then
-              CHANGELOG="- 无代码更改（仅重新打包）"
+              CHANGELOG="- No code changes (repackaged only) / 无代码更改（仅重新打包）"
             fi
           fi
 
@@ -79,19 +79,33 @@ jobs:
           body: |
             🚀 **DeepSeek AI Extension ${{ steps.version.outputs.tag }}**
 
-            ## 📦 安装说明
+            ---
+
+            ## 📦 Installation / 安装说明
+
+            **English:**
+            1. Download the `extension.zip` file below
+            2. Extract the zip file
+            3. Open your browser's extension management page
+            4. Enable "Developer mode"
+            5. Click "Load unpacked" and select the extracted folder
+
+            **中文：**
             1. 下载下方的 `extension.zip` 文件
             2. 解压缩文件
             3. 在浏览器中打开扩展管理页面
             4. 启用"开发者模式"
             5. 点击"加载已解压的扩展程序"并选择解压后的文件夹
 
-            ## 📝 更新日志
+            ---
+
+            ## 📝 Changelog / 更新日志
+
             ${{ steps.changelog.outputs.changelog }}
 
             ---
 
-            💡 查看完整提交历史：[点击这里](https://github.com/${{ github.repository }}/commits/${{ steps.version.outputs.tag }})
+            💡 View full commit history / 查看完整提交历史：[Click here / 点击这里](https://github.com/${{ github.repository }}/compare/${{ steps.version.outputs.tag }}...HEAD)
           draft: false
           prerelease: false
         env:

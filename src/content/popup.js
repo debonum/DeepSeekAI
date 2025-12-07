@@ -10,6 +10,9 @@ import { STYLE_CONSTANTS } from './utils/constants';
 import { popupStateManager } from './utils/popupStateManager';
 import { initCopyButtonsVisibility } from "./utils/markdownRenderer";
 import { focusInputIfSafe } from './utils/focusManager';
+import { ensureShadowContainer, getShadowContainer, destroyShadowContainer, getPopupElement, getAiResponseElement, getAiResponseContainer } from './components/ShadowContainer';
+// CSS 作为字符串导入，用于注入到 Shadow DOM
+import popupStyles from './styles/style.css?raw';
 
 // 将aiResponseContainer移动到window对象上
 window.aiResponseContainer = null;
@@ -141,6 +144,7 @@ export function createPopup(selectedText, rect, hideQuestion = false, removeCall
       // 添加选中内容文本
       const selectedContentP = document.createElement('p');
       selectedContentP.textContent = messages[0].content;
+      selectedContentP.style.color = 'white';  // 直接设置内联样式
       selectedContentDiv.appendChild(selectedContentP);
 
       // 添加用户问题
@@ -150,6 +154,7 @@ export function createPopup(selectedText, rect, hideQuestion = false, removeCall
       // 添加问题文本
       const userQuestionP = document.createElement('p');
       userQuestionP.textContent = messages[0].userQuestion;
+      userQuestionP.style.color = 'white';  // 直接设置内联样式
       userQuestionDiv.appendChild(userQuestionP);
 
       // 将选中内容和用户问题添加到组合容器
@@ -166,6 +171,7 @@ export function createPopup(selectedText, rect, hideQuestion = false, removeCall
     userQuestionDiv.className = 'user-question';
     const userQuestionP = document.createElement('p');
     userQuestionP.textContent = selectedText;
+    userQuestionP.style.color = 'white';  // 直接设置内联样式，确保颜色正确
     userQuestionDiv.appendChild(userQuestionP);
     addIconsToElement(userQuestionDiv);
     aiResponseElement.appendChild(userQuestionDiv);
@@ -227,7 +233,7 @@ export function createPopup(selectedText, rect, hideQuestion = false, removeCall
     if (removeCallback) removeCallback();
   };
 
-  document.body.appendChild(popup);
+  // 注意：弹窗不在这里挂载到 DOM，由调用者（content.js）负责挂载到 Shadow DOM 容器
 
   let abortController = new AbortController();
   // 增加回调函数，在生成完成时移除generating类
@@ -277,10 +283,18 @@ export function createPopup(selectedText, rect, hideQuestion = false, removeCall
     onGenerationError     // 新增错误回调
   );
 
-  const dragHandle = createDragHandle(enhancedRemoveCallback, minimizeCallback);
-  popup.appendChild(dragHandle);
+  // 固定回调函数（仅对当前窗口有效）
+  const pinCallback = (isPinned) => {
+    popup._isTempPinned = isPinned;
+  };
 
-  setupInteractions(popup, dragHandle, window.aiResponseContainer);
+  // 创建标题栏
+  const dragHandle = createDragHandle(enhancedRemoveCallback, minimizeCallback, pinCallback);
+  popup.appendChild(dragHandle);
+  initDraggable(dragHandle, popup);
+
+  // 设置 resize 交互
+  setupInteractions(popup, window.aiResponseContainer);
 
   const questionInputContainer = createQuestionInputContainer(window.aiResponseContainer);
   popup.appendChild(questionInputContainer);
@@ -315,8 +329,8 @@ export function createPopup(selectedText, rect, hideQuestion = false, removeCall
   return popup;
 }
 
-function setupInteractions(popup, dragHandle, aiResponseContainer) {
-  initDraggable(dragHandle, popup);
+function setupInteractions(popup, aiResponseContainer) {
+  // 拖拽初始化已在异步回调中完成
 
   let prevCleanup = null;
 
@@ -440,13 +454,14 @@ function updateInputContainer(popup) {
 }
 
 function sendQuestionToAI(question) {
-  const aiResponseElement = document.getElementById("ai-response");
+  const aiResponseElement = getAiResponseElement();
   const aiResponseContainer = window.aiResponseContainer;
 
   const userQuestionDiv = document.createElement('div');
   userQuestionDiv.className = 'user-question';
   const userQuestionP = document.createElement('p');
   userQuestionP.textContent = question;
+  userQuestionP.style.color = 'white';  // 直接设置内联样式，确保颜色正确
   userQuestionDiv.appendChild(userQuestionP);
   addIconsToElement(userQuestionDiv);
   aiResponseElement.appendChild(userQuestionDiv);
@@ -484,7 +499,7 @@ function sendQuestionToAI(question) {
       }, 1000);
     }
 
-    requestAnimationFrame(() => focusInputIfSafe(document.getElementById('ai-popup')));
+    requestAnimationFrame(() => focusInputIfSafe(getPopupElement()));
   };
 
   const onGenerationError = () => {
@@ -539,7 +554,7 @@ export function stylePopup(popup, rect) {
   const scrollThreshold = 30; // 触发滚动的边缘距离
 
   popup.addEventListener('mousemove', function(e) {
-    const responseContainer = document.getElementById('ai-response-container');
+    const responseContainer = getAiResponseContainer();
     if (!responseContainer) return;
 
     // 使用 requestAnimationFrame 来优化滚动性能

@@ -123,7 +123,7 @@ export function resizeMoveListener(event) {
   }
 }
 
-export function createDragHandle(removeCallback, minimizeCallback) {
+export function createDragHandle(removeCallback, minimizeCallback, pinCallback) {
   const dragHandle = document.createElement("div");
   Object.assign(dragHandle.style, {
     position: "absolute",
@@ -140,6 +140,9 @@ export function createDragHandle(removeCallback, minimizeCallback) {
   });
 
   dragHandle.classList.add('drag-handle');
+
+  // 临时固定状态（仅对当前窗口有效）
+  let isTempPinned = false;
 
   const titleContainer = document.createElement("div");
   Object.assign(titleContainer.style, {
@@ -219,9 +222,11 @@ export function createDragHandle(removeCallback, minimizeCallback) {
 
   const closeIcon = document.createElement("div");
   closeIcon.className = "close-icon";
-  // 使用已有的关闭图标SVG
+  // 使用内联 SVG，与其他按钮风格统一
   closeIcon.innerHTML = `
-    <img src="${chrome.runtime.getURL('icons/close.svg')}" alt="关闭" width="16" height="16" style="display: block;">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block">
+      <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
   `;
 
   // 简化图标样式
@@ -243,19 +248,13 @@ export function createDragHandle(removeCallback, minimizeCallback) {
   closeButton.addEventListener("mouseenter", () => {
     // 悬停时变为苹果蓝色并轻微放大
     closeIcon.style.transform = "scale(1.1)";
-    const img = closeIcon.querySelector('img');
-    if (img) {
-      img.style.filter = "invert(48%) sepia(57%) saturate(6300%) hue-rotate(193deg) brightness(101%) contrast(101%)";
-    }
+    closeIcon.style.color = "var(--accent-color, #007aff)";
   });
 
   closeButton.addEventListener("mouseleave", () => {
     // 恢复正常状态
     closeIcon.style.transform = "scale(1)";
-    const img = closeIcon.querySelector('img');
-    if (img) {
-      img.style.filter = "";
-    }
+    closeIcon.style.color = "var(--text-secondary)";
   });
 
   closeButton.addEventListener("mousedown", (e) => {
@@ -290,12 +289,6 @@ export function createDragHandle(removeCallback, minimizeCallback) {
     // 确保图标不会发生变形
     closeIcon.style.transition = "none";
     closeIcon.style.transform = "scale(1)";
-
-    // 阻止所有可能的动画或滑动
-    const img = closeIcon.querySelector('img');
-    if (img) {
-      img.style.transition = "none";
-    }
 
     // 立即执行关闭回调，不添加任何额外效果
     if (removeCallback) {
@@ -387,19 +380,137 @@ export function createDragHandle(removeCallback, minimizeCallback) {
     }
   });
 
+  // 固定按钮（在最小化按钮左侧）
+  const pinButton = document.createElement("button");
+  pinButton.className = "pin-button tooltip-trigger";
+  Object.assign(pinButton.style, {
+    display: "none",
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    padding: "8px",
+    margin: "0",
+    transition: "all 0.2s cubic-bezier(0.25, 1, 0.5, 1)",
+    position: "absolute",
+    right: "74px", // 在最小化按钮（42px）左边
+    top: "50%",
+    transform: "translateY(-50%) scale(1)",
+    width: "24px",
+    height: "24px",
+    minWidth: "24px",
+    minHeight: "24px",
+    maxWidth: "24px",
+    maxHeight: "24px",
+    lineHeight: "1",
+    outline: "none",
+    boxSizing: "content-box",
+    zIndex: "10",
+    appearance: "none",
+    WebkitAppearance: "none",
+    MozAppearance: "none",
+    borderRadius: "6px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center"
+  });
+
+  const pinIcon = document.createElement("div");
+  pinIcon.className = "pin-icon";
+  // 图钉 SVG 图标，与其他按钮风格一致
+  pinIcon.innerHTML = `
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block">
+      <path d="M16 4v4l2 2v2h-5v7l-1 1-1-1v-7H6v-2l2-2V4h8z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  `;
+  Object.assign(pinIcon.style, {
+    width: "16px",
+    height: "16px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+    color: "var(--text-secondary)",
+    transition: "transform 0.15s ease, color 0.15s ease",
+    padding: "0",
+    zIndex: "10"
+  });
+  pinButton.appendChild(pinIcon);
+
+  // 更新固定按钮图标状态
+  const updatePinIcon = (isPinned) => {
+    if (isPinned) {
+      pinIcon.innerHTML = `
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block">
+          <path d="M16 4v4l2 2v2h-5v7l-1 1-1-1v-7H6v-2l2-2V4h8z" fill="currentColor" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      `;
+      pinIcon.style.color = "var(--accent-color, #007aff)";
+    } else {
+      pinIcon.innerHTML = `
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block">
+          <path d="M16 4v4l2 2v2h-5v7l-1 1-1-1v-7H6v-2l2-2V4h8z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      `;
+      pinIcon.style.color = "var(--text-secondary)";
+    }
+  };
+
+  pinButton.addEventListener("mouseenter", () => {
+    pinIcon.style.transform = "scale(1.1)";
+    if (!isTempPinned) {
+      pinIcon.style.color = "var(--accent-color, #007aff)";
+    }
+  });
+  pinButton.addEventListener("mouseleave", () => {
+    pinIcon.style.transform = "scale(1)";
+    if (!isTempPinned) {
+      pinIcon.style.color = "var(--text-secondary)";
+    }
+  });
+  pinButton.addEventListener("mousedown", (e) => {
+    e.stopPropagation();
+    pinIcon.style.transform = "scale(1.2)";
+    pinButton.style.transform = "translateY(-50%)";
+    pinButton.style.top = "50%";
+    if ('vibrate' in navigator) navigator.vibrate(8);
+  });
+  pinButton.addEventListener("mouseup", () => {
+    pinIcon.style.transform = "scale(1.1)";
+    pinButton.style.transform = "translateY(-50%)";
+  });
+  pinButton.addEventListener("click", (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    pinButton.style.transform = "translateY(-50%)";
+    pinIcon.style.transform = "scale(1)";
+
+    // 切换临时固定状态
+    isTempPinned = !isTempPinned;
+    updatePinIcon(isTempPinned);
+
+    // 调用回调函数通知状态变化
+    if (typeof pinCallback === 'function') {
+      pinCallback(isTempPinned);
+    }
+  });
+
   dragHandle.addEventListener("mouseenter", () => {
     closeButton.style.display = "flex";
     minimizeButton.style.display = "flex";
+    pinButton.style.display = "flex";
   });
 
   dragHandle.addEventListener("mouseleave", () => {
     closeButton.style.display = "none";
     minimizeButton.style.display = "none";
+    pinButton.style.display = "none";
   });
 
   dragHandle.appendChild(titleContainer);
   dragHandle.appendChild(closeButton);
   dragHandle.appendChild(minimizeButton);
+  dragHandle.appendChild(pinButton);
 
   // 添加徽标，表示扩展的身份
   dragHandle.addEventListener("dblclick", (e) => {

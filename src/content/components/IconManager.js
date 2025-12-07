@@ -3,6 +3,7 @@ import PerfectScrollbar from "perfect-scrollbar";
 import { setAllowAutoScroll } from "../utils/scrollManager";
 import { focusInputIfSafe } from '../utils/focusManager';
 import { ICONS } from './Icons';
+import { getPopupElement, getAiResponseElement, getAiResponseContainer } from './ShadowContainer';
 
 export function createIcon(x, y) {
   const icon = document.createElement("img");
@@ -209,7 +210,7 @@ export function addIconsToElement(element) {
             element.style.backgroundColor = 'var(--success-color-alpha, rgba(52, 199, 89, 0.1))';
             setTimeout(() => { element.style.backgroundColor = originalColor; }, 1000);
           }
-          requestAnimationFrame(() => focusInputIfSafe(document.getElementById('ai-popup')));
+          requestAnimationFrame(() => focusInputIfSafe(getPopupElement()));
         };
 
         const onGenerationError = () => {
@@ -276,13 +277,13 @@ export function addIconsToElement(element) {
 }
 
 export function updateLastAnswerIcons() {
-  const aiResponseElement = document.getElementById("ai-response");
+  const aiResponseElement = getAiResponseElement();
   if (!aiResponseElement) return;
 
   const answers = aiResponseElement.getElementsByClassName("ai-answer");
   if (!answers || answers.length === 0) return;
 
-  const aiResponseContainer = document.getElementById("ai-response-container");
+  const aiResponseContainer = getAiResponseContainer();
   if (!aiResponseContainer) return;
 
   Array.from(answers).forEach(answer => {
@@ -354,7 +355,7 @@ export function updateLastAnswerIcons() {
             lastAnswer.style.backgroundColor = 'var(--success-color-alpha, rgba(52, 199, 89, 0.1))';
             setTimeout(() => { lastAnswer.style.backgroundColor = originalColor; }, 1000);
           }
-          requestAnimationFrame(() => focusInputIfSafe(document.getElementById('ai-popup')));
+          requestAnimationFrame(() => focusInputIfSafe(getPopupElement()));
         };
 
         const onGenerationError = () => {
