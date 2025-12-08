@@ -7,6 +7,9 @@ import { popupStateManager } from './utils/popupStateManager';
 import { ensureShadowContainer, getShadowContainer, destroyShadowContainer } from './components/ShadowContainer';
 // CSS 作为字符串导入，用于注入到 Shadow DOM
 import popupStyles from './styles/style.css?raw';
+import katexStyles from 'katex/dist/katex.min.css?raw';
+
+const shadowStyles = `${katexStyles}\n${popupStyles}`;
 
 // 选区保持管理器
 class SelectionPreservationManager {
@@ -505,7 +508,7 @@ function handlePopupCreation(selectedText, rect, hideQuestion = false, messages 
     }
 
     // 使用 Shadow DOM 容器挂载弹窗，实现样式隔离
-    const shadowContainer = ensureShadowContainer(popupStyles);
+    const shadowContainer = ensureShadowContainer(shadowStyles);
     shadowContainer.container.appendChild(currentPopup);
     popupStateManager.setVisible(true);  // 更新状态
     // 打开弹窗后，短时间抑制快捷按钮再次唤起

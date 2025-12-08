@@ -143,15 +143,37 @@ function restoreMath(html, map) {
     const entry = map.get(match);
     if (!entry) return match;
     try {
-      return katex.renderToString(entry.content, {
+      if (isChemfigMath(entry.content)) {
+        const escaped = escapeHtml(entry.content);
+        const tag = entry.isDisplay ? 'div' : 'span';
+        const cls = entry.isDisplay ? 'plain-math chem-fallback chem-display' : 'plain-math chem-fallback';
+        return `<${tag} class="${cls}">${escaped}</${tag}>`;
+      }
+      const rendered = katex.renderToString(entry.content, {
         displayMode: entry.isDisplay,
         throwOnError: false
       });
+      // 用容器包裹，防止根号等元素溢出气泡
+      const wrapperClass = entry.isDisplay ? 'math-block' : 'math-inline';
+      return `<span class="${wrapperClass}">${rendered}</span>`;
     } catch (err) {
       console.warn("KaTeX render error:", err);
       return match;
     }
   });
+}
+
+function escapeHtml(str = "") {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function isChemfigMath(str = "") {
+  return /\\chemfig|\\chemabove|\\chembelow|\\chemrel|\\lewis|\\chemup|\\chemdown/i.test(str);
 }
 
 // 在渲染阶段直接处理代码块：包裹 wrapper + 高亮，避免后续 DOM 操作导致抖动
@@ -497,7 +519,7 @@ function mergeSoftBreaksForMath(root) {
   }
 }
 
-function _old_isMathBalanced(text = "") {
+export function isMathBalanced(text = "") {
   if (!text) return true;
   try {
     // $$ ... $$ pairs
@@ -524,21 +546,20 @@ function _old_isMathBalanced(text = "") {
     const cS = (text.match(/\\\]/g) || []).length;
     if (oS !== cS) return false;
 
-    // bracket-only block lines [ ... ]
-    const lines = text.split(/\r?\n/);
-    let balance = 0;
-    for (const l of lines) {
-      if (/^\s*\[\s*$/.test(l)) balance += 1;
-      if (/^\s*\]\s*$/.test(l)) balance -= 1;
+    // 检查 {...} 括号是否平衡（对 \sqrt{...} 等命令很重要）
+    let braceBalance = 0;
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      if (ch === '\\') { i++; continue; } // 跳过转义
+      if (ch === '{') braceBalance++;
+      if (ch === '}') braceBalance--;
     }
-    if (balance !== 0) return false;
+    if (braceBalance !== 0) return false;
 
     return true;
   } catch (_) {
     return true;
   }
 }
-
-export function isMathBalanced() { return true; }
 
 export const md = { render };

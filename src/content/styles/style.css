@@ -1189,20 +1189,26 @@
 }
 
 .theme-adaptive .math-inline {
-  display: inline-flex;
-  align-items: center;
-  vertical-align: middle;
-  margin: 0 0.32em;               /* 略增水平留白，避免拥挤 */
-  padding: 0 1px;                 /* 防止与中文字间距过紧 */
+  display: inline;                /* 保持 inline 以不破坏 KaTeX 内部定位 */
+  vertical-align: baseline;
+  margin: 0 0.2em;
 }
 
-/* KaTeX 内部排版与换行控制，避免被容器的 anywhere 规则打断 */
-.theme-adaptive .math-block .katex,
-.theme-adaptive .math-inline .katex {
-  line-height: 1.55 !important;   /* 提升可读性 */
+/* KaTeX 内部排版保护 */
+.theme-adaptive .katex {
   word-break: normal !important;
   overflow-wrap: normal !important;
-  white-space: normal !important;
+  line-height: 1.4 !important;           /* 稍微放松行高，减少拥挤感 */
+}
+
+.theme-adaptive .math-block .katex {
+  line-height: 1.5 !important;           /* 块级公式再提高一些行距 */
+}
+/* 确保 .hide-tail 正确裁剪 400em 宽的根号 SVG */
+/* span 是 inline 元素，overflow 对 inline 无效，必须设为 inline-block */
+.theme-adaptive .katex .hide-tail {
+  display: inline-block !important;
+  overflow: hidden !important;
 }
 
 /* 列表中的公式上下间距更友好 */
@@ -1254,6 +1260,17 @@
   line-height: 1.6;                      /* 更舒适的行高 */
   word-break: normal !important;
   overflow-wrap: normal !important;
+}
+
+.theme-adaptive .chem-fallback {
+  font-family: "SFMono-Regular", Consolas, "Roboto Mono", monospace;
+  color: var(--text-secondary, #555);
+  white-space: pre-wrap;
+}
+
+.theme-adaptive .chem-display {
+  display: block;
+  margin: 0.8em 0;
 }
 
 /* 列表中的“纯文本公式”间距 */
@@ -2802,7 +2819,7 @@
   border: none;
   height: 1px;
   background-color: var(--divider-color); /* Solid but light color */
-  margin: 40px 0; /* More spacing around separator */
+  margin: 16px 0; /* Reduce vertical gap between paragraphs */
   width: 100%;
   opacity: 0.6;
 }

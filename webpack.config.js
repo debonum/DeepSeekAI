@@ -60,7 +60,7 @@ module.exports = {
       new TerserPlugin({
         terserOptions: {
           compress: {
-            drop_console: true,
+            drop_console: true,  // 临时开启 console 以调试根号渲染问题
             drop_debugger: true,
             passes: 2,
             pure_getters: true,
