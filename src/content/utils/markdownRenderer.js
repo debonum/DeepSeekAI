@@ -154,6 +154,30 @@ function restoreMath(html, map) {
   });
 }
 
+// 在渲染阶段直接处理代码块：包裹 wrapper + 高亮，避免后续 DOM 操作导致抖动
+function processCodeBlocks(html) {
+  return html.replace(/<pre><code(?:\s+class="language-([^"]*)")?>([\s\S]*?)<\/code><\/pre>/g, (match, lang, code) => {
+    const decoded = code
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'");
+    
+    let highlighted = decoded;
+    try {
+      if (lang && hljs.getLanguage(lang)) {
+        highlighted = hljs.highlight(decoded, { language: lang, ignoreIllegals: true }).value;
+      } else {
+        highlighted = hljs.highlightAuto(decoded).value;
+      }
+    } catch (e) { /* fallback to raw */ }
+    
+    const langClass = lang ? ` language-${lang}` : '';
+    return `<div class="code-block-wrapper"><pre class="hljs"><code class="hljs${langClass}">${highlighted}</code></pre></div>`;
+  });
+}
+
 export function render(text) {
   if (!text) return "";
   try {
@@ -170,11 +194,13 @@ export function render(text) {
     const html = mdIt.render(processedText);
 
     // 3.5 Process Admonitions (GitHub Alerts)
-    // Transform <blockquote><p>[!NOTE] ... to <blockquote class="markdown-alert markdown-alert-note"><p class="markdown-alert-title">Note</p>...
     let processedHtml = processAdmonitions(html);
 
     // 3.6 Wrap Tables
     processedHtml = processTables(processedHtml);
+
+    // 3.7 Process Code Blocks - 渲染阶段直接包裹和高亮，避免流式渲染抖动
+    processedHtml = processCodeBlocks(processedHtml);
 
     // 4. Sanitize
     const sanitized = sanitizeHtml(processedHtml);
@@ -202,21 +228,7 @@ function processTables(html) {
   return html.replace(/<table/g, '<div class="table-wrapper"><table').replace(/<\/table>/g, '</table></div>');
 }
 
-// ——— Code block copy button utilities (kept for UX, independent of renderer) ———
-const ensureCodeBlockWrapper = (preElement) => {
-  if (!isBrowserEnvironment || !preElement?.parentElement) return null;
-  if (preElement.parentElement.classList.contains("code-block-wrapper")) {
-    return preElement.parentElement;
-  }
-  const wrapper = document.createElement("div");
-  wrapper.className = "code-block-wrapper";
-  preElement.parentElement.insertBefore(wrapper, preElement);
-  wrapper.appendChild(preElement);
-  return wrapper;
-};
-
-
-
+// ——— Code block copy button bindCopyButton ———
 const bindCopyButton = (button, codeElement) => {
   if (!button || button.dataset.bound === "true") return;
   button.dataset.bound = "true";
@@ -259,7 +271,7 @@ const bindCopyButton = (button, codeElement) => {
       button.style.color = "var(--success-color, #34c759)";
       button.style.transform = "scale(1.15)";
       button.style.transition = "transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.15s ease";
-      
+
       setTimeout(() => { button.style.transform = "scale(1)"; }, 120);
       setTimeout(() => resetState(), 1500);
     } catch (error) {
@@ -274,43 +286,14 @@ export function showCodeCopyButtons(root = null) {
   const rootElement = root ?? document;
   if (!rootElement) return;
 
-  const codeBlocks = rootElement.querySelectorAll("pre code");
+  // 查找已经包裹好的代码块（由 render 阶段的 processCodeBlocks 生成）
+  const wrappers = rootElement.querySelectorAll(".code-block-wrapper");
 
+  wrappers.forEach((wrapper) => {
+    const codeElement = wrapper.querySelector("code");
+    if (!codeElement) return;
 
-  codeBlocks.forEach((codeElement) => {
-    const pre = codeElement.parentElement;
-    if (!pre) return;
-
-    // Add hljs classes for theming even without tokenization
-    if (!pre.classList.contains("hljs")) pre.classList.add("hljs");
-    if (!codeElement.classList.contains("hljs")) codeElement.classList.add("hljs");
-
-    // Optional client-side highlighting (no custom markdown-it rules used)
-    try {
-      const alreadyTokenized = codeElement.querySelector('[class^="hljs-"]');
-      if (!alreadyTokenized && codeElement.textContent) {
-        const langMatch = Array.from(codeElement.classList).find(c => c.startsWith('language-'));
-        if (langMatch) {
-          const lang = langMatch.replace('language-', '');
-          if (hljs.getLanguage(lang)) {
-            const { value } = hljs.highlight(codeElement.textContent, { language: lang, ignoreIllegals: true });
-            codeElement.innerHTML = value;
-          } else {
-            const { value } = hljs.highlightAuto(codeElement.textContent);
-            codeElement.innerHTML = value;
-          }
-        } else {
-          const { value } = hljs.highlightAuto(codeElement.textContent);
-          codeElement.innerHTML = value;
-        }
-      }
-    } catch (err) {
-      console.warn('hljs highlight failed:', err);
-    }
-
-    const wrapper = ensureCodeBlockWrapper(pre);
-    if (!wrapper) return;
-
+    // 只添加复制按钮，不再做包裹和高亮（已在 render 阶段完成）
     let button = wrapper.querySelector(".copy-button");
     if (!button) {
       button = document.createElement("button");
@@ -319,7 +302,6 @@ export function showCodeCopyButtons(root = null) {
       button.setAttribute("aria-label", "Copy code");
       button.title = "Copy";
       button.innerHTML = ICONS.copy;
-
       wrapper.appendChild(button);
     }
 
