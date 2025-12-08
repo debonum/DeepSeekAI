@@ -436,7 +436,7 @@
 .theme-adaptive .ai-answer {
   background-color: var(--ai-answer-bg);
   color: var(--text-primary);
-  padding: 12px 18px;
+  padding: 0px 18px;
   margin: 8px 16px 16px 16px;
   border-radius: 20px;
   font-size: 15px;
@@ -1852,8 +1852,12 @@
 .loading-icon {
   width: 20px;
   height: 20px;
-  /* Removed animation from container so stop button stays static */
-  /* colors are handled via JS or specific classes */
+}
+
+/* 亮色模式下 loading 图标样式 - 与发送按钮一致 */
+.theme-adaptive .loading-icon {
+  color: var(--text-secondary, #86868b);
+  opacity: 0.9;
 }
 
 /* Spinner element rotates */
@@ -1867,7 +1871,7 @@
   transition: fill 0.2s ease;
 }
 
-/* 暗色模式下loading图标样式 */
+/* 暗色模式下 loading 图标样式 */
 .theme-adaptive.dark-mode .loading-icon {
   color: #fff;
   opacity: 0.9;

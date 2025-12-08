@@ -143,17 +143,39 @@ export function addIconsToElement(element) {
       })
       .map(node => node.textContent)
       .join('')
-      .trim() // 去除首尾空白字符
-      .replace(/^\n+|\n+$/g, ''); // 去除开头和结尾的换行符
+      .trim()
+      .replace(/^\n+|\n+$/g, '');
 
     navigator.clipboard.writeText(textContent).then(() => {
-      copyIconContainer.style.transform = "scale(1.2)";
+      const originalIcon = copyIconContainer.innerHTML;
+      
+      // Apple 风格：勾选图标 + 系统绿 + 弹性动画
+      copyIconContainer.innerHTML = ICONS.check;
+      copyIconContainer.style.cssText = `
+        width: 16px; height: 16px;
+        display: flex; align-items: center; justify-content: center;
+        color: var(--success-color, #34c759);
+        transform: scale(1.25);
+        transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      `;
       copyIconContainer.title = "Copied!";
+      
+      const checkSvg = copyIconContainer.querySelector('svg');
+      if (checkSvg) checkSvg.style.cssText = 'width:100%;height:100%';
+
+      setTimeout(() => { copyIconContainer.style.transform = 'scale(1)'; }, 120);
 
       setTimeout(() => {
-        copyIconContainer.style.transform = "";
+        copyIconContainer.innerHTML = originalIcon;
+        copyIconContainer.style.cssText = `
+          width: 16px; height: 16px;
+          display: flex; align-items: center; justify-content: center;
+          transition: all 0.2s ease;
+        `;
         copyIconContainer.title = "Copy";
-      }, 1000);
+        const svg = copyIconContainer.querySelector('svg');
+        if (svg) svg.style.cssText = 'width:100%;height:100%';
+      }, 1500);
     });
   });
 

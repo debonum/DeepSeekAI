@@ -70,11 +70,12 @@ export const createQuestionInputContainer = (aiResponseContainer) => {
 
   // 设置loading图标的样式并监听主题变化
   const updateLoadingIconStyle = () => {
-    const isDarkMode = document.body.classList.contains('theme-adaptive dark-mode');
-    loadingIcon.style.opacity = "0.8";
-    loadingIcon.style.color = isDarkMode ? 'white' : 'var(--text-primary)';
-    // 在暗色模式下不应用亮度过滤，保持原色，在亮色模式下使用brightness控制颜色深度
-    loadingIcon.style.filter = isDarkMode ? 'none' : 'brightness(0.3)';
+    const isDark = document.body.classList.contains('dark-mode') ||
+                   document.documentElement.classList.contains('dark-mode') ||
+                   document.querySelector('.theme-adaptive.dark-mode');
+    // 与发送按钮保持一致：亮色用 --text-secondary (#86868b)，暗色用白色
+    loadingIcon.style.color = isDark ? '#fff' : '#86868b';
+    loadingIcon.style.filter = 'none';
   };
 
   // 初始化时调用一次
@@ -388,24 +389,16 @@ const setupSendButton = (sendIcon, textarea, aiResponseContainer) => {
 };
 
 const setupLoadingIcon = (loadingIconWrapper) => {
-  // 获取loading图标元素
   const loadingIcon = loadingIconWrapper.querySelector(".loading-icon");
 
-  // 确保loadingIcon样式与当前主题匹配
   const updateIconStyle = () => {
     if (loadingIcon) {
-      const isDarkMode = document.body.classList.contains('dark-mode') ||
-                         document.documentElement.classList.contains('dark-mode') ||
-                         document.querySelector('.theme-adaptive.dark-mode') ||
-                         document.body.classList.contains('theme-adaptive dark-mode');
-
-      // 在暗色模式下使用白色，确保可见性
-      loadingIcon.style.color = isDarkMode ? '#fff' : 'var(--text-primary)';
-      // loadingIcon.style.fill = 'none'; // Removed to allow stop button fill
-      loadingIcon.style.filter = isDarkMode ? 'brightness(1)' : 'brightness(0.3)';
-
-      // 添加日志用于调试
-      console.debug('[DeepSeek] Loading icon theme:', isDarkMode ? 'dark' : 'light');
+      const isDark = document.body.classList.contains('dark-mode') ||
+                     document.documentElement.classList.contains('dark-mode') ||
+                     document.querySelector('.theme-adaptive.dark-mode');
+      // 与发送按钮保持一致：亮色用 #86868b，暗色用白色
+      loadingIcon.style.color = isDark ? '#fff' : '#86868b';
+      loadingIcon.style.filter = 'none';
     }
   };
 
@@ -491,15 +484,13 @@ const setupUpdateButtonState = (container) => {
         loadingIconWrapper.style.transform = 'translateY(-50%) scale(1)';
         loadingIcon.classList.add("active");
 
-        // 更新loading图标样式，确保在暗色模式下可见
+        // 更新loading图标样式，与发送按钮颜色一致
         const isDarkMode = document.body.classList.contains('dark-mode') ||
                            document.documentElement.classList.contains('dark-mode') ||
-                           document.querySelector('.theme-adaptive.dark-mode') ||
-                           document.body.classList.contains('theme-adaptive dark-mode');
+                           document.querySelector('.theme-adaptive.dark-mode');
 
-        loadingIcon.style.color = isDarkMode ? '#fff' : 'var(--text-primary)';
-        // loadingIcon.style.fill = 'none'; // Removed
-        loadingIcon.style.filter = isDarkMode ? 'brightness(1)' : 'brightness(0.3)';
+        loadingIcon.style.color = isDarkMode ? '#fff' : '#86868b';
+        loadingIcon.style.filter = 'none';
       }, 150);
 
       // 禁用输入框

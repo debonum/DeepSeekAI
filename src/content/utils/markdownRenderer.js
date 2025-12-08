@@ -219,8 +219,6 @@ const ensureCodeBlockWrapper = (preElement) => {
 
 const bindCopyButton = (button, codeElement) => {
   if (!button || button.dataset.bound === "true") return;
-  const label = button.querySelector(".copy-label");
-  const success = button.querySelector(".copy-success");
   button.dataset.bound = "true";
 
   button.addEventListener("click", async (event) => {
@@ -234,6 +232,8 @@ const bindCopyButton = (button, codeElement) => {
       button.innerHTML = ICONS.copy;
       button.setAttribute("aria-label", "Copy code");
       button.title = "Copy";
+      button.style.color = "";
+      button.style.transform = "";
     };
 
     try {
@@ -251,15 +251,20 @@ const bindCopyButton = (button, codeElement) => {
         document.body.removeChild(textarea);
       }
 
+      // Apple 风格：勾选图标 + 系统绿 + 弹性动画
       button.classList.add("copied");
       button.innerHTML = ICONS.check;
       button.setAttribute("aria-label", "Copied");
-      button.title = "Copied";
-      setTimeout(() => resetState(), 2000);
+      button.title = "Copied!";
+      button.style.color = "var(--success-color, #34c759)";
+      button.style.transform = "scale(1.15)";
+      button.style.transition = "transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.15s ease";
+      
+      setTimeout(() => { button.style.transform = "scale(1)"; }, 120);
+      setTimeout(() => resetState(), 1500);
     } catch (error) {
       console.warn("Copy to clipboard failed:", error);
       resetState();
-      setTimeout(() => resetState(), 2000);
     }
   });
 };
