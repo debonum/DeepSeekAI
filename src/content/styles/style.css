@@ -1084,7 +1084,8 @@
 
 /* 内容区域滚动容器 - 修复滚动问题 */
 .theme-adaptive #ai-response-container {
-  height: calc(100% - 80px) !important;
+  margin-top: 10px;
+  height: calc(100% - 90px) !important;
   margin-bottom: 64px;
   background-color: var(--bg-primary);
   padding: 0 8px 32px 8px;
