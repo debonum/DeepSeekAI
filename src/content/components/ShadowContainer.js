@@ -82,7 +82,7 @@ export function createShadowContainer(cssText) {
       isolation: isolate !important;
     }
 
-    /* 内容容器 - 不使用 all: initial 避免重置颜色等属性 */
+    /* 内容容器 - 确保可以正确处理焦点事件 */
     #deepseek-popup-root {
       display: block;
       position: fixed;
@@ -90,7 +90,7 @@ export function createShadowContainer(cssText) {
       left: 0;
       width: 100%;
       height: 100%;
-      pointer-events: none;
+      pointer-events: auto; /* 修改为auto以支持正确的焦点管理 */
       font-family: inherit;
       font-size: inherit;
       line-height: inherit;
@@ -100,6 +100,16 @@ export function createShadowContainer(cssText) {
     /* 确保弹窗元素可以接收事件 */
     #deepseek-popup-root > * {
       pointer-events: auto;
+    }
+
+    /* 确保输入框和交互元素能够正确接收焦点 */
+    #deepseek-popup-root input,
+    #deepseek-popup-root textarea,
+    #deepseek-popup-root button,
+    #deepseek-popup-root [tabindex] {
+      pointer-events: auto !important;
+      -webkit-user-modify: read-write !important;
+      user-select: text !important;
     }
 
     /* 注入的外部样式 */

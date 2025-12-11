@@ -178,847 +178,734 @@ export async function createQuickActionButtons(
   // 添加Shadow DOM所需样式 - 苹果设计哲学
   const style = document.createElement('style');
   style.textContent = `
-    /* 主容器 - 极简主义设计 */
+    /* 主容器 - 豆包风格 Pill Shape */
     :host {
       display: flex;
-      flex-direction: column;
-      gap: 8px;
-      padding: 16px;
-      border-radius: 12px;
-      background: #f2f2f7 !important;
+      align-items: center;
+      gap: 0;
+      padding: 0;
+      border-radius: 999px; /* Pill shape */
+      /* Visual Hierarchy - ByteDance/Apple Premium Glass */
+      background: rgba(20, 20, 20, 0.6) !important; /* Darker tint for better contrast */
+      /* Sophisticated shadow stack for depth without heaviness */
       box-shadow:
-        0 12px 40px rgba(0, 0, 0, 0.15),
-        0 4px 12px rgba(0, 0, 0, 0.1),
-        0 0 0 1px rgba(0, 0, 0, 0.05);
-      border: 1px solid rgba(0, 0, 0, 0.08);
-      backdrop-filter: none !important;
-      -webkit-backdrop-filter: none !important;
+        0 20px 40px -12px rgba(0, 0, 0, 0.5), /* Deep ambient */
+        0 4px 12px -2px rgba(0, 0, 0, 0.3),  /* Mid-range definition */
+        0 0 0 1px rgba(255, 255, 255, 0.12) inset; /* Inner light stroke */
+      border: 0.5px solid rgba(255, 255, 255, 0.1); /* Subtle physical border */
+
+      backdrop-filter: blur(60px) saturate(220%) !important; /* Heavy creamy blur */
+      -webkit-backdrop-filter: blur(60px) saturate(220%) !important;
       position: absolute;
       z-index: 2147483647;
       isolation: isolate;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
-      font-size: 13px;
-      line-height: 1.4;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
       box-sizing: border-box;
-      width: 380px !important;
-      min-width: 320px;
-      max-width: 92vw;
+      height: 48px;
+      min-width: 300px;
+      max-width: 90vw;
       pointer-events: auto;
       user-select: none;
-      animation: quickActionsAppear 0.3s cubic-bezier(0.2, 0, 0.2, 1) forwards;
-      transform-origin: center;
-      will-change: transform, opacity;
+      animation: quickActionsAppear 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; /* Smooth spring-like ease */
+      color: rgba(255, 255, 255, 0.95);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    /* 入场动画 - 简洁优雅 */
-    @keyframes quickActionsAppear {
-      0% {
-        opacity: 0;
-        transform: scale(0.9) translateY(-8px);
-      }
-      100% {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-      }
+    /* Light Mode overrides */
+    :host(.light-mode) {
+       background: rgba(255, 255, 255, 0.45) !important; /* Very high transparency */
+       /* High Contrast Elevation */
+       box-shadow:
+         0 16px 40px rgba(0,0,0,0.15),
+         0 4px 12px rgba(0,0,0,0.1),
+         0 0 2px rgba(0,0,0,0.1);
+       border: 1px solid rgba(255, 255, 255, 0.4); /* Frosted white border */
+       color: #222;
+       text-shadow: none;
     }
 
-    /* 按钮容器 - 流式布局 */
-    .quick-action-buttons-container {
+    :host(.expanded-mode) {
+      border-radius: 20px; /* Modern large radius */
+      height: auto;
+      min-height: 140px; /* Spacious input area */
+      flex-direction: column;
+      padding: 16px 20px;
+      background: rgba(20, 20, 20, 0.85) !important; /* Significantly darker for expanded state */
+      align-items: stretch;
+      justify-content: flex-start;
+      border: 0.5px solid rgba(255, 255, 255, 0.15);
+      box-shadow:
+          0 32px 64px -12px rgba(0, 0, 0, 0.6),
+          0 12px 24px -4px rgba(0, 0, 0, 0.4),
+          0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+    }
+
+    /* 拖拽手柄 */
+    .drag-handle-bar {
       display: flex;
-      flex-wrap: wrap;
-      flex-wrap: wrap;
-      gap: 14px;
-      width: 100%;
+      align-items: center;
       justify-content: center;
-      user-select: none;
+      width: 24px;
+      height: 100%;
+      cursor: grab;
+      color: rgba(255, 255, 255, 0.3);
+      flex-shrink: 0;
+      margin-left: 8px;
+    }
+    .drag-handle-bar:active {
+      cursor: grabbing;
+      color: rgba(255, 255, 255, 0.6);
+    }
+    .drag-handle-bar svg {
+      width: 14px;
+      height: 14px;
     }
 
-    /* 按钮基础样式 - 极简圆形 */
+    /* Logo / Avatar */
+    .brand-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      overflow: hidden;
+      margin-right: 8px;
+      flex-shrink: 0;
+      pointer-events: none;
+    }
+    .brand-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* 分隔线 */
+    .separator {
+      width: 1px;
+      height: 16px; /* Slightly shorter */
+      background: rgba(255, 255, 255, 0.15);
+      margin: 0 8px;
+      flex-shrink: 0;
+    }
+
+    /* 按钮容器 */
+    .actions-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+      position: relative; /* Context for absolute popups */
+    }
+
+    /* 按钮基础样式 */
     .quick-action-button {
       box-sizing: border-box;
-      width: 35px;
-      height: 35px;
-      padding: 0;
-      margin: 0;
-      border-radius: 50%;
-      background: #f5f5f7;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s cubic-bezier(0.2, 0, 0.2, 1);
-      outline: none;
-      user-select: none;
-      border: none;
-      position: relative;
-      color: #1d1d1f; /* Default icon color */
-    }
-
-    /* icon-wrapper在按钮中完全居中 */
-    .quick-action-button .icon-wrapper {
-      display: flex !important;
-      align-items: center;
-      justify-content: center;
-      width: 20px;
-      height: 20px;
-      padding: 0;
-      margin: 0;
-    }
-
-    /* 按钮图标 - 精致尺寸 */
-    .quick-action-button img,
-    .quick-action-button svg {
-      width: 20px !important;
-      height: 20px !important;
-      opacity: 0.8;
-      transition: all 0.2s ease;
-      flex-shrink: 0;
-      display: block;
-    }
-
-    /* 悬停效果 - 微妙变化 */
-    .quick-action-button:hover {
-      background: #e6f0ff;
-      transform: scale(1.05);
-    }
-
-    .quick-action-button:hover img,
-    .quick-action-button:hover svg {
-      opacity: 1;
-    }
-
-    /* 按下效果 - 简洁反馈 */
-    .quick-action-button:active {
-      transform: scale(0.95);
-      background: #d4e5ff;
-    }
-    /* 语言选择菜单 - 极简设计 */
-    .language-select {
-      position: absolute;
-      top: calc(100% + 4px);
-      left: 50%;
-      transform: translateX(-50%);
-      min-width: 120px;
-      max-height: 280px;
-      overflow-y: auto;
-      padding: 4px;
-      border-radius: 8px;
-      background: #ffffff;
-      border: 0.5px solid rgba(0, 0, 0, 0.06);
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-      z-index: 2147483648;
-      display: none;
-      user-select: none;
-      animation: menuSlideIn 0.2s cubic-bezier(0.2, 0, 0.2, 1);
-    }
-
-    @keyframes menuSlideIn {
-      0% {
-        opacity: 0;
-        transform: translateX(-50%) translateY(-4px);
-      }
-      100% {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0);
-      }
-    }
-
-    /* 语言选项 - 简洁按钮 */
-    .language-option {
-      width: 100%;
-      padding: 8px 12px;
-      cursor: pointer;
-      background-color: transparent;
-      border: none;
-      text-align: left;
-      color: #1d1d1f;
-      white-space: nowrap;
-      transition: all 0.15s ease;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
-      font-size: 13px;
-      font-weight: 400;
-      line-height: 1.3;
-      border-radius: 6px;
-      user-select: none;
-    }
-
-    .language-option:hover {
-      background-color: rgba(0, 122, 255, 0.08);
-    }
-
-    .language-option:active {
-      background-color: rgba(0, 122, 255, 0.12);
-    }
-
-    /* 输入框容器 - 简约设计 */
-    .custom-input-wrapper {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      width: 100%;
-      border-top: 0.5px solid rgba(0, 0, 0, 0.06);
-    }
-
-    /* 输入框 - 极简风格 */
-    .custom-prompt-input {
-      flex: 1;
-      padding: 8px 10px;
-      border-radius: 8px;
-      background: #f5f5f7;
-      border: 0.5px solid rgba(0, 0, 0, 0.06);
-      color: #1d1d1f;
-      font-size: 13px;
-      line-height: 1.3;
-      font-weight: 400;
-      width: 100%;
-      min-height: 32px;
-      max-height: 64px;
-      outline: none;
-      transition: all 0.2s ease;
-      overflow-y: auto;
-      resize: none;
-      user-select: text;
-    }
-
-    .custom-prompt-input::placeholder {
-      color: rgba(60, 60, 67, 0.6);
-      font-weight: 400;
-    }
-
-    /* 输入框聚焦 */
-    .custom-prompt-input:focus {
-      border-color: rgba(0, 122, 255, 0.4);
-      background: #ffffff;
-      box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.1);
-    }
-
-    /* 发送按钮 - 简约圆形 */
-    .custom-prompt-send {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 32px;
       height: 32px;
-      min-width: 32px;
-      border-radius: 50%;
-      background: #f5f5f7;
+      padding: 0 8px;
+      margin: 0;
+      border-radius: 6px;
+      background: transparent;
       cursor: pointer;
-      transition: all 0.2s ease;
-      user-select: none;
-      border: none;
-      color: #1d1d1f;
-    }
-
-    .custom-prompt-send:hover {
-      transform: scale(1.05);
-      background: #e5e5ea;
-    }
-
-    .custom-prompt-send:active {
-      transform: scale(0.95);
-    }
-
-    .custom-prompt-send svg {
-      color: inherit;
-      transition: transform 0.15s ease;
-    }
-
-    .custom-prompt-send:hover svg {
-      transform: translateX(1px);
-    }
-
-    /* 抖动动画 - 简洁错误提示 */
-    .shake {
-      animation: shake 0.3s ease-in-out;
-    }
-
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-2px); }
-      75% { transform: translateX(2px); }
-    }
-
-    /* Logo容器 - 可拖拽的极简展示 */
-    .quick-action-logo {
-      width: 100%;
-      height: auto;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 5px;
-      box-sizing: border-box;
-      background: transparent;
-      cursor: grab;
+      transition: all 0.2s ease;
+      outline: none;
       user-select: none;
-      -webkit-user-select: none;
-      transition: opacity 0.2s ease;
+      border: none;
+      color: rgba(255, 255, 255, 0.6); /* Reduced brightness */
+      font-size: 13px;
+      white-space: nowrap;
+      gap: 6px;
+      opacity: 0.85; /* Soften the default white */
     }
 
-    .quick-action-logo:active {
-      cursor: grabbing;
-      opacity: 0.7;
+    .quick-action-button:hover,
+    .quick-action-translate:hover .quick-action-button {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff; /* Brighten on hover */
+      opacity: 1; /* Full opacity on hover */
     }
 
-    /* 拖拽状态 */
-    :host(.dragging) {
-      opacity: 1;
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2), 0 4px 16px rgba(0, 0, 0, 0.15);
-      transition: none;
+    .quick-action-button:active {
+      background: rgba(255, 255, 255, 0.2);
     }
 
-    .quick-action-logo img {
-      height: 24px;
-      width: auto;
-      opacity: 0.8;
-      transition: opacity 0.2s ease;
+    .quick-action-button .icon-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
-    .quick-action-logo:hover img {
-      opacity: 1;
+    .quick-action-button svg {
+      width: 18px;
+      height: 18px;
+      fill: none; /* VALIDATION: Must be none for stroke icons */
+      stroke: currentColor;
     }
 
-    /* 翻译按钮包装器 */
+    .quick-action-button img {
+        width: 18px;
+        height: 18px;
+        object-fit: contain;
+    }
+
+    /* 翻译菜单容器 */
     .quick-action-translate {
       position: relative;
     }
 
-    .quick-action-translate .quick-action-button {
-      /* 继承正常按钮样式 */
+    /* 语言选择弹出菜单 - Vertical Scroll List */
+    .language-select {
+        display: none; /* Initially hidden */
+        flex-direction: column;
+        position: absolute;
+        bottom: 100%; /* Align above the button */
+        left: 50%;
+        transform: translateX(-50%);
+        margin-bottom: 8px;
+        background: rgba(30, 30, 30, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        padding: 4px;
+        width: 140px; /* Narrower for vertical list */
+        max-height: 240px; /* Scrollable height */
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        z-index: 2000;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+
+        /* Custom Scrollbar */
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255,255,255,0.3) transparent;
     }
 
-    /* 暗色模式适配 - 使用类名而非媒体查询，与主窗口主题检测保持一致 */
-    :host(.dark-mode) {
-      background: #1c1c1e !important;
-      backdrop-filter: none !important;
-      -webkit-backdrop-filter: none !important;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      box-shadow:
-        0 20px 48px rgba(0, 0, 0, 0.6),
-        0 8px 24px rgba(0, 0, 0, 0.4),
-        inset 0 0 0 0.5px rgba(255, 255, 255, 0.1);
+    /* Reveal */
+    .quick-action-translate:hover .language-select {
+        display: flex;
+        animation: fadeIn 0.2s ease;
     }
 
-    :host(.dark-mode) .quick-action-button {
-      background: #3a3a3c;
-      border: 0.5px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-      color: #ffffff; /* Dark mode icon color */
+    /* Scrollbar Webkit overrides */
+    .language-select::-webkit-scrollbar {
+        width: 4px;
+    }
+    .language-select::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 2px;
     }
 
-    :host(.dark-mode) .quick-action-button:hover {
-      background: rgba(10, 132, 255, 0.35);
-      box-shadow: 0 4px 12px rgba(10, 132, 255, 0.3);
-      border-color: rgba(10, 132, 255, 0.4);
+    /* Invisible bridge */
+    .quick-action-translate::after {
+        content: '';
+        position: absolute;
+        bottom: 100%;
+        left: 0;
+        width: 100%;
+        height: 10px;
     }
 
-    :host(.dark-mode) .quick-action-button:active {
-      background: rgba(10, 132, 255, 0.45);
-      transform: scale(0.95);
-    }
-
-    /* 暗色模式下图标颜色适配 */
-    :host(.dark-mode) .quick-action-button img,
-    :host(.dark-mode) .quick-action-button svg {
-      opacity: 0.9;
-    }
-
-    :host(.dark-mode) .quick-action-button:hover img,
-    :host(.dark-mode) .quick-action-button:hover svg {
-      opacity: 1;
-    }
-
-    :host(.dark-mode) .custom-prompt-input {
-      background: #3a3a3c;
-      color: rgba(255, 255, 255, 0.95);
-      border-color: rgba(255, 255, 255, 0.06);
-    }
-
-    :host(.dark-mode) .custom-prompt-input::placeholder {
-      color: rgba(235, 235, 245, 0.5);
-    }
-
-    :host(.dark-mode) .custom-prompt-input:focus {
-      background: #2c2c2e;
-      border-color: rgba(10, 132, 255, 0.6);
-    }
-
-    :host(.dark-mode) .custom-input-wrapper {
-      border-top-color: rgba(255, 255, 255, 0.06);
-    }
-
-    :host(.dark-mode) .language-select {
-      background: #1c1c1e;
-      border-color: rgba(255, 255, 255, 0.06);
-    }
-
-    :host(.dark-mode) .language-option {
-      color: rgba(255, 255, 255, 0.95);
-    }
-
-    :host(.dark-mode) .language-option:hover {
-      background-color: rgba(10, 132, 255, 0.15);
-    }
-
-    /* Logo容器暗色模式 - 保持完全透明 */
-    :host(.dark-mode) .quick-action-logo {
+    .language-option {
       background: transparent;
       border: none;
-      box-shadow: none;
+      color: rgba(255, 255, 255, 0.8);
+      padding: 8px 12px;
+      font-size: 13px;
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: left; /* Standard list alignment */
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%; /* Full width */
+      flex-shrink: 0;
     }
 
-    :host(.dark-mode) .quick-action-logo:active {
-      opacity: 0.7;
+    .language-option:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
     }
 
-    :host(.dark-mode) .custom-prompt-send {
-      background: #3a3a3c;
-      color: #ffffff;
+    /* Input Trigger (Collapsed) */
+    .input-trigger {
+      flex: 1;
+      height: 32px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.05); /* Softer background */
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      cursor: text;
+      margin-right: 8px;
+      color: rgba(255, 255, 255, 0.4); /* Softer text */
+      font-size: 13px;
+      transition: all 0.2s ease;
+      min-width: 120px;
+    }
+    .input-trigger:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.8);
     }
 
-    :host(.dark-mode) .custom-prompt-send:hover {
-      background: #4a4a4c;
+    .input-trigger span {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .input-trigger .arrow-icon {
+      width: 16px;
+      height: 16px;
+      opacity: 0.5;
+    }
+
+    /* Expanded Input Area */
+    .expanded-input-container {
+      display: none;
+      width: 100%;
+      flex-direction: column;
+      gap: 8px;
+      animation: fadeIn 0.2s ease;
+    }
+
+    :host(.expanded-mode) .expanded-input-container {
+      display: flex;
+    }
+
+    :host(.expanded-mode) .actions-group,
+    :host(.expanded-mode) .separator,
+    :host(.expanded-mode) .drag-handle-bar,
+    :host(.expanded-mode) .brand-avatar,
+    :host(.expanded-mode) .input-trigger {
+      display: none;
+    }
+
+    .expanded-textarea {
+      width: 100%;
+      min-height: 100px;
+      background: transparent;
+      border: none;
+      color: rgba(255, 255, 255, 0.95);
+      font-size: 16px; /* Larger, more readable font */
+      font-family: inherit;
+      resize: none;
+      outline: none;
+      line-height: 1.6;
+      padding: 4px 0;
+      margin-bottom: 8px;
+      letter-spacing: 0.01em;
+    }
+    .expanded-textarea::placeholder {
+      color: rgba(255, 255, 255, 0.4);
+      font-weight: 300;
+    }
+
+    .expanded-footer {
+      display: flex;
+      justify-content: space-between; /* Space between Cancel and Send */
+      align-items: center;
+      margin-top: auto; /* Push to bottom */
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08); /* Subtle separator */
+    }
+
+    .cancel-btn {
+      background: transparent;
+      border: none;
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 13px;
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+    }
+    .cancel-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .send-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #4D8EFF, #3B7AD9); /* Premium Blue Gradient */
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #fff;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 4px 12px rgba(60, 120, 255, 0.3); /* Glowing shadow */
+      /* margin-left: auto; REMOVED: using justify-content: space-between */
+    }
+    .send-btn:hover {
+      transform: scale(1.08) rotate(-10deg);
+      box-shadow: 0 6px 16px rgba(60, 120, 255, 0.4);
+      background: linear-gradient(135deg, #5E9AFF, #4A89E8);
+    }
+    .send-btn:active {
+      transform: scale(0.95);
+    }
+    .send-btn svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
+    .input-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    /* Light Mode overrides */
+    :host(.light-mode) {
+       background: rgba(255, 255, 255, 0.65) !important; /* High transparency for frost */
+       /* High Contrast Elevation */
+       box-shadow:
+         0 16px 40px rgba(0,0,0,0.12), /* Large diffuse ambient */
+         0 2px 12px rgba(0,0,0,0.12),  /* Medium depth */
+         0 0 2px rgba(0,0,0,0.1);      /* Tightest definition */
+       border: 1px solid rgba(0,0,0,0.16); /* Sharp, distinct edge */
+       color: #333;
+    }
+    :host(.light-mode) .drag-handle-bar { color: rgba(0,0,0,0.25); }
+    :host(.light-mode) .quick-action-button { color: rgba(0,0,0,0.7); opacity: 0.8; }
+    :host(.light-mode) .quick-action-button:hover { background: rgba(0,0,0,0.05); color: #000; opacity: 1; }
+    :host(.light-mode) .separator { background: rgba(0,0,0,0.1); }
+    :host(.light-mode) .input-trigger { background: rgba(0,0,0,0.04); color: rgba(0,0,0,0.6); }
+    :host(.light-mode) .input-trigger:hover { background: rgba(0,0,0,0.06); color: rgba(0,0,0,0.8); }
+    :host(.light-mode) .expanded-textarea { color: #1d1d1f; }
+    :host(.light-mode) .expanded-textarea::placeholder { color: rgba(0,0,0,0.4); }
+
+    /* Light mode popover */
+    :host(.light-mode) .language-select {
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid rgba(0,0,0,0.1);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    }
+    :host(.light-mode) .language-option { color: #333; }
+    :host(.light-mode) .language-option:hover { background: rgba(0,0,0,0.05); }
+
+    @keyframes quickActionsAppear {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes fadeIn {
+       from { opacity: 0; transform: translateY(5px); }
+       to { opacity: 1; transform: translateY(0); }
     }
   `;
 
-  // 将样式添加到Shadow DOM，确保与宿主页面隔离
+  // 将样式添加到Shadow DOM
   shadowRoot.appendChild(style);
 
-  // 创建快捷按钮容器
-  const buttonsContainer = document.createElement("div");
-  buttonsContainer.className = "quick-action-buttons-container";
-  shadowRoot.appendChild(buttonsContainer);
+  // --- 1. 创建 Drag Handle (||) ---
+  const dragHandleBar = document.createElement("div");
+  dragHandleBar.className = "drag-handle-bar";
+  dragHandleBar.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 6a1 1 0 100 2 1 1 0 000-2zm0 5a1 1 0 100 2 1 1 0 000-2zm0 5a1 1 0 100 2 1 1 0 000-2zm8-10a1 1 0 100 2 1 1 0 000-2zm0 5a1 1 0 100 2 1 1 0 000-2zm0 5a1 1 0 100 2 1 1 0 000-2z" /></svg>`;
+  shadowRoot.appendChild(dragHandleBar);
 
-  // 保存选中状态的通用函数
-  const saveSelectionState = () => {
-    const selection = window.getSelection();
-    return selection && selection.toString ? selection.toString().trim() : "";
+  // --- 2. 创建 Brand/Avatar ---
+  const brandAvatar = document.createElement("div");
+  brandAvatar.className = "brand-avatar";
+  const avatarImg = document.createElement("img");
+  avatarImg.src = chrome.runtime.getURL("icons/icon48.png"); // Use larger icon for avatar
+  brandAvatar.appendChild(avatarImg);
+  shadowRoot.appendChild(brandAvatar);
+
+  // --- 3. 创建 Action Buttons Group ---
+  const actionsGroup = document.createElement("div");
+  actionsGroup.className = "actions-group";
+  shadowRoot.appendChild(actionsGroup);
+
+  // Helper to create buttons
+  const appendActionButton = (action, onClick) => {
+    const btn = document.createElement("button");
+    btn.className = "quick-action-button";
+
+    // Create icon
+    const iconWrapper = createSvgIcon(action.icon, action.title);
+    btn.appendChild(iconWrapper);
+
+    btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onClick(e);
+    });
+
+    // Prevent interfering with drag
+    btn.addEventListener("mousedown", (e) => e.stopPropagation());
+
+    actionsGroup.appendChild(btn);
+    return btn;
   };
 
-  actions.forEach((action) => {
-    if (action.id === "logo") {
-      const logoContainer = document.createElement("div");
-      logoContainer.className = "quick-action-logo";
+  // Populate Actions
+  actions.forEach(action => {
+    if (action.id === "logo") return;
 
-      const logo = document.createElement("img");
-      logo.src = chrome.runtime.getURL("icons/icon24.png");
-      logo.style.pointerEvents = 'none'; // 防止图片拖拽干扰
-      logo.setAttribute("draggable", "false");
+    if (action.id === "translate") {
+        const wrapper = document.createElement("div");
+        wrapper.className = "quick-action-translate";
+        wrapper.style.display = "flex";
 
-      logoContainer.appendChild(logo);
-      buttonsContainer.appendChild(logoContainer);
+        const btn = document.createElement("button");
+        btn.className = "quick-action-button";
+        btn.appendChild(createSvgIcon(action.icon, action.title));
 
-      // 添加拖拽功能
-      // 注意：由于container还未添加到DOM，我们需要在返回后再初始化拖拽
-      container.logoContainer = logoContainer; // 保存引用
-    } else if (action.id === "copy") {
-      const button = createSvgIcon(action.icon, action.title);
-      button.className = "quick-action-button quick-action-copy";
+        const menu = document.createElement("div");
+        menu.className = "language-select";
 
-      button.addEventListener("click", async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (typeof handleCopyAction === 'function') {
-          handleCopyAction();
-        }
-      });
+        btn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            closeQAB();
+            handleActionClick(action, selectedText);
+        };
 
-      button.addEventListener('mousedown', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-      });
-
-      buttonsContainer.appendChild(button);
-    } else if (action.id === "main") {
-      const button = createSvgIcon("icon24", action.title);
-      button.className = "quick-action-button";
-
-      button.onclick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        closeQAB();
-        const range = window.getSelection().getRangeAt(0);
-        const rect = range.getBoundingClientRect();
-        handleMainClick(e, selectedText, rect);
-      };
-
-      button.addEventListener('mousedown', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-      });
-
-      buttonsContainer.appendChild(button);
-    } else if (action.id === "translate") {
-      const wrapper = document.createElement("div");
-      wrapper.className = "quick-action-translate";
-      wrapper.style.position = "relative";
-
-      const button = createSvgIcon(action.icon, action.title);
-      button.className = "quick-action-button";
-
-      const menu = document.createElement("div");
-      menu.className = "language-select";
-
-      // 直接点击翻译按钮时使用上次选择的语言
-      button.onclick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        closeQAB();
-        handleActionClick(action, selectedText);
-      };
-
-      action.languages.forEach((lang) => {
-        const option = document.createElement("button");
-        option.type = "button";
-        option.className = "language-option";
-        option.textContent = lang.native;
-
-        // 高亮上次选择的语言
-        if (lang.native === lastLanguage) {
-          option.style.fontWeight = "600";
-          option.style.backgroundColor = "rgba(0, 122, 255, 0.1)";
-        }
-
-        option.addEventListener("click", async (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-
-          await chrome.storage.sync.set({ lastLanguage: lang.native });
-
-          action.prompt = `Act as an AI assistant with MBTI persona ISTJ-INFJ, functioning as a professional multilingual translation engine that provides the ${lang.native} version of user-given content while preserving the original format (such as poetry, code, glossaries). If no target language is specified, ask proactively. The translation MUST be accurate and natural in ${lang.native}. Output only the translated text directly without any additional explanation or clarification.`;
-
-          closeQAB();
-          handleActionClick(action, selectedText);
-          menu.style.display = "none";
+        action.languages.forEach(lang => {
+             const option = document.createElement("button");
+             option.className = "language-option";
+             option.textContent = lang.native;
+             if (lang.native === lastLanguage) {
+                 option.style.fontWeight = "600";
+                 option.style.backgroundColor = "rgba(0, 122, 255, 0.1)";
+             }
+             option.onclick = async (e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  await chrome.storage.sync.set({ lastLanguage: lang.native });
+                   action.prompt = `Act as an AI assistant with MBTI persona ISTJ-INFJ, functioning as a professional multilingual translation engine that provides the ${lang.native} version of user-given content while preserving the original format (such as poetry, code, glossaries). If no target language is specified, ask proactively. The translation MUST be accurate and natural in ${lang.native}. Output only the translated text directly without any additional explanation or clarification.`;
+                  closeQAB();
+                  handleActionClick(action, selectedText);
+             };
+             menu.appendChild(option);
         });
 
-        menu.appendChild(option);
-      });
+       let hideTimeout;
+       const showMenu = () => { clearTimeout(hideTimeout); menu.style.display = "block"; };
+       const hideMenu = () => { hideTimeout = setTimeout(() => menu.style.display = "none", 200); };
 
-      let hideTimeout = null;
+       wrapper.appendChild(btn);
+       wrapper.appendChild(menu);
+       wrapper.onmouseenter = showMenu;
+       wrapper.onmouseleave = hideMenu;
 
-      const showMenu = () => {
-        if (hideTimeout) {
-          clearTimeout(hideTimeout);
-          hideTimeout = null;
-        }
-        menu.style.display = "grid";
-      };
+       actionsGroup.appendChild(wrapper);
 
-      const hideMenu = () => {
-        hideTimeout = setTimeout(() => {
-          menu.style.display = "none";
-        }, 150);
-      };
-
-      wrapper.addEventListener("mouseenter", showMenu);
-      wrapper.addEventListener("mouseleave", hideMenu);
-      menu.addEventListener("mouseenter", showMenu);
-      menu.addEventListener("mouseleave", hideMenu);
-
-      wrapper.appendChild(button);
-      wrapper.appendChild(menu);
-      buttonsContainer.appendChild(wrapper);
+    } else if (action.id === "copy") {
+        appendActionButton(action, () => {
+             if (typeof handleCopyAction === 'function') handleCopyAction();
+        });
+    } else if (action.id === "main") {
+         appendActionButton(action, (e) => {
+             closeQAB();
+             const range = window.getSelection().getRangeAt(0);
+             const rect = range.getBoundingClientRect();
+             handleMainClick(e, selectedText, rect);
+         });
     } else {
-      const button = createSvgIcon(action.icon, action.title);
-      button.className = "quick-action-button";
-
-      button.onclick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        handleActionClick(action, selectedText);
-      };
-
-      button.addEventListener('mousedown', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-      });
-
-      buttonsContainer.appendChild(button);
+        appendActionButton(action, () => {
+             handleActionClick(action, selectedText);
+        });
     }
   });
 
-  // 创建自定义输入框
-  const customInputWrapper = document.createElement("div");
-  customInputWrapper.className = "custom-input-wrapper";
+  // --- 4. Separator ---
+  const separator = document.createElement("div");
+  separator.className = "separator";
+  shadowRoot.appendChild(separator);
 
-  // 创建输入框
-  const customInput = document.createElement("textarea");
-  customInput.className = "custom-prompt-input";
-  customInput.placeholder = "Ask questions about the selected content...";
+  // --- 5. Input Trigger (Collapsed) ---
+  const inputTrigger = document.createElement("div");
+  inputTrigger.className = "input-trigger";
+  inputTrigger.innerHTML = `<span>Ask DeepSeek...</span>
+    <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>`;
 
-  // 事件处理
-  customInput.addEventListener('mousedown', (e) => {
-    e.stopPropagation();
-  }, true);
+  shadowRoot.appendChild(inputTrigger);
 
-  customInput.addEventListener('click', (e) => {
-    e.stopPropagation();
-    customInput.focus();
-  }, true);
+  // --- 6. Expanded Input Container ---
+  const expandedContainer = document.createElement("div");
+  expandedContainer.className = "expanded-input-container";
 
-  // 🎯 输入框获得焦点时的处理
-  // 不需要特殊处理，因为全局的 copy 事件监听会确保复制时恢复选区
-  customInput.addEventListener('focus', (e) => {
-    // CSS Highlight 会保持视觉效果，浏览器选区会被清除
-    // 但我们已经保存了选区，复制时会自动恢复
-  }, true);
+  const textarea = document.createElement("textarea");
+  textarea.className = "expanded-textarea";
+  textarea.placeholder = "Ask DeepSeek AI...";
 
-  // 键盘事件
+  const expandedFooter = document.createElement("div");
+  expandedFooter.className = "expanded-footer";
 
-  customInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
+  const inputActions = document.createElement("div");
+  inputActions.className = "input-actions";
 
-      const customPrompt = customInput.value.trim();
-      if (customPrompt) {
-        const customAction = {
-          id: "custom",
-          title: "问答",
-          prompt: customPrompt
-        };
-        handleActionClick(customAction, selectedText);
-      } else {
-        // 错误提示
-        customInput.classList.add('shake');
-        setTimeout(() => customInput.classList.remove('shake'), 500);
-      }
-    }
-  });
+  const cancelBtn = document.createElement("button");
+  cancelBtn.className = "cancel-btn";
+  cancelBtn.textContent = "Cancel";
 
-  // 创建发送按钮
-  const sendButton = document.createElement("button");
-  sendButton.className = "custom-prompt-send";
-  sendButton.title = "发送";
+  const sendBtn = document.createElement("button");
+  sendBtn.className = "send-btn";
+  sendBtn.innerHTML = ICONS.send;
 
-  // 发送图标
-  const sendIconContainer = document.createElement("div");
-  sendIconContainer.style.width = "18px";
-  sendIconContainer.style.height = "18px";
-  sendIconContainer.style.display = "flex";
-  sendIconContainer.style.alignItems = "center";
-  sendIconContainer.style.justifyContent = "center";
-  sendIconContainer.innerHTML = ICONS.send;
+  expandedFooter.appendChild(cancelBtn);
+  expandedFooter.appendChild(inputActions); // Keep this if used, or remove if empty
+  expandedFooter.appendChild(sendBtn);
 
-  const sendSvg = sendIconContainer.querySelector('svg');
-  if (sendSvg) {
-    sendSvg.style.width = "100%";
-    sendSvg.style.height = "100%";
-  }
+  expandedContainer.appendChild(textarea);
+  expandedContainer.appendChild(expandedFooter);
 
-  sendButton.appendChild(sendIconContainer);
+  shadowRoot.appendChild(expandedContainer);
 
-  // 事件处理
-  sendButton.addEventListener("mousedown", (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-  });
-
-  sendButton.addEventListener("click", (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-
-    const customPrompt = customInput.value.trim();
-    if (customPrompt) {
-      const customAction = {
-        id: "custom",
-        title: "问答",
-        prompt: customPrompt
-      };
-
-      try {
-        closeQAB();
-        handleActionClick(customAction, selectedText);
-      } catch (err) {
-        console.error("处理自定义操作时出错:", err);
-      }
-    } else {
-      // 错误提示
-      customInput.classList.add('shake');
-      setTimeout(() => customInput.classList.remove('shake'), 500);
-    }
-  }, true);
-
-  customInputWrapper.appendChild(customInput);
-  customInputWrapper.appendChild(sendButton);
-  shadowRoot.appendChild(customInputWrapper);
-
-  // 自动聚焦逻辑 - 确保在渲染和动画开始后聚焦
-  // 使用 requestAnimationFrame 确保 DOM 已挂载
-  requestAnimationFrame(() => {
-    setTimeout(() => {
-      if (customInput && typeof customInput.focus === 'function') {
-        // 聚焦输入框
-        customInput.focus({ preventScroll: true });
-      }
-    }, 50); // 微小延迟以配合入场动画
-  });
-
-  container.initFocus = function noop() {};
-
-  // 初始化拖拽功能 - 返回初始化函数而不是立即执行
-  container.initDrag = function() {
-    const logoContainer = container.logoContainer;
-    if (!logoContainer) return;
-
-    const DRAG_THRESHOLD_PX = 3;
-    let isDragging = false;
-    let hasExceededThreshold = false;
-    let startX = 0, startY = 0;
-    let initialLeft = 0, initialTop = 0;
-    let activePointerId = null;
-
-    const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
-    const getActualTarget = (event) => {
-      if (event.composedPath) {
-        const path = event.composedPath();
-        for (const node of path) {
-          if (node instanceof Element) {
-            return node;
-          }
-        }
-      }
-      return event.target;
-    };
-
-    const isInInteractiveZone = (target) => {
-      if (!target || typeof target.closest !== 'function') return false;
-      return !!target.closest('.quick-action-button, .custom-prompt-input, .language-select, .language-option, .custom-prompt-send');
-    };
-
-    const markWrapperManual = () => {
-      const wrapper = container.parentElement;
-      if (!wrapper) return;
-      if (wrapper.dataset.manualPosition !== 'true') {
-        wrapper.dataset.manualPosition = 'true';
-      }
-    };
-
-    let pointerCaptureTarget = null;
-
-    const onPointerDown = (e) => {
-      const actualTarget = getActualTarget(e);
-      // 仅处理主指针并排除交互区域
-      if (e.button !== undefined && e.button !== 0) return;
-      if (isInInteractiveZone(actualTarget)) return;
-
-      const wrapper = container.parentElement;
-      if (!wrapper) return;
-
-      // 仅允许从 logo 或容器空白处开始拖拽
-      const isValidHandle =
-        actualTarget === logoContainer ||
-        (typeof actualTarget.closest === 'function' && actualTarget.closest('.quick-action-logo')) ||
-        actualTarget === container;
-      if (!isValidHandle) return;
-
-      const rect = wrapper.getBoundingClientRect();
-      initialLeft = rect.left;
-      initialTop = rect.top;
-
-      startX = e.clientX;
-      startY = e.clientY;
-      hasExceededThreshold = false;
-      isDragging = true;
-      activePointerId = e.pointerId ?? null;
-
-      // 更流畅的视觉与手势反馈
-      container.classList.add('dragging');
-      logoContainer.style.cursor = 'grabbing';
-      wrapper.style.transition = 'none';
-      pointerCaptureTarget = actualTarget;
-      try { pointerCaptureTarget && pointerCaptureTarget.setPointerCapture && pointerCaptureTarget.setPointerCapture(activePointerId); } catch(_) {}
-
-      if ('vibrate' in navigator) { navigator.vibrate(8); }
-
-      e.preventDefault();
+  // --- Logic for Expansion ---
+  inputTrigger.addEventListener("click", (e) => {
       e.stopPropagation();
-    };
+      container.classList.add("expanded-mode");
+      setTimeout(() => textarea.focus(), 50);
+  });
 
-    const onPointerMove = (e) => {
-      if (!isDragging) return;
-      if (activePointerId !== null && e.pointerId !== activePointerId) return;
-
-      const wrapper = container.parentElement;
-      if (!wrapper) return;
-
-      const dx = e.clientX - startX;
-      const dy = e.clientY - startY;
-
-      if (!hasExceededThreshold && (Math.abs(dx) > DRAG_THRESHOLD_PX || Math.abs(dy) > DRAG_THRESHOLD_PX)) {
-        hasExceededThreshold = true;
-        markWrapperManual();
-      }
-      if (!hasExceededThreshold) return;
-
-      const nextLeft = initialLeft + dx;
-      const nextTop = initialTop + dy;
-
-      const maxLeft = window.innerWidth - wrapper.offsetWidth;
-      const maxTop = window.innerHeight - wrapper.offsetHeight;
-
-      wrapper.style.left = `${clamp(nextLeft, 0, Math.max(0, maxLeft))}px`;
-      wrapper.style.top = `${clamp(nextTop, 0, Math.max(0, maxTop))}px`;
-
+  // Logic for Collapse
+  cancelBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
       e.preventDefault();
-    };
+      container.classList.remove("expanded-mode");
+      textarea.value = ""; // Optional: clear input
+  });
 
-    const onPointerUp = (e) => {
-      if (!isDragging) return;
-      if (activePointerId !== null && e.pointerId !== activePointerId) return;
+  // Prevent closing when clicking inside expanded area
+  expandedContainer.addEventListener("click", (e) => e.stopPropagation());
+  expandedContainer.addEventListener("mousedown", (e) => e.stopPropagation());
 
-      isDragging = false;
-      activePointerId = null;
+  // Send Logic
+  const handleSend = () => {
+      const text = textarea.value.trim();
+      if (!text) return;
 
-      const wrapper = container.parentElement;
-      if (wrapper) {
-        wrapper.style.transition = 'opacity 0.15s ease';
-      }
-      container.classList.remove('dragging');
-      logoContainer.style.cursor = 'grab';
-      try {
-        if (pointerCaptureTarget && pointerCaptureTarget.releasePointerCapture) {
-          pointerCaptureTarget.releasePointerCapture(e.pointerId);
-        }
-      } catch (_) {}
-      pointerCaptureTarget = null;
-
-      if ('vibrate' in navigator) { navigator.vibrate(5); }
-    };
-
-    // 绑定 Pointer 事件到容器与 logo，提升可拖拽命中率
-    container.addEventListener('pointerdown', onPointerDown, true);
-    logoContainer.addEventListener('pointerdown', onPointerDown, true);
-    document.addEventListener('pointermove', onPointerMove, true);
-    document.addEventListener('pointerup', onPointerUp, true);
-
-    // 保存清理函数
-    container.cleanupDrag = () => {
-      container.removeEventListener('pointerdown', onPointerDown, true);
-      logoContainer.removeEventListener('pointerdown', onPointerDown, true);
-      document.removeEventListener('pointermove', onPointerMove, true);
-      document.removeEventListener('pointerup', onPointerUp, true);
-    };
+      const customAction = {
+          id: "custom",
+          title: "Custom Question",
+          prompt: text
+      };
+      closeQAB();
+      handleActionClick(customAction, selectedText);
   };
 
-  // 🎯 主题同步：使用与主窗口相同的页面主题检测机制（而非系统主题）
+  sendBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      handleSend();
+  });
+
+  textarea.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          handleSend();
+      }
+      e.stopPropagation();
+  });
+
+   // --- Drag Initializer Adaptation (Expanded Area) ---
+   container.initDrag = function() {
+       const wrapper = container.parentElement;
+       if (!wrapper) return;
+
+       let isDragging = false;
+       let startX, startY;
+       let initialLeft, initialTop;
+
+       const onMouseDown = (e) => {
+           // 只响应左键
+           if (e.button !== 0) return;
+
+           // 检查是否点击了交互元素
+           const path = e.composedPath();
+           const isInteractive = path.some(el => {
+               return el.tagName === 'BUTTON' ||
+                      el.tagName === 'INPUT' ||
+                      el.tagName === 'TEXTAREA' ||
+                      (el.classList && el.classList.contains('input-trigger')) ||
+                      (el.classList && el.classList.contains('language-option'));
+           });
+
+           if (isInteractive) return;
+
+           // 允许特定元素拖拽，或空白处拖拽
+           // 阻止默认文本选择行为
+           e.preventDefault();
+
+           // 标记手动定位，停止 content.js 的滚动跟随
+           wrapper.dataset.manualPosition = 'true';
+
+           const rect = wrapper.getBoundingClientRect();
+           // 使用 bbox 的 viewport 坐标
+           initialLeft = rect.left;
+           initialTop = rect.top;
+           startX = e.clientX;
+           startY = e.clientY;
+
+           isDragging = true;
+
+           document.body.style.cursor = "grabbing";
+           container.style.cursor = "grabbing";
+       };
+
+       const onMouseMove = (e) => {
+           if (!isDragging) return;
+
+           e.preventDefault();
+
+           const dx = e.clientX - startX;
+           const dy = e.clientY - startY;
+
+           // 直接更新位置，无 RAF，简单粗暴有效 (Simple is best)
+           // 第一性原理：位置 = 初始位置 + 偏移量
+           wrapper.style.left = `${initialLeft + dx}px`;
+           wrapper.style.top = `${initialTop + dy}px`;
+       };
+
+       const onMouseUp = (e) => {
+           if (!isDragging) return;
+
+           // P0: 阻止事件传播，它是主要矛盾
+           // 防止 content.js 捕获此事件并错误地重置/移除工具栏
+           e.preventDefault();
+           e.stopPropagation();
+           e.stopImmediatePropagation();
+
+           isDragging = false;
+           document.body.style.cursor = "";
+           container.style.cursor = "";
+       };
+
+       container.addEventListener("mousedown", onMouseDown);
+       document.addEventListener("mousemove", onMouseMove);
+       // 使用捕获阶段 (true)，确保早在 content.js 的冒泡监听器之前拦截事件
+       document.addEventListener("mouseup", onMouseUp, true);
+
+       container.cleanupDrag = () => {
+           container.removeEventListener("mousedown", onMouseDown);
+           document.removeEventListener("mousemove", onMouseMove);
+           document.removeEventListener("mouseup", onMouseUp, true);
+       };
+   };
+
+  // --- Theme Watching ---
   const applyQuickActionsTheme = (isDark) => {
     if (isDark) {
       container.classList.add('dark-mode');
+      container.classList.remove('light-mode');
     } else {
+      container.classList.add('light-mode');
       container.classList.remove('dark-mode');
     }
   };
-
-  // 初始化主题
   const currentTheme = isDarkMode();
   applyQuickActionsTheme(currentTheme);
-
-  // 监听页面主题变化
-  const removeThemeListener = watchThemeChanges((isDark) => {
-    applyQuickActionsTheme(isDark);
-  });
-
-  // 保存清理函数
+  const removeThemeListener = watchThemeChanges(applyQuickActionsTheme);
   container.cleanupTheme = removeThemeListener;
 
   return container;

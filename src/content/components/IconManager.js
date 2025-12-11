@@ -232,7 +232,14 @@ export function addIconsToElement(element) {
             element.style.backgroundColor = 'var(--success-color-alpha, rgba(52, 199, 89, 0.1))';
             setTimeout(() => { element.style.backgroundColor = originalColor; }, 1000);
           }
-          requestAnimationFrame(() => focusInputIfSafe(getPopupElement()));
+          // 智能焦点恢复：避免打扰用户当前的输入
+          setTimeout(() => {
+            const activeElement = document.activeElement;
+            const isEditable = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.isContentEditable);
+            if (!isEditable || (isEditable && activeElement._lastInputTime && Date.now() - activeElement._lastInputTime > 3000)) {
+              focusInputIfSafe(getPopupElement());
+            }
+          }, 500);
         };
 
         const onGenerationError = () => {
@@ -377,7 +384,14 @@ export function updateLastAnswerIcons() {
             lastAnswer.style.backgroundColor = 'var(--success-color-alpha, rgba(52, 199, 89, 0.1))';
             setTimeout(() => { lastAnswer.style.backgroundColor = originalColor; }, 1000);
           }
-          requestAnimationFrame(() => focusInputIfSafe(getPopupElement()));
+          // 智能焦点恢复：避免打扰用户当前的输入
+          setTimeout(() => {
+            const activeElement = document.activeElement;
+            const isEditable = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.isContentEditable);
+            if (!isEditable || (isEditable && activeElement._lastInputTime && Date.now() - activeElement._lastInputTime > 3000)) {
+              focusInputIfSafe(getPopupElement());
+            }
+          }, 500);
         };
 
         const onGenerationError = () => {

@@ -1580,12 +1580,12 @@
   transition: opacity 0.3s ease-out;
 }
 
-/* 收缩状态下的文本省略 */
+/* 收缩状态下的内容隐藏 */
 .theme-adaptive .reasoning-content.collapsed .reasoning-content-inner {
-  white-space: nowrap;
+  display: none;
+  opacity: 0;
+  height: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
-  opacity: 0.7;
 }
 
 /* 展开状态下的内容 */
@@ -2965,3 +2965,43 @@
 
 .theme-adaptive.dark-mode .markdown-alert-caution { border-color: #f85149; }
 .theme-adaptive.dark-mode .markdown-alert-caution .markdown-alert-title { color: #f85149; }
+
+/* 🔒 焦点保护增强样式 - 防止英文输入焦点丢失 */
+.theme-adaptive #ai-popup {
+  /* 创建新的层叠上下文和焦点上下文 */
+  contain: layout style paint;
+  pointer-events: auto;
+  z-index: 2147483647; /* 最高层级 */
+  /* 防止外部元素覆盖 */
+  isolation: isolate;
+}
+
+.theme-adaptive .expandable-textarea {
+  /* 防止焦点被外部元素抢夺 */
+  position: relative;
+  z-index: 1;
+  /* 确保获得所有键盘事件 */
+  user-select: text;
+  /* 防止输入法候选框问题 */
+  ime-mode: auto;
+  /* 创建新的堆叠上下文 */
+  transform: translateZ(0);
+}
+
+/* 确保弹窗内的所有交互元素都能正确接收事件 */
+.theme-adaptive #ai-popup * {
+  pointer-events: auto;
+}
+
+/* 防止页面上的其他输入框在popup激活时自动获焦 */
+.theme-adaptive #ai-popup:focus-within {
+  outline: none;
+}
+
+/* 增强输入框的焦点锁定 */
+.theme-adaptive .expandable-textarea:focus {
+  /* 防止隐形元素在上层拦截焦点 */
+  transform: translateZ(0);
+  /* 确保最高优先级 */
+  position: relative;
+}

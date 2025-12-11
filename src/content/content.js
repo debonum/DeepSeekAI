@@ -1,5 +1,6 @@
-// 不再全局注入样式，改用 Shadow DOM 隔离
-// import './styles/style.css';
+// 注入主文档中的输入框样式
+import './styles/input-main.css';
+
 import { createSvgIcon, createIcon } from "./components/IconManager";
 import { createQuickActionButtons } from "./components/QuickActionButtons";
 import { createPopup } from "./popup";
@@ -673,6 +674,10 @@ document.addEventListener("mouseup", function(e) {
   isMouseDown = false;
   if (e.button === 2) return;
   if (!isSelectionEnabled || popupStateManager.isCreating() || isHandlingIconClick) return;
+
+  // 核心修复：如果点击释放发生在工具栏内部（例如拖拽结束），则忽略，避免重置位置
+  if (e.target.closest && e.target.closest('.quick-action-buttons')) return;
+
   const anchorPoint = { x: e.clientX, y: e.clientY };
   // 对点击型选中（双击/三击）等待“稳定”后再读取，确保拿到最终扩展的选区
   if (!hasMovedEnough && e.detail >= 2) {
@@ -913,7 +918,7 @@ document.addEventListener("mousedown", function(e) {
       // 这里可以保存选区，并阻止冒泡。
       selectionManager.saveSelection();
     }
-    e.stopPropagation();
+    // e.stopPropagation (); // 允许冒泡，以便内部组件（如拖拽手柄）能接收到事件
     return;
   }
 
@@ -1010,17 +1015,7 @@ document.addEventListener('mousedown', async (event) => {
   safeRemovePopup();
 });
 
-// 添加事件委托处理reasoning content的点击
-document.addEventListener('click', (event) => {
-  const reasoningHeader = event.target.closest('.reasoning-header');
-  if (reasoningHeader) {
-    const container = reasoningHeader.closest('.reasoning-content');
-    if (container) {
-      container.classList.toggle('collapsed');
-      container.classList.toggle('expanded');
-    }
-  }
-}, true);
+// reasoning content 点击事件现在直接在 apiService.js 中绑定
 
 // 添加更可靠的选中文本获取函数
 function getReliableSelectedText() {

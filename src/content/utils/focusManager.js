@@ -28,10 +28,22 @@ export function focusInputIfSafe(popup) {
   if (popupStateManager && typeof popupStateManager.isMinimized === 'function' && popupStateManager.isMinimized()) return;
 
   const active = document.activeElement;
-  if (isElementEditable(active)) return;
 
+  // 增强焦点保护：如果当前活跃元素就是我们想要的输入框，直接返回
   const textarea = targetPopup && targetPopup.querySelector && targetPopup.querySelector('.expandable-textarea');
   if (!textarea) return;
+
+  if (active === textarea) return; // 如果焦点已经在目标输入框，不需要重新聚焦
+
+  // 增强焦点保护：如果当前元素是可编辑的且用户正在输入，不要打断
+  if (isElementEditable(active)) {
+    // 检查用户是否在活跃输入（最近有输入事件）
+    const lastInputTime = active._lastInputTime || 0;
+    const now = Date.now();
+    if (now - lastInputTime < 1000) { // 1秒内有输入则认为是活跃状态
+      return;
+    }
+  }
 
   const tryFocus = () => {
     if (!textarea || textarea.disabled) return false;

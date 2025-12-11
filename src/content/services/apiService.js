@@ -49,6 +49,17 @@ async function processRenderQueue(responseElement, ps, aiResponseContainer) {
           <div class="reasoning-content-inner"></div>
         `;
         responseElement.insertBefore(reasoningContentElement, responseElement.firstChild);
+
+        // 直接绑定点击事件到 reasoning-header
+        const reasoningHeader = reasoningContentElement.querySelector('.reasoning-header');
+        if (reasoningHeader) {
+          reasoningHeader.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            reasoningContentElement.classList.toggle('collapsed');
+            reasoningContentElement.classList.toggle('expanded');
+          });
+        }
       }
 
       const reasoningInner = reasoningContentElement.querySelector('.reasoning-content-inner');
