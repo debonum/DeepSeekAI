@@ -1,5 +1,3 @@
-// 注入主文档中的输入框样式
-import './styles/input-main.css';
 
 import { createSvgIcon, createIcon } from "./components/IconManager";
 import { createQuickActionButtons } from "./components/QuickActionButtons";
