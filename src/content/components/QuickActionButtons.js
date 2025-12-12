@@ -201,8 +201,8 @@ export async function createQuickActionButtons(
       line-height: 1.5;
       box-sizing: border-box;
       height: 48px;
-      min-width: 300px;
-      max-width: 90vw;
+      min-width: min(360px, 94vw);
+      max-width: 94vw;
       pointer-events: auto;
       user-select: none;
       animation: quickActionsAppear 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; /* Smooth spring-like ease */
@@ -227,9 +227,10 @@ export async function createQuickActionButtons(
     :host(.expanded-mode) {
       border-radius: 20px; /* Modern large radius */
       height: auto;
-      min-height: 140px; /* Spacious input area */
+      min-height: 0; /* Compact by default (about 2 lines) */
+      width: 480px; /* Wider writing space in expanded state */
       flex-direction: column;
-      padding: 16px 20px;
+      padding: 10px 14px;
       background: rgba(20, 20, 20, 0.85) !important; /* Significantly darker for expanded state */
       align-items: stretch;
       justify-content: flex-start;
@@ -466,7 +467,7 @@ export async function createQuickActionButtons(
       display: none;
       width: 100%;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
       animation: fadeIn 0.2s ease;
     }
 
@@ -474,27 +475,55 @@ export async function createQuickActionButtons(
       display: flex;
     }
 
-    :host(.expanded-mode) .actions-group,
-    :host(.expanded-mode) .separator,
-    :host(.expanded-mode) .drag-handle-bar,
-    :host(.expanded-mode) .brand-avatar,
-    :host(.expanded-mode) .input-trigger {
-      display: none;
-    }
+	    :host(.expanded-mode) .actions-group,
+	    :host(.expanded-mode) .separator,
+	    :host(.expanded-mode) .brand-avatar,
+	    :host(.expanded-mode) .input-trigger {
+	      display: none;
+	    }
 
-    .expanded-textarea {
-      width: 100%;
-      min-height: 100px;
-      background: transparent;
-      border: none;
-      color: rgba(255, 255, 255, 0.95);
-      font-size: 16px; /* Larger, more readable font */
-      font-family: inherit;
+	    /* Hide top drag handle in expanded mode; use bottom handle instead */
+	    :host(.expanded-mode) .drag-handle-bar { display: none; }
+
+	    /* Expanded-mode bottom drag handle (below input) */
+	    .expanded-drag-handle {
+	      width: 100%;
+	      height: 14px;
+	      display: flex;
+	      align-items: center;
+	      justify-content: center;
+	      cursor: grab;
+	      color: rgba(255, 255, 255, 0.45);
+	      user-select: none;
+	    }
+	    .expanded-drag-handle:active {
+	      cursor: grabbing;
+	      color: rgba(255, 255, 255, 0.85);
+	    }
+	    .expanded-drag-handle svg {
+	      width: 14px;
+	      height: 14px;
+	    }
+	    :host(.light-mode) .expanded-drag-handle {
+	      color: rgba(0,0,0,0.35);
+	    }
+	    :host(.light-mode) .expanded-drag-handle:active {
+	      color: rgba(0,0,0,0.7);
+	    }
+
+	    .expanded-textarea {
+	      width: 100%;
+	      min-height: 1.8em; /* Two-line default height */
+	      background: transparent;
+	      border: none;
+	      color: rgba(255, 255, 255, 0.95);
+	      font-size: 15px; /* Slightly more compact */
+	      font-family: inherit;
       resize: none;
       outline: none;
-      line-height: 1.6;
-      padding: 4px 0;
-      margin-bottom: 8px;
+      line-height: 1.45;
+      padding: 2px 0;
+      margin-bottom: 0;
       letter-spacing: 0.01em;
     }
     .expanded-textarea::placeholder {
@@ -502,38 +531,38 @@ export async function createQuickActionButtons(
       font-weight: 300;
     }
 
-    .expanded-footer {
-      display: flex;
-      justify-content: space-between; /* Space between Cancel and Send */
-      align-items: center;
-      margin-top: auto; /* Push to bottom */
-      padding-top: 12px;
-      border-top: 1px solid rgba(255, 255, 255, 0.08); /* Subtle separator */
-    }
+	    .expanded-footer {
+	      display: flex;
+	      justify-content: space-between; /* Space between Cancel and Send */
+	      align-items: center;
+	      margin-top: auto; /* Push to bottom */
+	      padding-top: 8px;
+	      border-top: 1px solid rgba(255, 255, 255, 0.08); /* Subtle separator */
+	    }
 
-    .cancel-btn {
-      background: transparent;
-      border: none;
-      color: rgba(255, 255, 255, 0.5);
-      font-size: 13px;
-      cursor: pointer;
-      padding: 6px 12px;
-      border-radius: 6px;
-      transition: all 0.2s ease;
-    }
+	    .cancel-btn {
+	      background: transparent;
+	      border: none;
+	      color: rgba(255, 255, 255, 0.6);
+	      font-size: 12px;
+	      cursor: pointer;
+	      padding: 4px 8px;
+	      border-radius: 6px;
+	      transition: all 0.2s ease;
+	    }
     .cancel-btn:hover {
         background: rgba(255, 255, 255, 0.1);
         color: rgba(255, 255, 255, 0.9);
     }
 
-    .send-btn {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #4D8EFF, #3B7AD9); /* Premium Blue Gradient */
-      border: none;
-      display: flex;
-      align-items: center;
+	    .send-btn {
+	      width: 26px;
+	      height: 26px;
+	      border-radius: 50%;
+	      background: linear-gradient(135deg, #4D8EFF, #3B7AD9); /* Premium Blue Gradient */
+	      border: none;
+	      display: flex;
+	      align-items: center;
       justify-content: center;
       cursor: pointer;
       color: #fff;
@@ -586,13 +615,16 @@ export async function createQuickActionButtons(
     }
     :host(.light-mode) .separator { background: rgba(0,0,0,0.1); }
     :host(.light-mode) .input-trigger { background: rgba(0,0,0,0.04); color: rgba(0,0,0,0.6); }
-    :host(.light-mode) .input-trigger:hover { background: rgba(0,0,0,0.06); color: rgba(0,0,0,0.8); }
-    :host(.light-mode) .expanded-textarea { color: #1d1d1f; }
-    :host(.light-mode) .expanded-textarea::placeholder { color: rgba(0,0,0,0.4); }
+	    :host(.light-mode) .input-trigger:hover { background: rgba(0,0,0,0.06); color: rgba(0,0,0,0.8); }
+	    :host(.light-mode) .expanded-textarea { color: #1d1d1f; }
+	    :host(.light-mode) .expanded-textarea::placeholder { color: rgba(0,0,0,0.4); }
+	    :host(.light-mode) .expanded-footer { border-top: 1px solid rgba(0,0,0,0.12); }
+	    :host(.light-mode) .cancel-btn { color: rgba(0,0,0,0.65); }
+	    :host(.light-mode) .cancel-btn:hover { background: rgba(0,0,0,0.06); color: #000; }
 
-    /* Light mode popover */
-    :host(.light-mode) .language-select {
-        background: rgba(255, 255, 255, 0.95);
+	    /* Light mode popover */
+	    :host(.light-mode) .language-select {
+	        background: rgba(255, 255, 255, 0.95);
         border: 1px solid rgba(0,0,0,0.1);
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     }
@@ -738,16 +770,29 @@ export async function createQuickActionButtons(
 
   shadowRoot.appendChild(inputTrigger);
 
-  // --- 6. Expanded Input Container ---
-  const expandedContainer = document.createElement("div");
-  expandedContainer.className = "expanded-input-container";
+	  // --- 6. Expanded Input Container ---
+	  const expandedContainer = document.createElement("div");
+	  expandedContainer.className = "expanded-input-container";
 
-  const textarea = document.createElement("textarea");
-  textarea.className = "expanded-textarea";
-  textarea.placeholder = "Ask DeepSeek AI...";
+	  const textarea = document.createElement("textarea");
+	  textarea.className = "expanded-textarea";
+	  textarea.placeholder = "Ask DeepSeek AI...";
 
-  const expandedFooter = document.createElement("div");
-  expandedFooter.className = "expanded-footer";
+	  const resizeExpandedTextarea = () => {
+	      // Auto-resize to fit content while keeping a compact default height.
+	      textarea.style.height = "auto";
+	      const maxHeight = 240;
+	      const newHeight = Math.min(textarea.scrollHeight, maxHeight);
+	      textarea.style.height = `${newHeight}px`;
+	      textarea.style.overflowY = textarea.scrollHeight > maxHeight ? "auto" : "hidden";
+	  };
+
+	  const expandedFooter = document.createElement("div");
+	  expandedFooter.className = "expanded-footer";
+
+	  const expandedDragHandle = document.createElement("div");
+	  expandedDragHandle.className = "expanded-drag-handle";
+	  expandedDragHandle.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 6a1 1 0 100 2 1 1 0 000-2zm0 5a1 1 0 100 2 1 1 0 000-2zm0 5a1 1 0 100 2 1 1 0 000-2zm8-10a1 1 0 100 2 1 1 0 000-2zm0 5a1 1 0 100 2 1 1 0 000-2zm0 5a1 1 0 100 2 1 1 0 000-2z" /></svg>`;
 
   const inputActions = document.createElement("div");
   inputActions.className = "input-actions";
@@ -764,37 +809,54 @@ export async function createQuickActionButtons(
   expandedFooter.appendChild(inputActions); // Keep this if used, or remove if empty
   expandedFooter.appendChild(sendBtn);
 
-  expandedContainer.appendChild(textarea);
-  expandedContainer.appendChild(expandedFooter);
+	  expandedContainer.appendChild(textarea);
+	  expandedContainer.appendChild(expandedDragHandle);
+	  expandedContainer.appendChild(expandedFooter);
 
   shadowRoot.appendChild(expandedContainer);
 
   // --- Logic for Expansion ---
-  inputTrigger.addEventListener("click", (e) => {
-      e.stopPropagation();
-      container.classList.add("expanded-mode");
-      setTimeout(() => textarea.focus(), 50);
-  });
+	  inputTrigger.addEventListener("click", (e) => {
+	      e.stopPropagation();
+	      container.classList.add("expanded-mode");
+	      setTimeout(() => {
+	          resizeExpandedTextarea();
+	          textarea.focus();
+	      }, 50);
+	  });
 
-  // Logic for Collapse
-  cancelBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      container.classList.remove("expanded-mode");
-      textarea.value = ""; // Optional: clear input
-  });
+	  // Logic for Collapse
+	  cancelBtn.addEventListener("click", (e) => {
+	      e.stopPropagation();
+	      e.preventDefault();
+	      container.classList.remove("expanded-mode");
+	      textarea.value = ""; // Optional: clear input
+	      textarea.style.height = "";
+	      textarea.style.overflowY = "";
+	  });
 
-  // Prevent closing when clicking inside expanded area
-  expandedContainer.addEventListener("click", (e) => e.stopPropagation());
-  expandedContainer.addEventListener("mousedown", (e) => e.stopPropagation());
+	  // Prevent closing when clicking inside expanded area
+	  expandedContainer.addEventListener("click", (e) => e.stopPropagation());
+	  expandedContainer.addEventListener("mousedown", (e) => {
+	      // Allow drag handle events to bubble to host for dragging.
+	      if (e.target.closest('.expanded-drag-handle')) return;
+	      e.stopPropagation();
+	  });
 
   // Send Logic
-  const handleSend = () => {
-      const text = textarea.value.trim();
-      if (!text) return;
+	  const handleSend = () => {
+	      const text = textarea.value.trim();
+	      if (!text) {
+	          // If no input, collapse back to quick actions toolbar.
+	          container.classList.remove("expanded-mode");
+	          textarea.value = "";
+	          textarea.style.height = "";
+	          textarea.style.overflowY = "";
+	          return;
+	      }
 
-      const customAction = {
-          id: "custom",
+	      const customAction = {
+	          id: "custom",
           title: "Custom Question",
           prompt: text
       };
@@ -807,13 +869,27 @@ export async function createQuickActionButtons(
       handleSend();
   });
 
-  textarea.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-          e.preventDefault();
-          handleSend();
-      }
-      e.stopPropagation();
-  });
+	  textarea.addEventListener("keydown", (e) => {
+	      if (e.key === "Escape") {
+	          e.preventDefault();
+	          container.classList.remove("expanded-mode");
+	          textarea.value = "";
+	          textarea.style.height = "";
+	          textarea.style.overflowY = "";
+	          e.stopPropagation();
+	          return;
+	      }
+	      if (e.key === "Enter" && !e.shiftKey) {
+	          e.preventDefault();
+	          handleSend();
+	      }
+	      e.stopPropagation();
+	  });
+
+	  textarea.addEventListener("input", (e) => {
+	      resizeExpandedTextarea();
+	      e.stopPropagation();
+	  });
 
    // --- Drag Initializer Adaptation (Expanded Area) ---
    container.initDrag = function() {

@@ -807,15 +807,33 @@ function showQuickActionsForSelection(selection, anchorPoint) {
           zIndex: '2147483646'
         });
 
-        // 挂载按钮
-        buttonsContainer.style.position = 'static';
-        wrapper.appendChild(buttonsContainer);
-
-        // 显示
-        wrapper.style.opacity = '1';
-
-        // 记录显示时间，防止双击/三击的下一次 mousedown 立即移除
-        quickActionsShownAt = Date.now();
+	        // 挂载按钮
+	        buttonsContainer.style.position = 'static';
+	        wrapper.appendChild(buttonsContainer);
+	        
+	        // 水平防溢出：加宽后仍保持在视口内
+	        requestAnimationFrame(() => {
+	          try {
+	            const containerRect = buttonsContainer.getBoundingClientRect();
+	            const padding = 8;
+	            const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+	            let clampedLeft = initialRect.left;
+	            const maxLeft = viewportWidth - containerRect.width - padding;
+	            if (clampedLeft > maxLeft) clampedLeft = Math.max(padding, maxLeft);
+	            if (clampedLeft < padding) clampedLeft = padding;
+	
+	            if (clampedLeft !== initialRect.left) {
+	              initialRect.left = clampedLeft;
+	              wrapper.style.left = `${clampedLeft}px`;
+	            }
+	          } catch (_) {}
+	
+	          // 显示
+	          wrapper.style.opacity = '1';
+	        });
+	
+	        // 记录显示时间，防止双击/三击的下一次 mousedown 立即移除
+	        quickActionsShownAt = Date.now();
 
         // 🎯 添加滚动监听器，更新工具栏和高亮层位置
         const handleScroll = () => {
