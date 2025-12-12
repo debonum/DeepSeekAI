@@ -24,6 +24,11 @@ const processText = (text, type) => {
   return text;
 };
 
+const isElementAtBottom = (el, threshold = 8) => {
+  if (!el) return false;
+  return el.scrollHeight - (el.scrollTop + el.clientHeight) <= threshold;
+};
+
 // 优化渲染队列处理
 async function processRenderQueue(responseElement, ps, aiResponseContainer) {
   if (!responseElement?.isConnected || !aiResponseContainer?.isConnected) {
@@ -64,10 +69,14 @@ async function processRenderQueue(responseElement, ps, aiResponseContainer) {
 
       const reasoningInner = reasoningContentElement.querySelector('.reasoning-content-inner');
       if (reasoningInner) {
+        const wasAtBottom = isElementAtBottom(reasoningInner);
         const reasoningHtml = render(currentChunk.reasoningContent);
         reasoningInner.innerHTML = reasoningHtml;
-        // Keep preview mode scrolled to the latest content
-        if (!reasoningContentElement.classList.contains('expanded')) {
+
+        const isCollapsed = reasoningContentElement.classList.contains('collapsed');
+        const shouldAutoScrollReasoning = isCollapsed || (getAllowAutoScroll() && wasAtBottom);
+
+        if (shouldAutoScrollReasoning) {
           requestAnimationFrame(() => {
             reasoningInner.scrollTop = reasoningInner.scrollHeight;
           });
