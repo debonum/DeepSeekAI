@@ -112,6 +112,29 @@ export function createShadowContainer(cssText) {
   container.id = 'deepseek-popup-root';
   shadow.appendChild(container);
 
+  // 键盘事件隔离：阻止宿主页面的快捷键/热键抢占焦点（尤其是英文键盘输入）
+  // 原因：键盘事件在 Shadow DOM 会被 retarget 到宿主节点，宿主页认为当前不在可编辑元素中，从而触发自身的快捷键逻辑（跳转到搜索框等）
+  // 处理：在 Shadow 边界的冒泡阶段截断键盘事件，但保留 ESC 以维持关闭快捷键
+  const stopKeyboardEventPropagation = (event) => {
+    // 允许 ESC 继续冒泡以便全局关闭逻辑生效
+    if (event.key === 'Escape') return;
+
+    // 仅处理从当前 Shadow 容器内冒泡的事件
+    const path = typeof event.composedPath === 'function' ? event.composedPath() : [];
+    const withinPopup = path.some(node => node && (node.id === 'deepseek-popup-root' || node.id === 'ai-popup'));
+    if (!withinPopup) return;
+
+    // 阻断向宿主页冒泡，避免宿主页快捷键劫持焦点
+    event.stopPropagation();
+    if (typeof event.stopImmediatePropagation === 'function') {
+      event.stopImmediatePropagation();
+    }
+  };
+
+  ['keydown', 'keypress', 'keyup'].forEach((type) => {
+    shadow.addEventListener(type, stopKeyboardEventPropagation);
+  });
+
   // 保存实例引用
   shadowContainerInstance = { host, shadow, container };
 

@@ -1,4 +1,4 @@
-import { getAllowAutoScroll, scrollToBottom } from "../utils/scrollManager";
+import { getAllowAutoScroll, scrollToBottom, updateAllowAutoScroll } from "../utils/scrollManager";
 import { render, showCodeCopyButtons, isMathBalanced } from "../utils/markdownRenderer";
 
 // 全局变量用于存储对话历史
@@ -40,7 +40,7 @@ async function processRenderQueue(responseElement, ps, aiResponseContainer) {
       let reasoningContentElement = responseElement.querySelector('.reasoning-content');
       if (!reasoningContentElement) {
         reasoningContentElement = document.createElement('div');
-        reasoningContentElement.className = 'reasoning-content expanded';
+        reasoningContentElement.className = 'reasoning-content collapsed';
         reasoningContentElement.innerHTML = `
           <div class="reasoning-header">
             <div class="reasoning-toggle"></div>
@@ -66,6 +66,12 @@ async function processRenderQueue(responseElement, ps, aiResponseContainer) {
       if (reasoningInner) {
         const reasoningHtml = render(currentChunk.reasoningContent);
         reasoningInner.innerHTML = reasoningHtml;
+        // Keep preview mode scrolled to the latest content
+        if (!reasoningContentElement.classList.contains('expanded')) {
+          requestAnimationFrame(() => {
+            reasoningInner.scrollTop = reasoningInner.scrollHeight;
+          });
+        }
       }
     }
 
@@ -90,7 +96,12 @@ async function processRenderQueue(responseElement, ps, aiResponseContainer) {
     }
 
     // 使用requestAnimationFrame优化滚动和更新
-    if (getAllowAutoScroll() && aiResponseContainer.isConnected) {
+    if (aiResponseContainer?.isConnected) {
+      // 定期同步自动滚动状态，避免手动滚动后一直被锁住
+      updateAllowAutoScroll(aiResponseContainer);
+    }
+
+    if (getAllowAutoScroll() && aiResponseContainer?.isConnected) {
       requestAnimationFrame(() => {
         scrollToBottom(aiResponseContainer);
         if (ps?.update) ps.update();

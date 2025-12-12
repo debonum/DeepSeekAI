@@ -98,6 +98,9 @@ class ScrollStateManager {
 }
 
 let allowAutoScroll = true;
+let userScrolledUp = false;
+const MANUAL_SCROLL_HOLD_MS = 1200; // window to pause auto-scroll after user input
+let manualHoldTimeout = null;
 
 export function setAllowAutoScroll(value) {
   allowAutoScroll = value;
@@ -113,7 +116,12 @@ export function updateAllowAutoScroll(container) {
   const { scrollTop, scrollHeight, clientHeight } = container;
   const EXTRA_SCROLL_SPACE = 40; // 与上面相同的额外空间
   const isAtBottom = scrollHeight - (scrollTop + clientHeight + EXTRA_SCROLL_SPACE) < SCROLL_CONSTANTS.SCROLL_THRESHOLD;
-  setAllowAutoScroll(isAtBottom);
+  if (isAtBottom) {
+    setAllowAutoScroll(true);
+    userScrolledUp = false;
+  } else if (userScrolledUp) {
+    setAllowAutoScroll(false);
+  }
 }
 
 export function handleUserScroll(event) {
@@ -121,6 +129,19 @@ export function handleUserScroll(event) {
 
   const container = event.target;
   if (!container) return;
+
+  // 用户触发的滚动立即暂停自动滚动，直到回到底部
+  if (event.isTrusted) {
+    userScrolledUp = true;
+    setAllowAutoScroll(false);
+    if (manualHoldTimeout) {
+      clearTimeout(manualHoldTimeout);
+    }
+    manualHoldTimeout = setTimeout(() => {
+      // 窗口结束后如果已经在底部则恢复自动滚动
+      updateAllowAutoScroll(container);
+    }, MANUAL_SCROLL_HOLD_MS + 50);
+  }
 
   requestAnimationFrame(() => {
     updateAllowAutoScroll(container);

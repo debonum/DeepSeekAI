@@ -1563,9 +1563,8 @@
 
 /* 思维链收缩状态 */
 .theme-adaptive .reasoning-content.collapsed {
-  max-height: 32px;
   cursor: pointer;
-  opacity: 0.8;
+  opacity: 0.9;
 }
 
 /* 思维链展开状态 */
@@ -1582,14 +1581,16 @@
 
 /* 收缩状态下的内容隐藏 */
 .theme-adaptive .reasoning-content.collapsed .reasoning-content-inner {
-  display: none;
-  opacity: 0;
-  height: 0;
-  overflow: hidden;
+  display: block;
+  opacity: 1;
+  max-height: 4.5em; /* roughly 3 lines with 1.5 line-height */
+  overflow-y: auto;
+  padding-right: 6px; /* leave room for scrollbar */
 }
 
 /* 展开状态下的内容 */
 .theme-adaptive .reasoning-content.expanded .reasoning-content-inner {
+  max-height: none;
   white-space: normal;
   overflow: visible;
   opacity: 1;

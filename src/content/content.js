@@ -1,4 +1,5 @@
 
+import "./publicPath";
 import { createSvgIcon, createIcon } from "./components/IconManager";
 import { createQuickActionButtons } from "./components/QuickActionButtons";
 import { createPopup } from "./popup";
