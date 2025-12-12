@@ -37,7 +37,7 @@ export function styleResponseContainer(container) {
 
       if (!scrollManager.isInCooldown()) {
         const isAtBottom = scrollManager.isNearBottom(container);
-        updateAllowAutoScroll(container);
+        updateAllowAutoScroll(container, e);
 
         if (isAtBottom && getAllowAutoScroll()) {
           const lastMessage = container.querySelector('#ai-response > div:last-child');

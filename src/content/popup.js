@@ -391,13 +391,13 @@ function setupInteractions(popup, aiResponseContainer) {
     });
 
   // 优化滚动事件监听
-  const handleScroll = () => {
-    handleUserScroll();
+  const handleScroll = (event) => {
+    handleUserScroll(event);
     requestAnimationFrame(() => {
       if (aiResponseContainer?.perfectScrollbar) {
         aiResponseContainer.perfectScrollbar.update();
       }
-      updateAllowAutoScroll(aiResponseContainer);
+      updateAllowAutoScroll(aiResponseContainer, event);
     });
   };
 

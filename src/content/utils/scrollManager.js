@@ -97,10 +97,13 @@ class ScrollStateManager {
   }
 }
 
-let allowAutoScroll = true;
-let userScrolledUp = false;
-const MANUAL_SCROLL_HOLD_MS = 1200; // window to pause auto-scroll after user input
-let manualHoldTimeout = null;
+let allowAutoScroll = false;
+
+const isAtBottom = (container) => {
+  if (!container) return false;
+  const { scrollTop, scrollHeight, clientHeight } = container;
+  return scrollHeight - (scrollTop + clientHeight) <= SCROLL_CONSTANTS.SCROLL_THRESHOLD;
+};
 
 export function setAllowAutoScroll(value) {
   allowAutoScroll = value;
@@ -110,42 +113,41 @@ export function getAllowAutoScroll() {
   return allowAutoScroll;
 }
 
-export function updateAllowAutoScroll(container) {
+export function updateAllowAutoScroll(container, event) {
   if (!container) return;
 
-  const { scrollTop, scrollHeight, clientHeight } = container;
-  const EXTRA_SCROLL_SPACE = 40; // 与上面相同的额外空间
-  const isAtBottom = scrollHeight - (scrollTop + clientHeight + EXTRA_SCROLL_SPACE) < SCROLL_CONSTANTS.SCROLL_THRESHOLD;
-  if (isAtBottom) {
-    setAllowAutoScroll(true);
-    userScrolledUp = false;
-  } else if (userScrolledUp) {
-    setAllowAutoScroll(false);
+  // 只有用户触发的滚动才会更新自动滚动开关
+  if (event?.isTrusted) {
+    setAllowAutoScroll(isAtBottom(container));
   }
 }
 
+// 优化后的用户滚动处理函数
 export function handleUserScroll(event) {
-  if (!event || !event.target) return;
-
-  const container = event.target;
+  const container = event?.target || event;
   if (!container) return;
 
-  // 用户触发的滚动立即暂停自动滚动，直到回到底部
-  if (event.isTrusted) {
-    userScrolledUp = true;
-    setAllowAutoScroll(false);
-    if (manualHoldTimeout) {
-      clearTimeout(manualHoldTimeout);
-    }
-    manualHoldTimeout = setTimeout(() => {
-      // 窗口结束后如果已经在底部则恢复自动滚动
-      updateAllowAutoScroll(container);
-    }, MANUAL_SCROLL_HOLD_MS + 50);
-  }
+  updateAllowAutoScroll(container, event);
+}
 
-  requestAnimationFrame(() => {
-    updateAllowAutoScroll(container);
-  });
+// 在新内容添加后更新滚动状态
+export function updateScrollStateAfterContentAdd(container) {
+  if (!container) return;
+
+  // 只有当已开启自动滚动（用户滚动到底部）时才自动滚动
+  if (!getAllowAutoScroll()) return;
+
+  scrollToBottom(container);
+}
+
+// 重置所有滚动状态
+export function resetScrollState() {
+  allowAutoScroll = false;
+}
+
+// 检查是否可以自动滚动
+export function canAutoScroll() {
+  return getAllowAutoScroll();
 }
 
 export function scrollToBottom(container) {
@@ -280,7 +282,7 @@ export function setupScrollHandlers(container, perfectScrollbar) {
 
       if (!scrollManager.isInCooldown()) {
         const isAtBottom = scrollManager.isNearBottom(container);
-        updateAllowAutoScroll(container);
+        updateAllowAutoScroll(container, event);
 
         if (isAtBottom) {
           scrollManager.scrollToBottom(container);
