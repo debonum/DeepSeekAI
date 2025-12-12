@@ -119,9 +119,6 @@ export async function createQuickActionButtons(
 
   const container = document.createElement("div");
   container.className = "quick-action-buttons";
-  container.style.setProperty('background', '#ffffff', 'important');
-  container.style.setProperty('backdrop-filter', 'none', 'important');
-  container.style.setProperty('-webkit-backdrop-filter', 'none', 'important');
   container.style.setProperty('padding', '6px 12px 8px 12px');
   container.style.opacity = '1';
   const shadowRoot = container.attachShadow({ mode: "open" });
@@ -251,13 +248,13 @@ export async function createQuickActionButtons(
       width: 24px;
       height: 100%;
       cursor: grab;
-      color: rgba(255, 255, 255, 0.3);
+      color: rgba(255, 255, 255, 0.65); /* Stronger contrast on light backgrounds */
       flex-shrink: 0;
       margin-left: 8px;
     }
     .drag-handle-bar:active {
       cursor: grabbing;
-      color: rgba(255, 255, 255, 0.6);
+      color: rgba(255, 255, 255, 0.9);
     }
     .drag-handle-bar svg {
       width: 14px;
@@ -565,18 +562,28 @@ export async function createQuickActionButtons(
 
     /* Light Mode overrides */
     :host(.light-mode) {
-       background: rgba(255, 255, 255, 0.65) !important; /* High transparency for frost */
-       /* High Contrast Elevation */
+       background: linear-gradient(140deg, rgba(248, 250, 255, 0.96), rgba(232, 238, 252, 0.9)) !important; /* Stronger panel tint to separate from white pages */
+       backdrop-filter: blur(20px) saturate(190%) !important;
+       -webkit-backdrop-filter: blur(20px) saturate(190%) !important;
        box-shadow:
-         0 16px 40px rgba(0,0,0,0.12), /* Large diffuse ambient */
-         0 2px 12px rgba(0,0,0,0.12),  /* Medium depth */
-         0 0 2px rgba(0,0,0,0.1);      /* Tightest definition */
-       border: 1px solid rgba(0,0,0,0.16); /* Sharp, distinct edge */
-       color: #333;
+         0 20px 40px rgba(0,0,0,0.15),
+         0 6px 18px rgba(0,0,0,0.12),
+         0 0 0 1px rgba(255,255,255,0.8);
+       border: 1px solid rgba(0,0,0,0.14); /* Clear edge against light backgrounds */
+       color: #111;
     }
-    :host(.light-mode) .drag-handle-bar { color: rgba(0,0,0,0.25); }
-    :host(.light-mode) .quick-action-button { color: rgba(0,0,0,0.7); opacity: 0.8; }
-    :host(.light-mode) .quick-action-button:hover { background: rgba(0,0,0,0.05); color: #000; opacity: 1; }
+    :host(.light-mode) .drag-handle-bar { color: rgba(0,0,0,0.55); }
+    :host(.light-mode) .quick-action-button {
+      color: rgba(0,0,0,0.78);
+      opacity: 1;
+      background: transparent;
+      box-shadow: none;
+    }
+    :host(.light-mode) .quick-action-button:hover {
+      background: rgba(0,0,0,0.08);
+      color: #000;
+      opacity: 1;
+    }
     :host(.light-mode) .separator { background: rgba(0,0,0,0.1); }
     :host(.light-mode) .input-trigger { background: rgba(0,0,0,0.04); color: rgba(0,0,0,0.6); }
     :host(.light-mode) .input-trigger:hover { background: rgba(0,0,0,0.06); color: rgba(0,0,0,0.8); }
