@@ -1,5 +1,5 @@
 import { SCROLL_CONSTANTS } from './constants';
-import { getIsGenerating } from '../services/apiService';
+
 
 class ScrollStateManager {
   constructor() {
@@ -20,6 +20,11 @@ class ScrollStateManager {
       positions: [],
       maxSamples: SCROLL_CONSTANTS.MAX_MOMENTUM_SAMPLES,
     };
+    this.isInteracting = false; // 新增：跟踪用户是否正在进行物理交互（按住鼠标/触摸）
+  }
+
+  setInteracting(value) {
+    this.isInteracting = value;
   }
 
   setManualScrolling(value) {
@@ -71,7 +76,7 @@ class ScrollStateManager {
   }
 
   restoreScrollPosition(container) {
-    if (this.isAtBottom || getIsGenerating()) {
+    if (this.isAtBottom) {
       container.scrollTop = container.scrollHeight;
     } else {
       const scrollRatio = this.scrollPosition / container.scrollHeight;
@@ -102,6 +107,8 @@ let allowAutoScroll = false;
 const isAtBottom = (container) => {
   if (!container) return false;
   const { scrollTop, scrollHeight, clientHeight } = container;
+  // 安全检查：如果在顶部（scrollTop < 1）且内容高度超过可视高度，则肯定不在底部
+  if (scrollTop < 1 && scrollHeight > clientHeight + SCROLL_CONSTANTS.SCROLL_THRESHOLD) return false;
   return scrollHeight - (scrollTop + clientHeight) <= SCROLL_CONSTANTS.SCROLL_THRESHOLD;
 };
 
@@ -116,9 +123,19 @@ export function getAllowAutoScroll() {
 export function updateAllowAutoScroll(container, event) {
   if (!container) return;
 
-  // 只有用户触发的滚动才会更新自动滚动开关
-  if (event?.isTrusted) {
-    setAllowAutoScroll(isAtBottom(container));
+  const currentIsAtBottom = isAtBottom(container);
+
+  if (currentIsAtBottom) {
+    // 如果已经在底部，强制开启自动滚动
+    setAllowAutoScroll(true);
+  } else {
+    // 如果不在底部，只有当是用户主动操作（event.isTrusted）时，才关闭自动滚动
+    // 防止系统自动扩展内容导致的高度变化（非用户操作）错误地关闭自动滚动
+    if (event && event.isTrusted) {
+      setAllowAutoScroll(false);
+    }
+    // 如果是系统事件（event.isTrusted 为 undefined 或 false），保持原状态不变
+    // 这样当内容生成导致暂时不在底部时，不会错误地取消自动滚动
   }
 }
 
@@ -150,10 +167,16 @@ export function canAutoScroll() {
   return getAllowAutoScroll();
 }
 
-export function scrollToBottom(container) {
+export function scrollToBottom(container, shouldCheckState = false) {
   if (!container) return;
 
   requestAnimationFrame(() => {
+    // 强力护盾：如果用户正在交互（按住滚动条/触摸屏幕），绝对禁止自动滚动
+    if (container.scrollStateManager && container.scrollStateManager.isInteracting) return;
+
+    // JIT检查：如果要求检查状态，且当前不允许自动滚动，则取消本次滚动
+    if (shouldCheckState && !getAllowAutoScroll()) return;
+
     container.scrollTop = container.scrollHeight;
 
     if (container.perfectScrollbar) {
@@ -221,20 +244,27 @@ export function createScrollManager() {
     isNearBottom(container) {
       if (!container) return false;
       const { scrollTop, scrollHeight, clientHeight } = container;
-      return scrollHeight - (scrollTop + clientHeight) <= 30;
+      // 安全检查：如果在顶部（scrollTop < 1）且内容高度超过可视高度，则肯定不在底部
+      if (scrollTop < 1 && scrollHeight > clientHeight + SCROLL_CONSTANTS.SCROLL_THRESHOLD) return false;
+      return scrollHeight - (scrollTop + clientHeight) <= SCROLL_CONSTANTS.SCROLL_THRESHOLD;
     },
 
     saveScrollPosition(container) {
       if (!container) return;
       const { scrollTop, scrollHeight, clientHeight } = container;
-      this.isAtBottom = scrollHeight - (scrollTop + clientHeight) <= 30;
+      // 安全检查：如果在顶部（scrollTop < 1）且内容高度超过可视高度，则肯定不在底部
+      if (scrollTop < 1 && scrollHeight > clientHeight + SCROLL_CONSTANTS.SCROLL_THRESHOLD) {
+        this.isAtBottom = false;
+      } else {
+        this.isAtBottom = scrollHeight - (scrollTop + clientHeight) <= SCROLL_CONSTANTS.SCROLL_THRESHOLD;
+      }
       this.scrollPosition = scrollTop;
       this.updateScrollVelocity(scrollTop);
     },
 
     restoreScrollPosition(container) {
       if (!container) return;
-      if (this.isAtBottom || getIsGenerating()) {
+      if (this.isAtBottom) {
         scrollToBottom(container);
       } else {
         container.scrollTop = this.scrollPosition;
@@ -244,8 +274,8 @@ export function createScrollManager() {
       }
     },
 
-    scrollToBottom(container) {
-      scrollToBottom(container);
+    scrollToBottom(container, shouldCheckState = false) {
+      scrollToBottom(container, shouldCheckState);
     },
 
     cleanup() {
@@ -257,6 +287,7 @@ export function createScrollManager() {
       this.scrollTimeout = null;
       this.scrollMomentum.positions = [];
       this.scrollMomentum.velocity = 0;
+      this.isInteracting = false;
     }
   };
 }
@@ -270,8 +301,14 @@ export function setupScrollHandlers(container, perfectScrollbar) {
   const handleScroll = (event) => {
     if (!scrollManager) return;
 
-    scrollManager.setManualScrolling(true);
+    // 只有用户触发的滚动才算手动滚动
+    if (event.isTrusted) {
+      scrollManager.setManualScrolling(true);
+    }
     scrollManager.saveScrollPosition(container);
+
+    // 无论是否冷却，状态必须实时、同步更新 (零延迟)
+    updateAllowAutoScroll(container, event);
 
     handleUserScroll(event);
 
@@ -282,10 +319,9 @@ export function setupScrollHandlers(container, perfectScrollbar) {
 
       if (!scrollManager.isInCooldown()) {
         const isAtBottom = scrollManager.isNearBottom(container);
-        updateAllowAutoScroll(container, event);
 
-        if (isAtBottom) {
-          scrollManager.scrollToBottom(container);
+        if (isAtBottom && getAllowAutoScroll()) {
+          scrollManager.scrollToBottom(container, true);
         }
       }
     });
@@ -305,11 +341,27 @@ export function setupScrollHandlers(container, perfectScrollbar) {
   container.addEventListener('touchmove', handleScroll, { passive: true });
   container.addEventListener('scroll', handleScroll, { passive: true });
 
+  // 交互状态监听（护盾机制）
+  const handleInteractionStart = () => scrollManager.setInteracting(true);
+  const handleInteractionEnd = () => scrollManager.setInteracting(false);
+
+  container.addEventListener('mousedown', handleInteractionStart, { passive: true });
+  container.addEventListener('mouseup', handleInteractionEnd, { passive: true });
+  container.addEventListener('mouseleave', handleInteractionEnd, { passive: true }); // 鼠标移出也视为结束
+  container.addEventListener('touchstart', handleInteractionStart, { passive: true });
+  container.addEventListener('touchend', handleInteractionEnd, { passive: true });
+
   // 返回清理函数
   return () => {
     container.removeEventListener('wheel', handleScroll);
     container.removeEventListener('touchstart', handleScroll);
     container.removeEventListener('touchmove', handleScroll);
     container.removeEventListener('scroll', handleScroll);
+
+    container.removeEventListener('mousedown', handleInteractionStart);
+    container.removeEventListener('mouseup', handleInteractionEnd);
+    container.removeEventListener('mouseleave', handleInteractionEnd);
+    container.removeEventListener('touchstart', handleInteractionStart);
+    container.removeEventListener('touchend', handleInteractionEnd);
   };
 }

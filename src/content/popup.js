@@ -390,21 +390,6 @@ function setupInteractions(popup, aiResponseContainer) {
       autoScroll: false
     });
 
-  // 优化滚动事件监听
-  const handleScroll = (event) => {
-    handleUserScroll(event);
-    requestAnimationFrame(() => {
-      if (aiResponseContainer?.perfectScrollbar) {
-        aiResponseContainer.perfectScrollbar.update();
-      }
-      updateAllowAutoScroll(aiResponseContainer, event);
-    });
-  };
-
-  aiResponseContainer.addEventListener('wheel', handleScroll, { passive: true });
-  aiResponseContainer.addEventListener('touchstart', handleUserScroll, { passive: true });
-  aiResponseContainer.addEventListener('touchmove', handleScroll, { passive: true });
-  aiResponseContainer.addEventListener('scroll', handleScroll, { passive: true });
 }
 
 function updateScroll({ width, height, ps }) {

@@ -1,5 +1,5 @@
 export const SCROLL_CONSTANTS = {
-  SCROLL_THRESHOLD: 30,          // 滚动触发阈值
+  SCROLL_THRESHOLD: 50,          // 滚动触发阈值
   COOLDOWN_DURATION: 150,        // 滚动冷却时间（毫秒）
   ANIMATION_DURATION: 300,       // 动画持续时间（毫秒）
   VELOCITY_THRESHOLD: 0.5,       // 速度阈值

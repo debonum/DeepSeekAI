@@ -105,14 +105,11 @@ async function processRenderQueue(responseElement, ps, aiResponseContainer) {
     }
 
     // 使用requestAnimationFrame优化滚动和更新
-    if (aiResponseContainer?.isConnected) {
-      // 定期同步自动滚动状态，避免手动滚动后一直被锁住
-      updateAllowAutoScroll(aiResponseContainer);
-    }
+
 
     if (getAllowAutoScroll() && aiResponseContainer?.isConnected) {
       requestAnimationFrame(() => {
-        scrollToBottom(aiResponseContainer);
+        scrollToBottom(aiResponseContainer, true);
         if (ps?.update) ps.update();
       });
     }
