@@ -338,6 +338,19 @@ chrome.commands.onCommand.addListener(async (command) => {
       return;
     }
 
+    // 检查是否有本地文件访问权限
+    if (tab.url.startsWith('file://')) {
+      const isAllowed = await new Promise(resolve =>
+        chrome.extension.isAllowedFileSchemeAccess(resolve)
+      );
+      if (!isAllowed) {
+        chrome.tabs.create({
+          url: chrome.runtime.getURL('Instructions/Instructions.html#file-access')
+        });
+        return;
+      }
+    }
+
     try {
       // 使用更可靠的方式获取选中文本
       const [{result}] = await chrome.scripting.executeScript({
@@ -356,6 +369,8 @@ chrome.commands.onCommand.addListener(async (command) => {
         action: "toggleChat",
         selectedText: result,
         useGreeting: getGreeting()
+      }).catch(err => {
+         console.error("DeepSeek AI: Failed to send toggleChat message. Is content script running?", err);
       });
     } catch (error) {
       console.error("获取选中文本出错:", error);
@@ -363,12 +378,25 @@ chrome.commands.onCommand.addListener(async (command) => {
         action: "toggleChat",
         selectedText: "",
         useGreeting: getGreeting()
-      });
+      }).catch(err => console.error("DeepSeek AI: Failed to send fallback message:", err));
     }
   } else if (command === "show-hide-chat") {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!tab || tab.url.startsWith('chrome://') || tab.url.startsWith('edge://')) {
       return;
+    }
+
+    // 检查是否有本地文件访问权限
+    if (tab.url.startsWith('file://')) {
+      const isAllowed = await new Promise(resolve =>
+        chrome.extension.isAllowedFileSchemeAccess(resolve)
+      );
+      if (!isAllowed) {
+        chrome.tabs.create({
+          url: chrome.runtime.getURL('Instructions/Instructions.html#file-access')
+        });
+        return;
+      }
     }
 
     try {
@@ -389,6 +417,8 @@ chrome.commands.onCommand.addListener(async (command) => {
         action: "showHideChat",
         selectedText: result,
         useGreeting: getGreeting()
+      }).catch(err => {
+         console.error("DeepSeek AI: Failed to send showHideChat message. Is content script running?", err);
       });
     } catch (error) {
       console.error("获取选中文本出错:", error);
@@ -396,7 +426,7 @@ chrome.commands.onCommand.addListener(async (command) => {
         action: "showHideChat",
         selectedText: "",
         useGreeting: getGreeting()
-      });
+      }).catch(err => console.error("DeepSeek AI: Failed to send fallback message:", err));
     }
   } else if (command === "close-chat") {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -406,6 +436,8 @@ chrome.commands.onCommand.addListener(async (command) => {
 
     chrome.tabs.sendMessage(tab.id, {
       action: "closeChat"
+    }).catch(err => {
+       console.error("DeepSeek AI: Failed to send closeChat message:", err);
     });
   }
 });

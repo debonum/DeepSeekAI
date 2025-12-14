@@ -436,7 +436,7 @@
 .theme-adaptive .ai-answer {
   background-color: var(--ai-answer-bg);
   color: var(--text-primary);
-  padding: 0px 18px;
+  padding: 10px 18px;
   margin: 8px 16px 16px 16px;
   border-radius: 20px;
   font-size: 15px;
@@ -1155,11 +1155,22 @@
   vertical-align: middle !important;
 }
 
-#ai-response .ai-answer,
+#ai-response .ai-answer {
+  word-wrap: break-word !important;
+  overflow-wrap: anywhere !important;
+  white-space: normal !important;
+}
+
 #ai-response .content-container {
   word-wrap: break-word !important;
   overflow-wrap: anywhere !important;
   white-space: normal !important;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+#ai-response .content-container > *:first-child {
+  margin-top: 0 !important;
 }
 
 #ai-response mjx-container * {
@@ -1359,7 +1370,7 @@
 /* 确保公式容器不会影响行高 */
 .theme-adaptive .ai-answer p {
   line-height: 1.65 !important;
-  margin: 0.8em 0 !important;
+  /* margin: 0.8em 0 !important; */
   word-wrap: break-word !important;
   word-break: break-word !important;
   overflow-wrap: break-word !important;
@@ -1551,7 +1562,7 @@
 .theme-adaptive .reasoning-content {
   position: relative;
   padding: 0px 6px;
-  margin: 8px 0;
+  margin: 6px 0 2px 0; /* Reduced bottom margin */
   border-left: 3px solid var(--reasoning-border);
   color: var(--reasoning-text);
   font-size: 14px;

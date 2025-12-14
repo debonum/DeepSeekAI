@@ -34,6 +34,13 @@ module.exports = {
         test: /\.css$/,
         resourceQuery: /raw/,
         type: 'asset/source',
+      },
+      {
+        test: /\.(woff|woff2|eot|ttf|otf)$/i,
+        type: 'asset/resource',
+        generator: {
+          filename: 'fonts/[name][ext][query]'
+        }
       }
     ],
   },
@@ -51,7 +58,11 @@ module.exports = {
         { from: "./src/content/styles/style.css", to: "style.css" },
         { from: "./src/popup", to: "popup" },
         { from: "./src/background.js", to: "background.js" },
-        { from: "./src/Instructions", to: "Instructions" }
+        { from: "./src/Instructions", to: "Instructions" },
+        {
+          from: "node_modules/katex/dist/fonts",
+          to: "fonts"
+        }
       ],
     }),
   ],

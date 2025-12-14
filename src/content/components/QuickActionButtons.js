@@ -249,7 +249,7 @@ export async function createQuickActionButtons(
       width: 24px;
       height: 100%;
       cursor: grab;
-      color: rgba(255, 255, 255, 0.65); /* Stronger contrast on light backgrounds */
+      color: rgba(255, 255, 255, 0.9); /* High contrast for visibility */
       flex-shrink: 0;
       margin-left: 8px;
     }
@@ -258,8 +258,8 @@ export async function createQuickActionButtons(
       color: rgba(255, 255, 255, 0.9);
     }
     .drag-handle-bar svg {
-      width: 14px;
-      height: 14px;
+      width: 18px;
+      height: 18px;
     }
 
     /* Logo / Avatar */
@@ -501,9 +501,9 @@ export async function createQuickActionButtons(
 	      color: rgba(255, 255, 255, 0.85);
 	    }
 	    .expanded-drag-handle svg {
-	      width: 14px;
-	      height: 14px;
-	    }
+      width: 18px;
+      height: 18px;
+    }
 	    :host(.light-mode) .expanded-drag-handle {
 	      color: rgba(0,0,0,0.35);
 	    }
@@ -601,7 +601,7 @@ export async function createQuickActionButtons(
        border: 1px solid rgba(0,0,0,0.14); /* Clear edge against light backgrounds */
        color: #111;
     }
-    :host(.light-mode) .drag-handle-bar { color: rgba(0,0,0,0.55); }
+    :host(.light-mode) .drag-handle-bar { color: rgba(0,0,0,0.7); }
     :host(.light-mode) .quick-action-button {
       color: rgba(0,0,0,0.78);
       opacity: 1;

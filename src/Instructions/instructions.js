@@ -282,6 +282,17 @@ document.addEventListener("DOMContentLoaded", () => {
   } else {
     console.error("Language toggle button not found");
   }
+
+  // Check for file access hash
+  if (window.location.hash === '#file-access') {
+    const cnMsg = "请在扩展管理页面中启用“允许访问文件网址”权限，以便在本地文件中使用 DeepSeek AI。";
+    const enMsg = "Please enable 'Allow access to file URLs' in the extension management page to use DeepSeek AI with local files.";
+    // Simple alert for immediate attention. A custom modal would be better but this is effective and simple.
+    // Using setTimeout to ensure the page renders first
+    setTimeout(() => {
+        alert(currentLang === 'zh' ? cnMsg : enMsg);
+    }, 500);
+  }
 });
 
 document

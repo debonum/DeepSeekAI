@@ -244,6 +244,7 @@ export function createPopup(selectedText, rect, hideQuestion = false, removeCall
       initialAnswerElement.style.transition = 'background-color 0.5s ease';
       const originalColor = getComputedStyle(initialAnswerElement).backgroundColor;
       initialAnswerElement.style.backgroundColor = 'var(--success-color-alpha, rgba(52, 199, 89, 0.1))';
+
       setTimeout(() => {
         initialAnswerElement.style.backgroundColor = originalColor;
       }, 1000);

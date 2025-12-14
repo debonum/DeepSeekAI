@@ -9,7 +9,16 @@ import { ensureShadowContainer, getShadowContainer, destroyShadowContainer } fro
 import popupStyles from './styles/style.css?raw';
 import katexStyles from 'katex/dist/katex.min.css?raw';
 
-const shadowStyles = `${katexStyles}\n${popupStyles}`;
+// Debug log to confirm injection
+console.log(`DeepSeek AI: Content script injected on ${window.location.href}`);
+
+// 动态替换字体路径为绝对路径
+const fontBaseUrl = chrome.runtime.getURL('fonts/');
+const processedKatexStyles = katexStyles.replace(/url\((['"]?)fonts\//g, (match, quote) => {
+  return `url(${quote}${fontBaseUrl}`;
+});
+
+const shadowStyles = `${processedKatexStyles}\n${popupStyles}`;
 
 // 选区保持管理器
 class SelectionPreservationManager {
@@ -810,7 +819,7 @@ function showQuickActionsForSelection(selection, anchorPoint) {
 	        // 挂载按钮
 	        buttonsContainer.style.position = 'static';
 	        wrapper.appendChild(buttonsContainer);
-	        
+
 	        // 水平防溢出：加宽后仍保持在视口内
 	        requestAnimationFrame(() => {
 	          try {
@@ -821,17 +830,17 @@ function showQuickActionsForSelection(selection, anchorPoint) {
 	            const maxLeft = viewportWidth - containerRect.width - padding;
 	            if (clampedLeft > maxLeft) clampedLeft = Math.max(padding, maxLeft);
 	            if (clampedLeft < padding) clampedLeft = padding;
-	
+
 	            if (clampedLeft !== initialRect.left) {
 	              initialRect.left = clampedLeft;
 	              wrapper.style.left = `${clampedLeft}px`;
 	            }
 	          } catch (_) {}
-	
+
 	          // 显示
 	          wrapper.style.opacity = '1';
 	        });
-	
+
 	        // 记录显示时间，防止双击/三击的下一次 mousedown 立即移除
 	        quickActionsShownAt = Date.now();
 

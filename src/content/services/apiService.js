@@ -93,7 +93,7 @@ async function processRenderQueue(responseElement, ps, aiResponseContainer) {
         responseElement.appendChild(contentElement);
       }
 
-      const text = currentChunk.content;
+      const text = currentChunk.content?.replace(/^\s+/, '') || "";
       // 流式期间：如果文本中包含数学且尚未闭合，则暂缓渲染，避免中间态错乱
       const containsMath = /\$|\\\(|\\\[/.test(text);
       if (containsMath && !isMathBalanced(text)) {
