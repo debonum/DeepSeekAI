@@ -380,6 +380,162 @@ export function createDragHandle(removeCallback, minimizeCallback, pinCallback) 
     }
   });
 
+  // 复制所有对话按钮（在最小化按钮左侧，固定按钮右侧，或者根据新的布局调整）
+  // 布局顺序：Copy -> Pin -> Minimize -> Close
+  // Close: right 10px
+  // Minimize: right 42px
+  // Pin: right 74px
+  // Copy: right 106px
+
+  const copyButton = document.createElement("button");
+  copyButton.className = "copy-all-button tooltip-trigger";
+  Object.assign(copyButton.style, {
+    display: "none",
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    padding: "8px",
+    margin: "0",
+    transition: "all 0.2s cubic-bezier(0.25, 1, 0.5, 1)",
+    position: "absolute",
+    right: "106px", // Pin按钮左侧
+    top: "50%",
+    transform: "translateY(-50%) scale(1)",
+    width: "24px",
+    height: "24px",
+    minWidth: "24px",
+    minHeight: "24px",
+    maxWidth: "24px",
+    maxHeight: "24px",
+    lineHeight: "1",
+    outline: "none",
+    boxSizing: "content-box",
+    zIndex: "10",
+    appearance: "none",
+    WebkitAppearance: "none",
+    MozAppearance: "none",
+    borderRadius: "6px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center"
+  });
+
+  const copyIcon = document.createElement("div");
+  copyIcon.className = "copy-all-icon";
+  // 使用与 IconManager.js 中一致的 Copy 图标 SVG
+  const copySvgContent = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block"><path d="M8 4V16C8 17.1046 8.89543 18 10 18H18C19.1046 18 20 17.1046 20 16V7.24264C20 6.71221 19.7893 6.20357 19.4142 5.82843L16.1716 2.58579C15.7964 2.21071 15.2878 2 14.7574 2H10C8.89543 2 8 2.89543 8 4Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 18V20C16 21.1046 15.1046 22 14 22H6C4.89543 22 4 21.1046 4 20V8C4 6.89543 4.89543 6 6 6H8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+  copyIcon.innerHTML = copySvgContent;
+
+  Object.assign(copyIcon.style, {
+    width: "16px",
+    height: "16px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+    color: "var(--text-secondary)",
+    transition: "transform 0.15s ease, color 0.15s ease",
+    padding: "0",
+    zIndex: "10"
+  });
+  copyButton.appendChild(copyIcon);
+
+  // 添加工具提示
+  const copyTooltip = document.createElement('div');
+  copyTooltip.className = 'tool-tip';
+  copyTooltip.textContent = 'Copy entire conversation';
+  copyTooltip.style.top = '35px';
+  copyTooltip.style.right = '-20px';
+  copyTooltip.style.width = 'max-content';
+  copyButton.appendChild(copyTooltip);
+
+  copyButton.addEventListener("mouseenter", () => {
+    copyIcon.style.transform = "scale(1.1)";
+    copyIcon.style.color = "var(--accent-color, #007aff)";
+  });
+
+  copyButton.addEventListener("mouseleave", () => {
+    copyIcon.style.transform = "scale(1)";
+    copyIcon.style.color = "var(--text-secondary)";
+  });
+
+  copyButton.addEventListener("mousedown", (e) => {
+    e.stopPropagation();
+    copyIcon.style.transform = "scale(1.2)";
+    copyButton.style.transform = "translateY(-50%)";
+    copyButton.style.top = "50%"; // 确保位置
+    if ('vibrate' in navigator) navigator.vibrate(8);
+  });
+
+  copyButton.addEventListener("mouseup", () => {
+    copyIcon.style.transform = "scale(1.1)";
+    copyButton.style.transform = "translateY(-50%)";
+  });
+
+  copyButton.addEventListener("click", (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    copyButton.style.transform = "translateY(-50%)";
+
+    // 获取对话内容逻辑
+    const aiResponseContainer = window.aiResponseContainer;
+    if (!aiResponseContainer) return;
+
+    // 收集所有对话
+    const userQuestions = aiResponseContainer.querySelectorAll('.user-question');
+    const aiAnswers = aiResponseContainer.querySelectorAll('.ai-answer');
+
+    let conversationText = '';
+
+    // 假设问答是一一对应的，或者是交替的
+    // 更稳健的方法是按文档顺序遍历
+    const allMessages = aiResponseContainer.querySelectorAll('.user-question, .ai-answer');
+
+    allMessages.forEach(msg => {
+      const isUser = msg.classList.contains('user-question');
+      // 提取文本，移除图标容器等干扰内容
+      const cleanText = Array.from(msg.childNodes)
+        .filter(node => {
+          return (!node.classList ||
+                 (!node.classList.contains('icon-container') &&
+                  !node.classList.contains('reasoning-content')));
+        })
+        .map(node => node.textContent)
+        .join('')
+        .trim();
+
+      if (cleanText) {
+        conversationText += `${isUser ? 'User' : 'DeepSeek'}: ${cleanText}\n\n`;
+      }
+    });
+
+    if (conversationText) {
+      navigator.clipboard.writeText(conversationText).then(() => {
+        // 成功反馈
+        // 切换为绿色对号图标
+        copyIcon.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block"><path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+        copyIcon.style.color = "var(--success-color, #34c759)";
+        copyIcon.style.transform = "scale(1.25)";
+
+        if ('vibrate' in navigator) navigator.vibrate([10, 50, 10]);
+
+        setTimeout(() => {
+          copyIcon.style.transform = "scale(1)";
+          // 恢复原始图标
+          copyIcon.innerHTML = copySvgContent;
+          copyIcon.style.color = "var(--text-secondary)";
+          // 恢复 hover 状态（如果鼠标还在上面的话）
+          if (copyButton.matches(':hover')) {
+             copyIcon.style.color = "var(--accent-color, #007aff)";
+          }
+        }, 1500);
+      });
+    }
+  });
+
+
   // 固定按钮（在最小化按钮左侧）
   const pinButton = document.createElement("button");
   pinButton.className = "pin-button tooltip-trigger";
@@ -499,18 +655,21 @@ export function createDragHandle(removeCallback, minimizeCallback, pinCallback) 
     closeButton.style.display = "flex";
     minimizeButton.style.display = "flex";
     pinButton.style.display = "flex";
+    copyButton.style.display = "flex";
   });
 
   dragHandle.addEventListener("mouseleave", () => {
     closeButton.style.display = "none";
     minimizeButton.style.display = "none";
     pinButton.style.display = "none";
+    copyButton.style.display = "none";
   });
 
   dragHandle.appendChild(titleContainer);
   dragHandle.appendChild(closeButton);
   dragHandle.appendChild(minimizeButton);
   dragHandle.appendChild(pinButton);
+  dragHandle.appendChild(copyButton);
 
   // 添加徽标，表示扩展的身份
   dragHandle.addEventListener("dblclick", (e) => {
