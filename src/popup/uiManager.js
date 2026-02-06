@@ -32,6 +32,7 @@ export class UiManager {
       cancelCustomSystemPromptButton: document.getElementById("cancelCustomSystemPromptButton"),
       customSystemPromptValidationMessage: document.getElementById("customSystemPromptValidationMessage"),
       customSystemPromptTitle: document.getElementById("customSystemPromptTitle"),
+      charCount: document.getElementById("charCount"),
       // 添加模型相关元素
       addModelButton: document.getElementById("addModelButton"),
       addModelModal: document.getElementById("addModelModal"),
@@ -252,6 +253,9 @@ export class UiManager {
     }
     if (!this.elements.customSystemPromptTitle) {
       this.elements.customSystemPromptTitle = document.getElementById("customSystemPromptTitle");
+    }
+    if (!this.elements.charCount) {
+      this.elements.charCount = document.getElementById("charCount");
     }
   }
 

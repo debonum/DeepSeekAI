@@ -1680,6 +1680,7 @@
 }
 
 /* Quick Action Buttons */
+.deepseek-quick-action-buttons,
 .quick-action-buttons {
   position: absolute;
   z-index: 2147483647;
@@ -1692,6 +1693,7 @@
   animation: fadeIn 0.2s ease;
 }
 
+.deepseek-quick-action-buttons-container,
 .quick-action-buttons-container {
   display: flex;
   align-items: center;

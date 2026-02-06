@@ -63,12 +63,6 @@ const QUICK_ACTIONS = [
     title: "Email",
     prompt: "Act as an AI assistant with MBTI persona ISTJ-ENFJ. Write an email based on the user's input. Include a clear subject, proper greeting, concise body, actionable points, and a polite closing. Output only the email content with no extra commentary.",
   },
-  {
-    id: "analyze",
-    icon: "analyze",
-    title: "Analyze",
-    prompt: "Act as an AI assistant with MBTI persona ISTP-ENTP. Analyze the content and highlight key issues, insights, and actionable suggestions. Provide only the final analysis without exposing intermediate reasoning.",
-  },
 ];
 
 // 获取上次选择的语言
@@ -106,8 +100,8 @@ export async function createQuickActionButtons(
   // 🧹 添加全局点击监听器，用于在点击任意位置时清理高亮
   // 这是为了解决"点击焦点外内容时，被选中状态一直保留"的问题
   const clearHighlightHandler = (e) => {
-    // 如果点击的是工具栏内部，不清理
-    if (e.target.closest('.quick-action-buttons')) return;
+    // 如果点击的是工具栏内部，不清理（兼容旧 class）
+    if (e.target.closest('.deepseek-quick-action-buttons, .quick-action-buttons')) return;
 
     if (CSS && CSS.highlights) {
       CSS.highlights.delete("deepseek-active-selection");
@@ -118,8 +112,12 @@ export async function createQuickActionButtons(
   document.addEventListener('mousedown', clearHighlightHandler, true);
 
   const container = document.createElement("div");
-  container.className = "quick-action-buttons";
-  container.style.setProperty('padding', '6px 12px 8px 12px');
+  // Use a uniquely prefixed class to avoid collisions with host page CSS (some sites define .quick-action-buttons).
+  container.className = "deepseek-quick-action-buttons";
+  // Hard-enforce sizing on the host element so toolbar height stays consistent across pages.
+  container.style.setProperty('box-sizing', 'border-box', 'important');
+  container.style.setProperty('height', '40px', 'important');
+  container.style.setProperty('padding', '4px 10px', 'important');
   container.style.opacity = '1';
   const shadowRoot = container.attachShadow({ mode: "open" });
 
@@ -150,8 +148,8 @@ export async function createQuickActionButtons(
         legacy.style.pointerEvents = 'none';
         legacy.innerHTML = '';
       }
-      // 兜底：移除任何遗留的 .quick-action-buttons 节点
-      document.querySelectorAll('.quick-action-buttons').forEach(node => {
+      // 兜底：移除任何遗留的工具栏节点（包含旧 class 以兼容历史版本）
+      document.querySelectorAll('.deepseek-quick-action-buttons, .quick-action-buttons').forEach(node => {
         if (node && node !== container && node.parentNode) {
           node.parentNode.removeChild(node);
         }
@@ -176,11 +174,11 @@ export async function createQuickActionButtons(
   const style = document.createElement('style');
   style.textContent = `
     /* 主容器 - 豆包风格 Pill Shape */
-    :host {
-      display: flex;
-      align-items: center;
-      gap: 0;
-      padding: 0;
+	    :host {
+	      display: flex;
+	      align-items: center;
+	      gap: 0;
+	      padding: 4px 10px;
       border-radius: 999px; /* Pill shape */
       /* Visual Hierarchy - ByteDance/Apple Premium Glass */
       background: rgba(20, 20, 20, 0.6) !important; /* Darker tint for better contrast */
@@ -189,7 +187,7 @@ export async function createQuickActionButtons(
         0 20px 40px -12px rgba(0, 0, 0, 0.5), /* Deep ambient */
         0 4px 12px -2px rgba(0, 0, 0, 0.3),  /* Mid-range definition */
         0 0 0 1px rgba(255, 255, 255, 0.12) inset; /* Inner light stroke */
-      border: 0.5px solid rgba(255, 255, 255, 0.1); /* Subtle physical border */
+      border: 0.1px solid rgba(255, 255, 255, 0.6) !important; /* Match icon color */
 
       backdrop-filter: blur(60px) saturate(220%) !important; /* Heavy creamy blur */
       -webkit-backdrop-filter: blur(60px) saturate(220%) !important;
@@ -199,9 +197,9 @@ export async function createQuickActionButtons(
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
       font-size: 14px;
       line-height: 1.5;
-      box-sizing: border-box;
-      height: 48px;
-      min-width: min(360px, 94vw);
+	      box-sizing: border-box !important;
+	      height: 40px !important;
+      min-width: fit-content;
       max-width: 94vw;
       pointer-events: auto;
       user-select: none;
@@ -226,7 +224,7 @@ export async function createQuickActionButtons(
 
     :host(.expanded-mode) {
       border-radius: 20px; /* Modern large radius */
-      height: auto;
+      height: auto !important; /* Override base 40px !important */
       min-height: 0; /* Compact by default (about 2 lines) */
       width: 480px; /* Wider writing space in expanded state */
       flex-direction: column;
@@ -234,7 +232,7 @@ export async function createQuickActionButtons(
       background: rgba(20, 20, 20, 0.85) !important; /* Significantly darker for expanded state */
       align-items: stretch;
       justify-content: flex-start;
-      border: 0.5px solid rgba(255, 255, 255, 0.15);
+      border: 0.1px solid rgba(255, 255, 255, 0.6) !important; /* Match icon color */
       box-shadow:
           0 32px 64px -12px rgba(0, 0, 0, 0.6),
           0 12px 24px -4px rgba(0, 0, 0, 0.4),
@@ -428,38 +426,40 @@ export async function createQuickActionButtons(
       color: #fff;
     }
 
-    /* Input Trigger (Collapsed) */
+    /* Input Trigger (Collapsed) - Now styled as a button */
     .input-trigger {
-      flex: 1;
-      height: 32px;
-      border-radius: 6px;
-      background: rgba(255, 255, 255, 0.05); /* Softer background */
       display: flex;
       align-items: center;
-      padding: 0 12px;
-      cursor: text;
-      margin-right: 8px;
-      color: rgba(255, 255, 255, 0.4); /* Softer text */
+      justify-content: center;
+      height: 32px;
+      padding: 0 10px;
+      border-radius: 6px;
+      background: transparent;
+      border: none;
+
+      cursor: pointer;
+      color: rgba(255, 255, 255, 0.85);
       font-size: 13px;
+      font-weight: 500;
       transition: all 0.2s ease;
-      min-width: 120px;
+      gap: 6px;
+      white-space: nowrap;
     }
+
     .input-trigger:hover {
       background: rgba(255, 255, 255, 0.1);
-      color: rgba(255, 255, 255, 0.8);
+      color: #fff;
     }
 
     .input-trigger span {
-      flex: 1;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      display: inline-block;
     }
 
-    .input-trigger .arrow-icon {
+    .input-trigger svg {
       width: 16px;
       height: 16px;
-      opacity: 0.5;
+      opacity: 0.9;
+      stroke: currentColor;
     }
 
     /* Expanded Input Area */
@@ -614,8 +614,8 @@ export async function createQuickActionButtons(
       opacity: 1;
     }
     :host(.light-mode) .separator { background: rgba(0,0,0,0.1); }
-    :host(.light-mode) .input-trigger { background: rgba(0,0,0,0.04); color: rgba(0,0,0,0.6); }
-	    :host(.light-mode) .input-trigger:hover { background: rgba(0,0,0,0.06); color: rgba(0,0,0,0.8); }
+    :host(.light-mode) .input-trigger { background: transparent; color: rgba(0,0,0,0.75); }
+	    :host(.light-mode) .input-trigger:hover { background: rgba(0,0,0,0.06); color: #000; }
 	    :host(.light-mode) .expanded-textarea { color: #1d1d1f; }
 	    :host(.light-mode) .expanded-textarea::placeholder { color: rgba(0,0,0,0.4); }
 	    :host(.light-mode) .expanded-footer { border-top: 1px solid rgba(0,0,0,0.12); }
@@ -639,6 +639,47 @@ export async function createQuickActionButtons(
     @keyframes fadeIn {
        from { opacity: 0; transform: translateY(5px); }
        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Fix for consistent Premium Glassy Look in Expanded Mode */
+    :host(.light-mode.expanded-mode) {
+        /* Ensure distinct card background while maintaining glass feel */
+        background: rgba(255, 255, 255, 0.98) !important;
+        backdrop-filter: blur(20px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+        /* Matches toolbar border style */
+        border: 1px solid rgba(0, 0, 0, 0.08) !important;
+        box-shadow: 0 24px 48px rgba(0,0,0,0.12), 0 12px 24px rgba(0,0,0,0.08) !important;
+    }
+
+    /* Dark Mode Expanded */
+    :host(.expanded-mode) {
+        /* Darker, richer background for contrast against page */
+        background: rgba(30, 30, 30, 0.85) !important;
+        backdrop-filter: blur(40px) saturate(200%) !important;
+        -webkit-backdrop-filter: blur(40px) saturate(200%) !important;
+    }
+
+    /* Remove the nested box look - The container IS the box now */
+    :host(.light-mode) .expanded-textarea {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 4px 0 !important;
+        margin-bottom: 0 !important;
+        font-size: 15px;
+        color: #1d1d1f;
+    }
+
+    :host(.light-mode) .expanded-textarea:focus {
+        box-shadow: none !important;
+        outline: none !important;
+    }
+
+    /* Ensure the footer area is also covered by the host background (Host handles it) */
+    .expanded-footer {
+         /* Just spacing, no background needed as host covers all */
+         margin-top: 8px;
     }
   `;
 
@@ -763,10 +804,13 @@ export async function createQuickActionButtons(
   shadowRoot.appendChild(separator);
 
   // --- 5. Input Trigger (Collapsed) ---
-  const inputTrigger = document.createElement("div");
+  const inputTrigger = document.createElement("button");
   inputTrigger.className = "input-trigger";
-  inputTrigger.innerHTML = `<span>Ask DeepSeek...</span>
-    <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>`;
+  // Using a Chat Bubble icon for "Ask AI"
+  inputTrigger.innerHTML = `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+    <span>Ask AI</span>
+  `;
 
   shadowRoot.appendChild(inputTrigger);
 

@@ -59,6 +59,13 @@ export class SystemPromptManager {
         }
       });
     }
+
+    // 输入框内容变化事件
+    if (this.uiManager.elements.customSystemPromptInput) {
+      this.uiManager.elements.customSystemPromptInput.addEventListener('input', () => {
+        this.updateCharCount();
+      });
+    }
   }
 
   // 显示自定义 system prompt 弹窗
@@ -66,6 +73,7 @@ export class SystemPromptManager {
     // 加载当前的自定义 system prompt
     this.storageManager.getCustomSystemPrompt().then(prompt => {
       this.uiManager.setCustomSystemPromptValue(prompt);
+      this.updateCharCount();
       this.uiManager.showCustomSystemPromptModal();
     });
   }
@@ -107,6 +115,27 @@ export class SystemPromptManager {
         ? '保存自定义系统提示词失败。请重试。'
         : 'Failed to save custom system prompt. Please try again.';
       this.uiManager.showCustomSystemPromptValidationMessage(errorMsg, false);
+    }
+  }
+
+  // 更新字符计数
+  updateCharCount() {
+    const input = this.uiManager.elements.customSystemPromptInput;
+    const counter = this.uiManager.elements.charCount;
+
+    if (input && counter) {
+      const length = input.value.length;
+      counter.textContent = `${length} / 2000`;
+
+      // 添加视觉反馈
+      if (length >= 2000) {
+        counter.classList.add('error');
+      } else if (length >= 1800) {
+        counter.classList.add('warning');
+        counter.classList.remove('error');
+      } else {
+        counter.classList.remove('warning', 'error');
+      }
     }
   }
 
