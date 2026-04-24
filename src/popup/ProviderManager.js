@@ -1,5 +1,7 @@
 import {
+  getCanonicalDeepSeekModelValue,
   getDeepSeekDefaultModels,
+  getDeepSeekModelLabel,
   resolveDeepSeekModel,
 } from "./deepseekModelConfig.js";
 
@@ -665,19 +667,23 @@ export class ProviderManager {
       const { models: storedModels, hasStoredValue } =
         await this.getStoredModelsSnapshot(providerId);
 
-      // 只要用户已经显式保存过该 provider 的模型列表，就以它为准。
-      // 这里要区分“空数组”和“未初始化”，否则删到最后一个模型后会被默认模型重新顶回来。
-      if (hasStoredValue) {
-        return storedModels;
-      }
-
-      const legacyModels = await this.getLegacyModels(providerId);
-
       const deletedDefaultModels = await this.getDeletedDefaultModels(providerId);
       const defaultModels = this.getDefaultModels(providerId);
       const availableDefaultModels = defaultModels.filter(
         (model) => !deletedDefaultModels.includes(model.value)
       );
+
+      // 只要用户已经显式保存过该 provider 的模型列表，就以它为准。
+      // 这里要区分“空数组”和“未初始化”，否则删到最后一个模型后会被默认模型重新顶回来。
+      if (hasStoredValue) {
+        if (providerId === "deepseek") {
+          return this.mergeModels(storedModels, availableDefaultModels);
+        }
+
+        return storedModels;
+      }
+
+      const legacyModels = await this.getLegacyModels(providerId);
 
       return this.mergeModels(legacyModels, availableDefaultModels);
     } catch (error) {
@@ -692,7 +698,7 @@ export class ProviderManager {
     return new Promise((resolve) => {
       chrome.storage.sync.get(keyName, (data) => {
         const hasStoredValue = Object.prototype.hasOwnProperty.call(data, keyName);
-        const models = Array.isArray(data[keyName]) ? data[keyName] : [];
+        const models = this.normalizeModels(providerId, Array.isArray(data[keyName]) ? data[keyName] : []);
         resolve({ models, hasStoredValue });
       });
     });
@@ -716,7 +722,10 @@ export class ProviderManager {
         console.warn(`读取 legacy localStorage 模型失败: ${providerId}`, error);
       }
 
-      return this.mergeModels(syncModels, localModels);
+      return this.normalizeModels(
+        providerId,
+        this.mergeModels(syncModels, localModels)
+      );
     } catch (error) {
       console.error("获取 legacy 模型列表错误:", error);
       return [];
@@ -743,12 +752,40 @@ export class ProviderManager {
     return merged;
   }
 
+  normalizeModels(providerId, models = []) {
+    if (providerId !== "deepseek") {
+      return Array.isArray(models) ? models : [];
+    }
+
+    const normalizedModels = (Array.isArray(models) ? models : [])
+      .map((model) => {
+        const value = getCanonicalDeepSeekModelValue(model?.value);
+        if (!value) {
+          return null;
+        }
+
+        return {
+          value,
+          label: getDeepSeekModelLabel(value),
+        };
+      })
+      .filter(Boolean);
+
+    return this.mergeModels(normalizedModels);
+  }
+
   async getDeletedDefaultModels(providerId) {
     try {
       const keyName = `${providerId}DeletedDefaultModels`;
       return await new Promise((resolve) => {
         chrome.storage.sync.get(keyName, (data) => {
-          resolve(Array.isArray(data[keyName]) ? data[keyName] : []);
+          const deletedModels = Array.isArray(data[keyName]) ? data[keyName] : [];
+          if (providerId !== "deepseek") {
+            resolve(deletedModels);
+            return;
+          }
+
+          resolve([...new Set(deletedModels.map((modelId) => getCanonicalDeepSeekModelValue(modelId)).filter(Boolean))]);
         });
       });
     } catch (error) {
@@ -879,13 +916,22 @@ export class ProviderManager {
 
   // 检查是否是默认模型
   isDefaultModel(providerId, modelId) {
+    const normalizedModelId =
+      providerId === "deepseek"
+        ? getCanonicalDeepSeekModelValue(modelId)
+        : modelId;
     const defaultModels = this.getDefaultModels(providerId);
-    return defaultModels.some((m) => m.value === modelId);
+    return defaultModels.some((m) => m.value === normalizedModelId);
   }
 
   // 添加到已删除默认模型列表
   async addToDeletedDefaultModels(providerId, modelId) {
     try {
+      const normalizedModelId =
+        providerId === "deepseek"
+          ? getCanonicalDeepSeekModelValue(modelId)
+          : modelId;
+
       // 获取已删除的默认模型列表
       const keyName = `${providerId}DeletedDefaultModels`;
       const result = await new Promise((resolve) => {
@@ -895,8 +941,8 @@ export class ProviderManager {
       });
 
       // 如果模型ID不在列表中，添加它
-      if (!result.includes(modelId)) {
-        result.push(modelId);
+      if (!result.includes(normalizedModelId)) {
+        result.push(normalizedModelId);
 
         // 保存更新后的列表
         return new Promise((resolve) => {

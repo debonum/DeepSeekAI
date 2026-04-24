@@ -1,6 +1,6 @@
 {
   "name": "ai-assistant",
-  "version": "3.1.8",
+  "version": "3.1.9",
   "description": "DeepSeek AI Assistant is a free and open-source browser extension.",
   "main": "index.js",
   "scripts": {

@@ -1,4 +1,5 @@
 import {
+  getCanonicalDeepSeekModelValue,
   getDeepSeekModelLabel,
   resolveDeepSeekModel,
 } from "./deepseekModelConfig.js";
@@ -26,12 +27,19 @@ export class ModelManager {
 
     const modelSelect = this.uiManager.elements.modelSelect;
 
-    const currentSelectedValue = modelSelect.value;
+    const currentSelectedValue =
+      provider === "deepseek"
+        ? getCanonicalDeepSeekModelValue(modelSelect.value)
+        : modelSelect.value;
     modelSelect.innerHTML = "";
 
     const models = await this.providerManager.getModels(provider);
     const settings = await this.storageManager.getSettings();
-    const currentModel = currentSelectedValue || settings.model;
+    const savedModel =
+      provider === "deepseek"
+        ? getCanonicalDeepSeekModelValue(settings.model)
+        : settings.model;
+    const currentModel = currentSelectedValue || savedModel;
     const allModels = models.map((model) => ({
       value: model.value,
       label: model.label,
@@ -64,9 +72,12 @@ export class ModelManager {
     } else {
       if (currentModel && allModels.some((opt) => opt.value === currentModel)) {
         modelSelect.value = currentModel;
+        if (provider === "deepseek" && settings.model && settings.model !== currentModel) {
+          await this.storageManager.saveModel(currentModel);
+        }
       } else {
         modelSelect.value = allModels[0]?.value || "";
-        this.storageManager.saveModel(modelSelect.value);
+        await this.storageManager.saveModel(modelSelect.value);
       }
     }
 
@@ -114,7 +125,13 @@ export class ModelManager {
       return false;
     }
 
-    return resolveDeepSeekModel(normalizedModel, "").isKnownModel === true;
+    const resolvedModel = resolveDeepSeekModel(normalizedModel, "");
+
+    return (
+      resolvedModel.isKnownModel === true &&
+      resolvedModel.isVisible !== false &&
+      !options.some((option) => option.value === resolvedModel.canonicalValue)
+    );
   }
 
   setCurrentModel(modelValue) {

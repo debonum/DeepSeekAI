@@ -8,11 +8,18 @@ const DEEPSEEK_MODEL_OPTIONS = [
     thinkingType: "disabled",
   },
   {
-    value: "deepseek-v4-flash:thinking",
-    label: "deepseek-v4-flash (Thinking)",
+    value: "deepseek-v4-flash:thinking-high",
+    label: "deepseek-v4-flash (Thinking · High)",
     apiModel: "deepseek-v4-flash",
     thinkingType: "enabled",
     reasoningEffort: "high",
+  },
+  {
+    value: "deepseek-v4-flash:thinking-max",
+    label: "deepseek-v4-flash (Thinking · Max)",
+    apiModel: "deepseek-v4-flash",
+    thinkingType: "enabled",
+    reasoningEffort: "max",
   },
   {
     value: "deepseek-v4-pro",
@@ -21,11 +28,36 @@ const DEEPSEEK_MODEL_OPTIONS = [
     thinkingType: "disabled",
   },
   {
-    value: "deepseek-v4-pro:thinking",
-    label: "deepseek-v4-pro (Thinking)",
+    value: "deepseek-v4-pro:thinking-high",
+    label: "deepseek-v4-pro (Thinking · High)",
+    apiModel: "deepseek-v4-pro",
+    thinkingType: "enabled",
+    reasoningEffort: "high",
+  },
+  {
+    value: "deepseek-v4-pro:thinking-max",
+    label: "deepseek-v4-pro (Thinking · Max)",
     apiModel: "deepseek-v4-pro",
     thinkingType: "enabled",
     reasoningEffort: "max",
+  },
+  {
+    value: "deepseek-v4-flash:thinking",
+    label: "deepseek-v4-flash (Thinking · High)",
+    apiModel: "deepseek-v4-flash",
+    thinkingType: "enabled",
+    reasoningEffort: "high",
+    canonicalValue: "deepseek-v4-flash:thinking-high",
+    isVisible: false,
+  },
+  {
+    value: "deepseek-v4-pro:thinking",
+    label: "deepseek-v4-pro (Thinking · Max)",
+    apiModel: "deepseek-v4-pro",
+    thinkingType: "enabled",
+    reasoningEffort: "max",
+    canonicalValue: "deepseek-v4-pro:thinking-max",
+    isVisible: false,
   },
   {
     value: "deepseek-chat",
@@ -36,7 +68,7 @@ const DEEPSEEK_MODEL_OPTIONS = [
   },
   {
     value: "deepseek-reasoner",
-    label: "deepseek-reasoner (Legacy Alias)",
+    label: "deepseek-reasoner (Legacy Alias · High)",
     apiModel: "deepseek-v4-flash",
     thinkingType: "enabled",
     reasoningEffort: "high",
@@ -48,12 +80,28 @@ const DEEPSEEK_MODEL_OPTION_MAP = new Map(
   DEEPSEEK_MODEL_OPTIONS.map((option) => [option.value, option])
 );
 
+function getDeepSeekOptionCanonicalValue(option) {
+  return option?.canonicalValue || option?.value || DEEPSEEK_DEFAULT_MODEL;
+}
+
 export function getDeepSeekDefaultModels() {
-  return DEEPSEEK_MODEL_OPTIONS.map(({ value, label }) => ({ value, label }));
+  return DEEPSEEK_MODEL_OPTIONS
+    .filter((option) => option.isVisible !== false)
+    .map(({ value, label }) => ({ value, label }));
 }
 
 export function getDeepSeekModelLabel(modelValue) {
   return DEEPSEEK_MODEL_OPTION_MAP.get(modelValue)?.label || modelValue || "";
+}
+
+export function getCanonicalDeepSeekModelValue(modelValue) {
+  const normalizedModel = typeof modelValue === "string" ? modelValue.trim() : "";
+  if (!normalizedModel) {
+    return "";
+  }
+
+  const matchedOption = DEEPSEEK_MODEL_OPTION_MAP.get(normalizedModel);
+  return matchedOption ? getDeepSeekOptionCanonicalValue(matchedOption) : normalizedModel;
 }
 
 export function resolveDeepSeekModel(modelValue, fallbackValue = DEEPSEEK_DEFAULT_MODEL) {
@@ -63,6 +111,7 @@ export function resolveDeepSeekModel(modelValue, fallbackValue = DEEPSEEK_DEFAUL
   if (matchedOption) {
     return {
       ...matchedOption,
+      canonicalValue: getDeepSeekOptionCanonicalValue(matchedOption),
       isKnownModel: true,
       thinking:
         matchedOption.thinkingType
@@ -76,6 +125,7 @@ export function resolveDeepSeekModel(modelValue, fallbackValue = DEEPSEEK_DEFAUL
       value: normalizedModel,
       label: normalizedModel,
       apiModel: normalizedModel,
+      canonicalValue: normalizedModel,
       thinking: null,
       thinkingType: null,
       reasoningEffort: null,
