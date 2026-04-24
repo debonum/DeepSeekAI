@@ -192,6 +192,7 @@ export function createScrollManager() {
     scrollTimeout: null,
     isAtBottom: true,
     scrollPosition: 0,
+    isInteracting: false,
     scrollMomentum: {
       positions: [],
       maxSamples: 5,
@@ -207,6 +208,10 @@ export function createScrollManager() {
       if (value) {
         this.lastScrollTime = Date.now();
       }
+    },
+
+    setInteracting(value) {
+      this.isInteracting = Boolean(value);
     },
 
     updateScrollVelocity(currentPosition) {

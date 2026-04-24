@@ -1,3 +1,8 @@
+import {
+  getDeepSeekModelLabel,
+  resolveDeepSeekModel,
+} from "./deepseekModelConfig.js";
+
 export class ModelManager {
   constructor(providerManager, storageManager, uiManager, i18nManager, tempStateManager) {
     this.providerManager = providerManager;
@@ -5,391 +10,403 @@ export class ModelManager {
     this.uiManager = uiManager;
     this.i18nManager = i18nManager;
     this.tempStateManager = tempStateManager;
-    this.customModelDropdown = null;
+    this.modelPickerEscHandler = null;
+    this.modelPickerState = {
+      provider: "deepseek",
+      options: [],
+      currentModel: "",
+      searchTerm: "",
+    };
   }
 
   // 更新模型选项
   async updateModelOptions(provider) {
-    // 首先清理现有的模型下拉菜单
     this.cleanupCustomModelDropdown();
+    this.uiManager.refreshElements();
 
     const modelSelect = this.uiManager.elements.modelSelect;
 
-    // 清空现有选项前备份当前选中的值
     const currentSelectedValue = modelSelect.value;
+    modelSelect.innerHTML = "";
 
-    modelSelect.innerHTML = ''; // 清空现有选项
-
-    // 禁用原生下拉菜单行为
-    modelSelect.style.pointerEvents = 'none';
-
-    // 确保父容器可以接收点击事件
-    const modelContainer = modelSelect.parentElement;
-    if (modelContainer && modelContainer.classList.contains('custom-select-container')) {
-      modelContainer.style.pointerEvents = 'auto';
-      modelContainer.style.cursor = 'pointer';
-    }
-
-    // 从ProviderManager获取模型列表
     const models = await this.providerManager.getModels(provider);
-
-    // 获取保存的模型设置
     const settings = await this.storageManager.getSettings();
-
-    // 优先使用之前选中的值，然后是settings中的值，最后是默认值
     const currentModel = currentSelectedValue || settings.model;
-
-    // 将模型列表转换为选项格式
-    const allModels = models.map(model => ({
+    const allModels = models.map((model) => ({
       value: model.value,
-      label: model.label
+      label: model.label,
     }));
 
-    // 填充模型下拉框
-    allModels.forEach(option => {
-      const optionElement = document.createElement('option');
+    if (
+      provider === "deepseek" &&
+      this.shouldPreserveDeepSeekModel(currentModel, allModels)
+    ) {
+      allModels.unshift({
+        value: currentModel,
+        label: getDeepSeekModelLabel(currentModel),
+      });
+    }
+
+    allModels.forEach((option) => {
+      const optionElement = document.createElement("option");
       optionElement.value = option.value;
       optionElement.textContent = option.label;
       modelSelect.appendChild(optionElement);
     });
 
-    // 当没有模型时，设置一个空占位符
     if (allModels.length === 0) {
-      const emptyOption = document.createElement('option');
-      emptyOption.value = '';
-      emptyOption.textContent = '';
+      const emptyOption = document.createElement("option");
+      emptyOption.value = "";
+      emptyOption.textContent = "";
       emptyOption.disabled = true;
       emptyOption.selected = true;
       modelSelect.appendChild(emptyOption);
     } else {
-      // 设置当前选中的模型
-      if (currentModel && allModels.some(opt => opt.value === currentModel)) {
+      if (currentModel && allModels.some((opt) => opt.value === currentModel)) {
         modelSelect.value = currentModel;
       } else {
-        // 如果没有保存的值或值无效，使用第一个选项并保存
-        modelSelect.value = allModels[0]?.value || '';
+        modelSelect.value = allModels[0]?.value || "";
         this.storageManager.saveModel(modelSelect.value);
       }
     }
 
-    // 创建自定义下拉菜单，支持模型删除功能
-    this.createCustomModelDropdown(provider, allModels, currentModel);
-
+    this.syncModelPicker(provider, allModels, modelSelect.value);
     return allModels;
   }
 
-  // 创建自定义模型下拉菜单
-  createCustomModelDropdown(provider, options, currentModel) {
-    const modelSelect = document.getElementById('model');
-    const modelContainer = modelSelect.closest('.custom-select-container');
-    let customDropdown = document.getElementById('custom-model-dropdown');
+  syncModelPicker(provider, options, currentModel) {
+    this.modelPickerState = {
+      provider,
+      options,
+      currentModel,
+      searchTerm: "",
+    };
 
-    // 如果下拉菜单不存在，创建一个新的
-    if (!customDropdown) {
-      customDropdown = document.createElement('div');
-      customDropdown.id = 'custom-model-dropdown';
-      customDropdown.className = 'custom-select-dropdown';
+    const addButton = this.uiManager.elements.modelPickerAddButton;
+    const footer = this.uiManager.elements.modelPickerFooter;
+    const isDeepSeek = provider === "deepseek";
 
-      // 将下拉菜单添加到容器中
-      if (modelContainer) {
-        modelContainer.appendChild(customDropdown);
-      } else {
-        modelSelect.insertAdjacentElement('afterend', customDropdown);
-      }
+    if (footer) {
+      footer.hidden = isDeepSeek;
     }
 
-    // 保存引用以便后续清理
-    this.customModelDropdown = customDropdown;
-
-    // 清空内容并设置初始状态
-    customDropdown.innerHTML = '';
-    customDropdown.style.display = 'none';
-
-    // 确保modelSelect的样式设置正确
-    modelSelect.style.pointerEvents = 'none';
-    modelSelect.style.appearance = 'none';
-    modelSelect.style.webkitAppearance = 'none';
-    modelSelect.style.mozAppearance = 'none';
-
-    // 确保父容器可以接收点击事件
-    if (modelContainer) {
-      modelContainer.style.pointerEvents = 'auto';
-      modelContainer.style.cursor = 'pointer';
-
-      // 移除之前可能存在的点击事件
-      modelContainer.removeEventListener('click', this.modelSelectClickListener);
-
-      // 为容器添加点击事件
-      this.modelSelectClickListener = (e) => {
-        e.stopPropagation();
-        this.updateDropdownPosition(modelSelect, customDropdown);
-
-        // 切换下拉菜单显示状态
-        const isVisible = customDropdown.style.display === 'block';
-
-        // 隐藏所有其他下拉菜单
-        document.querySelectorAll('.custom-select-dropdown').forEach(dropdown => {
-          if (dropdown !== customDropdown) {
-            dropdown.style.display = 'none';
-          }
-        });
-
-        customDropdown.style.display = isVisible ? 'none' : 'block';
-      };
-
-      modelContainer.addEventListener('click', this.modelSelectClickListener);
+    if (addButton) {
+      addButton.hidden = isDeepSeek;
+      addButton.disabled = isDeepSeek;
     }
 
-    // 为每个选项创建元素
-    options.forEach(option => {
-      const optionElement = document.createElement('div');
-      optionElement.className = 'custom-select-option';
-      if (option.value === currentModel) {
-        optionElement.classList.add('selected');
+    const searchInput = this.uiManager.elements.modelPickerSearch;
+    if (searchInput) {
+      searchInput.value = "";
+    }
+
+    this.updateModelPickerTrigger();
+    this.renderModelPickerList();
+  }
+
+  shouldPreserveDeepSeekModel(modelValue, options) {
+    if (!modelValue || options.some((option) => option.value === modelValue)) {
+      return false;
+    }
+
+    const normalizedModel = typeof modelValue === "string" ? modelValue.trim() : "";
+    if (!normalizedModel) {
+      return false;
+    }
+
+    return resolveDeepSeekModel(normalizedModel, "").isKnownModel === true;
+  }
+
+  setCurrentModel(modelValue) {
+    this.modelPickerState.currentModel = modelValue || "";
+    this.updateModelPickerTrigger();
+    this.renderModelPickerList();
+  }
+
+  openModelPicker() {
+    this.uiManager.refreshElements();
+
+    const modal = this.uiManager.elements.modelPickerModal;
+    if (!modal) return;
+
+    this.modelPickerState.searchTerm = "";
+    if (this.uiManager.elements.modelPickerSearch) {
+      this.uiManager.elements.modelPickerSearch.value = "";
+    }
+
+    this.renderModelPickerList();
+    modal.classList.add("show");
+    this.uiManager.elements.modelPickerTrigger?.setAttribute("aria-expanded", "true");
+
+    if (this.modelPickerEscHandler) {
+      document.removeEventListener("keydown", this.modelPickerEscHandler);
+    }
+
+    this.modelPickerEscHandler = (event) => {
+      if (event.key === "Escape") {
+        this.closeModelPicker();
       }
+    };
 
-      // 创建选项内容容器
-      const optionContent = document.createElement('div');
-      optionContent.className = 'option-content';
+    document.addEventListener("keydown", this.modelPickerEscHandler);
+    window.requestAnimationFrame(() => {
+      this.uiManager.elements.modelPickerSearch?.focus();
+    });
+  }
 
-      // 添加选项文本
-      const optionText = document.createElement('span');
-      optionText.textContent = option.label;
-      optionContent.appendChild(optionText);
+  closeModelPicker() {
+    this.uiManager.elements.modelPickerModal?.classList.remove("show");
+    this.uiManager.elements.modelPickerTrigger?.setAttribute("aria-expanded", "false");
 
-      // 添加删除按钮
-      const deleteBtn = document.createElement('button');
-      deleteBtn.className = 'delete-model-btn';
-      deleteBtn.title = this.i18nManager.getTranslation('deleteModelBtnTitle');
-      deleteBtn.innerHTML = '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM8 9h8v10H8V9zm7.5-5l-1-1h-5l-1 1H5v2h14V4h-3.5z"/></svg>';
+    if (this.modelPickerEscHandler) {
+      document.removeEventListener("keydown", this.modelPickerEscHandler);
+      this.modelPickerEscHandler = null;
+    }
+  }
 
-      // 为删除按钮添加事件监听器
-      deleteBtn.addEventListener('click', (e) => {
-        e.stopPropagation(); // 防止冒泡，避免触发选择模型
-        customDropdown.style.display = 'none'; // 隐藏下拉菜单
-        this.showDeleteModelDialog(provider, option.value, option.label);
-      });
+  handleModelPickerSearch(keyword = "") {
+    this.modelPickerState.searchTerm = keyword.trim();
+    this.renderModelPickerList();
+  }
 
-      optionContent.appendChild(deleteBtn);
-      optionElement.appendChild(optionContent);
+  handleModelPickerAdd() {
+    if (this.modelPickerState.provider === "deepseek") {
+      return;
+    }
 
-      // 为选项添加点击事件
-      optionElement.addEventListener('click', () => {
-        // 设置选中值
-        modelSelect.value = option.value;
-        customDropdown.style.display = 'none';
+    this.closeModelPicker();
+    this.showAddModelDialog();
+  }
 
-        // 更新选中样式
-        document.querySelectorAll('.custom-select-option').forEach(el => {
-          el.classList.remove('selected');
-        });
-        optionElement.classList.add('selected');
+  updateModelPickerTrigger() {
+    const selectedOption = this.modelPickerState.options.find(
+      (option) => option.value === this.modelPickerState.currentModel
+    );
+    const label = selectedOption?.label || this.i18nManager.getTranslation("modelPickerTriggerPlaceholder");
 
-        // 触发change事件
-        modelSelect.dispatchEvent(new Event('change'));
-      });
+    if (this.uiManager.elements.modelPickerTriggerLabel) {
+      this.uiManager.elements.modelPickerTriggerLabel.textContent = label;
+    }
 
-      customDropdown.appendChild(optionElement);
+    const trigger = this.uiManager.elements.modelPickerTrigger;
+    if (trigger) {
+      trigger.classList.toggle("is-empty", !selectedOption);
+      trigger.title = selectedOption ? label : "";
+    }
+  }
+
+  renderModelPickerList() {
+    const listElement = this.uiManager.elements.modelPickerList;
+    const emptyElement = this.uiManager.elements.modelPickerEmptyState;
+
+    if (!listElement || !emptyElement) return;
+
+    listElement.innerHTML = "";
+
+    const { provider, options, currentModel, searchTerm } = this.modelPickerState;
+    const keyword = searchTerm.toLowerCase();
+    const filteredOptions = options.filter((option) =>
+      !keyword || `${option.label} ${option.value}`.toLowerCase().includes(keyword)
+    );
+
+    emptyElement.textContent = this.i18nManager.getTranslation("modelPickerEmptyState");
+    emptyElement.hidden = filteredOptions.length > 0;
+    listElement.hidden = filteredOptions.length === 0;
+
+    filteredOptions.forEach((option) => {
+      listElement.appendChild(
+        this.createModelPickerItem(option, provider, option.value === currentModel)
+      );
+    });
+  }
+
+  createModelPickerItem(option, provider, isSelected) {
+    const item = document.createElement("div");
+    item.className = "model-picker-item";
+    item.tabIndex = 0;
+    item.setAttribute("role", "button");
+    item.setAttribute("aria-selected", String(isSelected));
+
+    if (isSelected) {
+      item.classList.add("is-selected");
+    }
+
+    item.addEventListener("click", () => this.selectModel(option.value));
+    item.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        this.selectModel(option.value);
+      }
     });
 
-    // 添加自定义模型选项 - deepseek不需要添加模型，其他服务商才显示
-    if (provider !== 'deepseek') {
-      const addCustomModel = document.createElement('div');
-      addCustomModel.className = 'custom-select-option add-model-option';
-      // 每次都重新获取国际化翻译
-      const addModelText = this.i18nManager.getTranslation('addModel');
-      addCustomModel.textContent = '+ ' + addModelText;
-      addCustomModel.style.color = 'var(--accent-color)';
-      addCustomModel.style.textAlign = 'center';
-      addCustomModel.style.fontWeight = 'bold';
-      addCustomModel.style.padding = '10px';
-      addCustomModel.style.borderTop = options.length > 0 ? '1px solid var(--border-color)' : 'none';
-      addCustomModel.addEventListener('click', () => {
-        customDropdown.style.display = 'none';
-        this.showAddModelDialog();
+    const content = document.createElement("div");
+    content.className = "model-picker-item-main";
+
+    const topRow = document.createElement("div");
+    topRow.className = "model-picker-item-top";
+
+    const title = document.createElement("div");
+    title.className = "model-picker-item-title";
+    title.textContent = option.label;
+    topRow.appendChild(title);
+
+    const badges = this.getModelBadges(option, provider);
+    if (badges.length > 0) {
+      const badgeRow = document.createElement("div");
+      badgeRow.className = "model-picker-badge-row";
+      badges.forEach((badgeText) => {
+        const badge = document.createElement("span");
+        badge.className = "model-picker-badge";
+        badge.textContent = badgeText;
+        badgeRow.appendChild(badge);
       });
-
-      customDropdown.appendChild(addCustomModel);
+      topRow.appendChild(badgeRow);
     }
 
-    // 下拉菜单点击事件处理
-    const dropdownClickListener = (e) => {
-      e.stopPropagation();
-    };
+    const subtitle = document.createElement("div");
+    subtitle.className = "model-picker-item-subtitle";
+    subtitle.textContent = option.value;
 
-    customDropdown.addEventListener('click', dropdownClickListener);
+    content.append(topRow, subtitle);
 
-    // 更新下拉菜单定位
-    const updateDropdownPosition = () => {
-      this.updateDropdownPosition(modelSelect, customDropdown);
-    };
+    const actions = document.createElement("div");
+    actions.className = "model-picker-actions";
 
-    // 文档点击事件，用于关闭下拉菜单
-    const documentClickListener = (e) => {
-      if (e.target !== modelSelect && !modelSelect.contains(e.target) &&
-          e.target !== customDropdown && !customDropdown.contains(e.target) &&
-          e.target !== modelContainer && !modelContainer.contains(e.target)) {
-        customDropdown.style.display = 'none';
-      }
-    };
+    const checkmark = document.createElement("span");
+    checkmark.className = "model-picker-check";
+    checkmark.textContent = "✓";
 
-    // 添加事件监听器
-    document.addEventListener('click', documentClickListener);
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.className = "model-picker-icon-button";
+    deleteButton.title = this.i18nManager.getTranslation("deleteModelBtnTitle");
+    deleteButton.setAttribute("aria-label", this.i18nManager.getTranslation("deleteModelBtnTitle"));
+    deleteButton.innerHTML =
+      '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM8 9h8v10H8V9zm7.5-5l-1-1h-5l-1 1H5v2h14V4h-3.5z"/></svg>';
+    deleteButton.addEventListener("click", (event) => {
+      event.stopPropagation();
+      this.closeModelPicker();
+      this.showDeleteModelDialog(provider, option.value, option.label);
+    });
 
-    // 保存事件监听器引用，以便后续清理
-    this.documentClickListener = documentClickListener;
-    this.dropdownClickListener = dropdownClickListener;
+    actions.append(checkmark, deleteButton);
+    item.append(content, actions);
+
+    return item;
   }
 
-  // 辅助方法：更新下拉菜单位置
-  updateDropdownPosition(selectElement, dropdownElement) {
-    if (selectElement && dropdownElement) {
-      const selectRect = selectElement.getBoundingClientRect();
-      dropdownElement.style.width = `${Math.max(selectRect.width, 130)}px`;
-      dropdownElement.style.left = '0';
-      dropdownElement.style.top = `${selectRect.height}px`;
+  getModelBadges(option, provider) {
+    const badges = [];
+    const isDefaultModel = this.providerManager.isDefaultModel(provider, option.value);
+
+    if (!isDefaultModel) {
+      badges.push(this.i18nManager.getTranslation("modelPickerCustomBadge"));
     }
+
+    if (provider === "deepseek" && resolveDeepSeekModel(option.value, option.value).isLegacyAlias) {
+      badges.push(this.i18nManager.getTranslation("modelPickerLegacyBadge"));
+    }
+
+    return badges;
   }
 
-  // 清理自定义模型下拉菜单
+  selectModel(modelValue) {
+    const modelSelect = this.uiManager.elements.modelSelect;
+    if (!modelSelect) return;
+
+    modelSelect.value = modelValue;
+    this.setCurrentModel(modelValue);
+    this.closeModelPicker();
+    modelSelect.dispatchEvent(new Event("change"));
+  }
+
   cleanupCustomModelDropdown() {
     try {
-      // 移除容器点击事件监听器
-      if (this.modelSelectClickListener) {
-        const modelContainer = document.querySelector('#model')?.closest('.custom-select-container');
-        if (modelContainer) {
-          modelContainer.removeEventListener('click', this.modelSelectClickListener);
-        }
+      this.closeModelPicker();
+      if (this.uiManager.elements.modelPickerSearch) {
+        this.uiManager.elements.modelPickerSearch.value = "";
       }
-
-      // 移除文档点击事件监听器
-      if (this.documentClickListener) {
-        document.removeEventListener('click', this.documentClickListener);
-      }
-
-      // 移除下拉菜单点击事件监听器
-      if (this.customModelDropdown && this.dropdownClickListener) {
-        this.customModelDropdown.removeEventListener('click', this.dropdownClickListener);
-      }
-
-      // 移除所有选项和删除按钮的事件监听器
-      const customDropdown = document.getElementById('custom-model-dropdown');
-      if (customDropdown) {
-        // 获取所有选项
-        const options = customDropdown.querySelectorAll('.custom-select-option');
-        options.forEach(option => {
-          // 移除选项点击事件
-          const newOption = option.cloneNode(true);
-          option.parentNode.replaceChild(newOption, option);
-        });
-
-        // 获取所有删除按钮并移除事件监听器
-        const deleteButtons = customDropdown.querySelectorAll('.delete-model-btn');
-        deleteButtons.forEach(button => {
-          const newButton = button.cloneNode(true);
-          if (button.parentNode) {
-            button.parentNode.replaceChild(newButton, button);
-          }
-        });
-
-        // 清空内容
-        customDropdown.innerHTML = '';
-        customDropdown.style.display = 'none';
-      }
-
-      // 清空引用
-      this.modelSelectClickListener = null;
-      this.documentClickListener = null;
-      this.dropdownClickListener = null;
-      this.customModelDropdown = null;
+      this.modelPickerState.searchTerm = "";
     } catch (error) {
-      console.error('清理模型下拉菜单错误:', error);
+      console.error("清理模型选择器错误:", error);
     }
   }
 
   // 显示删除模型确认弹窗
   showDeleteModelDialog(provider, modelId, modelName) {
-    const deleteModelModal = document.getElementById('deleteModelModal');
-    const deleteModelConfirmText = document.getElementById('deleteModelConfirmText');
-    const confirmDeleteModelButton = document.getElementById('confirmDeleteModelButton');
-    const cancelDeleteModelButton = document.getElementById('cancelDeleteModelButton');
-    const closeDeleteModelModal = document.getElementById('closeDeleteModelModal');
-    const deleteModelValidationMessage = document.getElementById('deleteModelValidationMessage');
-    const deleteModelTitle = document.getElementById('deleteModelTitle');
+    this.closeModelPicker();
+
+    const deleteModelModal = document.getElementById("deleteModelModal");
+    const deleteModelConfirmText = document.getElementById("deleteModelConfirmText");
+    const confirmDeleteModelButton = document.getElementById("confirmDeleteModelButton");
+    const cancelDeleteModelButton = document.getElementById("cancelDeleteModelButton");
+    const closeDeleteModelModal = document.getElementById("closeDeleteModelModal");
+    const deleteModelValidationMessage = document.getElementById("deleteModelValidationMessage");
+    const deleteModelTitle = document.getElementById("deleteModelTitle");
 
     if (!deleteModelModal) return;
 
-    // 设置标题
     if (deleteModelTitle) {
-      deleteModelTitle.textContent = this.i18nManager.getTranslation('deleteModel');
+      deleteModelTitle.textContent = this.i18nManager.getTranslation("deleteModel");
     }
 
-    // 设置确认文本
     if (deleteModelConfirmText) {
-      const confirmText = this.i18nManager.getTranslation('confirmDeleteModel').replace('{model}', modelName);
+      const confirmText = this.i18nManager.getTranslation("confirmDeleteModel").replace("{model}", modelName);
       deleteModelConfirmText.textContent = confirmText;
     }
 
-    // 设置确认按钮文本
     if (confirmDeleteModelButton) {
-      confirmDeleteModelButton.textContent = this.i18nManager.getTranslation('deleteModel');
+      confirmDeleteModelButton.textContent = this.i18nManager.getTranslation("deleteModel");
     }
 
-    // 清除验证消息
     if (deleteModelValidationMessage) {
-      deleteModelValidationMessage.innerHTML = '';
-      deleteModelValidationMessage.className = 'validation-message';
+      deleteModelValidationMessage.innerHTML = "";
+      deleteModelValidationMessage.className = "validation-message";
     }
 
-    // 显示弹窗
-    deleteModelModal.classList.add('show');
+    deleteModelModal.classList.add("show");
 
-    // 处理确认按钮点击
     const handleConfirm = async () => {
       await this.handleDeleteModel(modelId, provider);
     };
 
-    // 处理取消按钮点击
     const handleClose = () => {
-      deleteModelModal.classList.remove('show');
+      deleteModelModal.classList.remove("show");
 
-      // 移除事件监听器
       if (confirmDeleteModelButton) {
-        confirmDeleteModelButton.removeEventListener('click', handleConfirm);
+        confirmDeleteModelButton.removeEventListener("click", handleConfirm);
       }
 
       if (cancelDeleteModelButton) {
-        cancelDeleteModelButton.removeEventListener('click', handleClose);
+        cancelDeleteModelButton.removeEventListener("click", handleClose);
       }
 
       if (closeDeleteModelModal) {
-        closeDeleteModelModal.removeEventListener('click', handleClose);
+        closeDeleteModelModal.removeEventListener("click", handleClose);
       }
 
-      document.removeEventListener('keydown', handleEsc);
+      document.removeEventListener("keydown", handleEsc);
     };
 
-    // 处理ESC键关闭弹窗
     const handleEsc = (e) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         handleClose();
       }
     };
 
-    // 添加事件监听器
     if (confirmDeleteModelButton) {
-      confirmDeleteModelButton.addEventListener('click', handleConfirm);
+      confirmDeleteModelButton.addEventListener("click", handleConfirm);
     }
 
     if (cancelDeleteModelButton) {
-      cancelDeleteModelButton.addEventListener('click', handleClose);
+      cancelDeleteModelButton.addEventListener("click", handleClose);
     }
 
     if (closeDeleteModelModal) {
-      closeDeleteModelModal.addEventListener('click', handleClose);
+      closeDeleteModelModal.addEventListener("click", handleClose);
     }
 
-    document.addEventListener('keydown', handleEsc);
+    document.addEventListener("keydown", handleEsc);
   }
 
   // 显示添加模型弹窗
@@ -400,6 +417,8 @@ export class ModelManager {
     if (provider === 'deepseek') {
       return;
     }
+
+    this.closeModelPicker();
 
     const addModelModal = document.getElementById('addModelModal');
     const modelApiId = document.getElementById('modelApiId');
@@ -668,12 +687,7 @@ export class ModelManager {
         // 立即更新UI选择框的值
         if (this.uiManager.elements.modelSelect) {
           this.uiManager.elements.modelSelect.value = modelId;
-
-          // 更新显示的文本
-          const selectedOption = document.querySelector('#model-container .selected-text');
-          if (selectedOption) {
-            selectedOption.textContent = modelName;
-          }
+          this.setCurrentModel(modelId);
         }
 
         // 清除临时状态（验证成功，数据已正式保存）

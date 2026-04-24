@@ -12,6 +12,17 @@ export class UiManager {
       providerSelect: document.getElementById("provider"),
       languageSelect: document.getElementById("language"),
       modelSelect: document.getElementById("model"),
+      modelPickerTrigger: document.getElementById("modelPickerTrigger"),
+      modelPickerTriggerLabel: document.getElementById("modelPickerTriggerLabel"),
+      modelPickerTriggerValue: document.getElementById("modelPickerTriggerValue"),
+      modelPickerModal: document.getElementById("modelPickerModal"),
+      closeModelPickerModal: document.getElementById("closeModelPickerModal"),
+      modelPickerTitle: document.getElementById("modelPickerTitle"),
+      modelPickerSearch: document.getElementById("modelPickerSearch"),
+      modelPickerList: document.getElementById("modelPickerList"),
+      modelPickerEmptyState: document.getElementById("modelPickerEmptyState"),
+      modelPickerFooter: document.getElementById("modelPickerFooter"),
+      modelPickerAddButton: document.getElementById("modelPickerAddButton"),
       selectionEnabled: document.getElementById("selectionEnabled"),
       rememberWindowSize: document.getElementById("rememberWindowSize"),
       customApiUrl: document.getElementById("customApiUrl"),
@@ -68,7 +79,6 @@ export class UiManager {
       confirmDeleteProviderButton: document.getElementById("confirmDeleteProviderButton"),
       deleteProviderValidationMessage: document.getElementById("deleteProviderValidationMessage"),
       deleteProviderTitle: document.getElementById("deleteProviderTitle"),
-      customModelDropdown: document.getElementById("custom-model-dropdown"),
       // 删除模型相关元素
       deleteModelModal: document.getElementById("deleteModelModal"),
       closeDeleteModelModal: document.getElementById("closeDeleteModelModal"),
@@ -113,6 +123,39 @@ export class UiManager {
     // 添加模型相关元素
     if (!this.elements.addModelButton) {
       this.elements.addModelButton = document.getElementById("addModelButton");
+    }
+    if (!this.elements.modelPickerTrigger) {
+      this.elements.modelPickerTrigger = document.getElementById("modelPickerTrigger");
+    }
+    if (!this.elements.modelPickerTriggerLabel) {
+      this.elements.modelPickerTriggerLabel = document.getElementById("modelPickerTriggerLabel");
+    }
+    if (!this.elements.modelPickerTriggerValue) {
+      this.elements.modelPickerTriggerValue = document.getElementById("modelPickerTriggerValue");
+    }
+    if (!this.elements.modelPickerModal) {
+      this.elements.modelPickerModal = document.getElementById("modelPickerModal");
+    }
+    if (!this.elements.closeModelPickerModal) {
+      this.elements.closeModelPickerModal = document.getElementById("closeModelPickerModal");
+    }
+    if (!this.elements.modelPickerTitle) {
+      this.elements.modelPickerTitle = document.getElementById("modelPickerTitle");
+    }
+    if (!this.elements.modelPickerSearch) {
+      this.elements.modelPickerSearch = document.getElementById("modelPickerSearch");
+    }
+    if (!this.elements.modelPickerList) {
+      this.elements.modelPickerList = document.getElementById("modelPickerList");
+    }
+    if (!this.elements.modelPickerEmptyState) {
+      this.elements.modelPickerEmptyState = document.getElementById("modelPickerEmptyState");
+    }
+    if (!this.elements.modelPickerFooter) {
+      this.elements.modelPickerFooter = document.getElementById("modelPickerFooter");
+    }
+    if (!this.elements.modelPickerAddButton) {
+      this.elements.modelPickerAddButton = document.getElementById("modelPickerAddButton");
     }
     if (!this.elements.addModelModal) {
       this.elements.addModelModal = document.getElementById("addModelModal");
@@ -202,10 +245,6 @@ export class UiManager {
     if (!this.elements.deleteProviderTitle) {
       this.elements.deleteProviderTitle = document.getElementById("deleteProviderTitle");
     }
-    if (!this.elements.customModelDropdown) {
-      this.elements.customModelDropdown = document.getElementById("custom-model-dropdown");
-    }
-
     // 添加删除模型相关元素
     if (!this.elements.deleteModelModal) {
       this.elements.deleteModelModal = document.getElementById("deleteModelModal");

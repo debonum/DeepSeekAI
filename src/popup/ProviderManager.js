@@ -1,3 +1,8 @@
+import {
+  getDeepSeekDefaultModels,
+  resolveDeepSeekModel,
+} from "./deepseekModelConfig.js";
+
 export class ProviderManager {
   constructor() {
     // 默认服务商列表
@@ -517,27 +522,42 @@ export class ProviderManager {
         return { ok: false, reason: 'unknown', status: 0, message: 'API URL missing' };
       }
 
-      // 非 deepseek 必须提供模型，deepseek 允许使用固定模型作为兜底
-      const resolvedModel = providerId === 'deepseek' ? (model || 'deepseek-chat') : model;
+      // 非 deepseek 必须提供模型，deepseek 通过兼容层解析成真实请求参数
+      const deepseekConfig =
+        providerId === "deepseek" ? resolveDeepSeekModel(model) : null;
+      const resolvedModel =
+        providerId === "deepseek"
+          ? (typeof model === "string" && model.trim()) || deepseekConfig.value
+          : model;
 
       if (!resolvedModel) {
         console.error('❌ 验证失败：模型未设置');
         return { ok: false, reason: 'invalid_model', status: 0, message: 'Model not set' };
       }
 
-      // 构建请求体
-      const requestBody = {
-        model: resolvedModel,
-        messages: [{ role: "user", content: "test" }],
-        stream: false,
+      const createProbeBody = (probeModel) => {
+        if (providerId !== "deepseek") {
+          return {
+            model: probeModel,
+            messages: [{ role: "user", content: "test" }],
+            stream: false,
+          };
+        }
+
+        const probeConfig = resolveDeepSeekModel(probeModel);
+        return {
+          model: probeConfig.apiModel,
+          messages: [{ role: "user", content: "test" }],
+          stream: false,
+          ...(probeConfig.thinking ? { thinking: probeConfig.thinking } : {}),
+          ...(probeConfig.reasoningEffort
+            ? { reasoning_effort: probeConfig.reasoningEffort }
+            : {}),
+        };
       };
 
       const sendProbe = async (probeModel) => {
-        const reqBody = {
-          model: probeModel,
-          messages: [{ role: "user", content: "test" }],
-          stream: false,
-        };
+        const reqBody = createProbeBody(probeModel);
         return await new Promise((resolve) => {
           chrome.runtime.sendMessage(
             {
@@ -595,7 +615,9 @@ export class ProviderManager {
       if (verdict.reason === 'unknown' || verdict.status === 400) {
         try {
           const defaults = this.getDefaultModels(providerId);
-          const fallbackModel = (defaults && defaults[0]?.value) || (providerId === 'deepseek' ? 'deepseek-chat' : null);
+          const fallbackModel =
+            (defaults && defaults[0]?.value) ||
+            (providerId === "deepseek" ? "deepseek-v4-flash" : null);
           if (fallbackModel) {
             const probeResp = await sendProbe(fallbackModel);
             // 如果 fallback 仍然失败且被判定为 key 错，则认定 key 错
@@ -640,39 +662,97 @@ export class ProviderManager {
   // 获取服务商的模型列表
   async getModels(providerId) {
     try {
-      // 首先尝试获取自定义模型列表
-      const keyName = `${providerId}Models`;
-      const result = await new Promise((resolve) => {
-        chrome.storage.sync.get(keyName, (data) => {
-          resolve(data[keyName] || []);
+      const { models: storedModels, hasStoredValue } =
+        await this.getStoredModelsSnapshot(providerId);
+
+      // 只要用户已经显式保存过该 provider 的模型列表，就以它为准。
+      // 这里要区分“空数组”和“未初始化”，否则删到最后一个模型后会被默认模型重新顶回来。
+      if (hasStoredValue) {
+        return storedModels;
+      }
+
+      const legacyModels = await this.getLegacyModels(providerId);
+
+      const deletedDefaultModels = await this.getDeletedDefaultModels(providerId);
+      const defaultModels = this.getDefaultModels(providerId);
+      const availableDefaultModels = defaultModels.filter(
+        (model) => !deletedDefaultModels.includes(model.value)
+      );
+
+      return this.mergeModels(legacyModels, availableDefaultModels);
+    } catch (error) {
+      console.error("获取模型列表错误:", error);
+      return [];
+    }
+  }
+
+  async getStoredModelsSnapshot(providerId) {
+    const keyName = `${providerId}Models`;
+
+    return new Promise((resolve) => {
+      chrome.storage.sync.get(keyName, (data) => {
+        const hasStoredValue = Object.prototype.hasOwnProperty.call(data, keyName);
+        const models = Array.isArray(data[keyName]) ? data[keyName] : [];
+        resolve({ models, hasStoredValue });
+      });
+    });
+  }
+
+  async getLegacyModels(providerId) {
+    try {
+      const syncModels = await new Promise((resolve) => {
+        chrome.storage.sync.get("customModels", (data) => {
+          const models = data?.customModels?.[providerId];
+          resolve(Array.isArray(models) ? models : []);
         });
       });
 
-      // 如果有自定义模型，返回它们
-      if (result && result.length > 0) {
-        return result;
+      let localModels = [];
+      try {
+        const raw = localStorage.getItem(`customModels_${providerId}`);
+        const parsed = raw ? JSON.parse(raw) : [];
+        localModels = Array.isArray(parsed) ? parsed : [];
+      } catch (error) {
+        console.warn(`读取 legacy localStorage 模型失败: ${providerId}`, error);
       }
 
-      // 仅对 deepseek 保留默认模型回退，其他提供商不再提供默认模型
-      if (providerId === 'deepseek') {
-        // 获取已删除的默认模型列表，仅用于 deepseek
-        const deletedModelsKeyName = `${providerId}DeletedDefaultModels`;
-        const deletedDefaultModels = await new Promise((resolve) => {
-          chrome.storage.sync.get(deletedModelsKeyName, (data) => {
-            resolve(data[deletedModelsKeyName] || []);
-          });
-        });
-
-        const defaultModels = this.getDefaultModels(providerId);
-        return defaultModels.filter(
-          (model) => !deletedDefaultModels.includes(model.value)
-        );
-      }
-
-      // 非 deepseek：无默认模型
-      return [];
+      return this.mergeModels(syncModels, localModels);
     } catch (error) {
-      console.error("获取模型列表错误:", error);
+      console.error("获取 legacy 模型列表错误:", error);
+      return [];
+    }
+  }
+
+  mergeModels(...groups) {
+    const seen = new Set();
+    const merged = [];
+
+    groups.flat().forEach((model) => {
+      const value = model?.value;
+      if (!value || seen.has(value)) {
+        return;
+      }
+
+      seen.add(value);
+      merged.push({
+        value,
+        label: model?.label || value,
+      });
+    });
+
+    return merged;
+  }
+
+  async getDeletedDefaultModels(providerId) {
+    try {
+      const keyName = `${providerId}DeletedDefaultModels`;
+      return await new Promise((resolve) => {
+        chrome.storage.sync.get(keyName, (data) => {
+          resolve(Array.isArray(data[keyName]) ? data[keyName] : []);
+        });
+      });
+    } catch (error) {
+      console.error("获取已删除默认模型列表失败:", error);
       return [];
     }
   }
@@ -680,10 +760,7 @@ export class ProviderManager {
   // 获取服务商的默认模型列表
   getDefaultModels(providerId) {
     const defaultModels = {
-      deepseek: [
-        { value: "deepseek-chat", label: "deepseek-chat" },
-        { value: "deepseek-reasoner", label: "deepseek-reasoner" },
-      ],
+      deepseek: getDeepSeekDefaultModels(),
       siliconflow: [
         { value: "deepseek-ai/DeepSeek-V3", label: "DeepSeek-V3" },
         { value: "deepseek-ai/DeepSeek-R1", label: "DeepSeek-R1" },

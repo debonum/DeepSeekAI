@@ -150,10 +150,14 @@ class PopupManager {
         }
       }
 
-      // 设置保存的model值
-      if (settings.model) {
+      const hasSavedModel = settings.model && Array.from(this.uiManager.elements.modelSelect.options)
+        .some((option) => option.value === settings.model);
+
+      if (hasSavedModel) {
         this.uiManager.elements.modelSelect.value = settings.model;
       }
+
+      this.modelManager.setCurrentModel(this.uiManager.elements.modelSelect.value);
 
       // 初始化自定义 system prompt 管理器
       await this.systemPromptManager.initialize();
@@ -223,11 +227,15 @@ document.getElementById('language-toggle')?.addEventListener('click', () => {
   // 重新创建模型下拉菜单
   if (popupManager && popupManager.modelManager) {
     popupManager.modelManager.updateModelOptions(currentProvider).then(() => {
-      // 恢复之前选中的模型
       const modelSelect = document.getElementById('model');
-      if (modelSelect && currentModel) {
+      const hasCurrentModel = modelSelect && currentModel && Array.from(modelSelect.options)
+        .some((option) => option.value === currentModel);
+
+      if (hasCurrentModel) {
         modelSelect.value = currentModel;
       }
+
+      popupManager.modelManager.setCurrentModel(modelSelect?.value || '');
 
       // 确保模态窗口中的文本也被更新
       if (popupManager && popupManager.i18nManager) {

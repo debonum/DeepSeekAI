@@ -14,9 +14,9 @@
 
 ## 📖 Introduction
 
-DeepSeekAI is an unofficial, open-source browser extension that lets you summon a private DeepSeek-powered co-pilot anywhere on the web. Highlight text, tap a quick action, or press a shortcut to open a floating chat workspace that streams answers, shows reasoning traces, and remembers your preferred layout. The project is independent from DeepSeek, and you must provide your own API key (DeepSeek or any OpenAI-compatible endpoint).
+DeepSeekAI is an open-source browser extension that lets you summon a private DeepSeek-powered co-pilot anywhere on the web. Highlight text, tap a quick action, or press a shortcut to open a floating chat workspace that streams answers, shows reasoning traces, and remembers your preferred layout. You provide your own API key (DeepSeek or any OpenAI-compatible endpoint).
 
-> **Note**: This extension is a community project and is not affiliated with DeepSeek. Keys, custom endpoints, and preferences are stored only in `chrome.storage.sync` on your device.
+> **Note**: This extension is maintained by the community. Keys, custom endpoints, and preferences are stored only in `chrome.storage.sync` on your device.
 
 ### 🔌 Supported API Providers
 - [DeepSeek](https://deepseek.com) (official endpoint)

@@ -262,6 +262,92 @@
         color: var(--text-primary);
       }
 
+      .model-setting-row {
+        align-items: center;
+      }
+
+      .model-picker-field {
+        position: relative;
+        flex: 0 1 180px;
+        min-width: 0;
+      }
+
+      .model-native-select {
+        display: none;
+      }
+
+      .model-picker-trigger {
+        width: 100%;
+        min-width: 0;
+        height: 32px;
+        min-height: 32px;
+        padding: 6px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        background: linear-gradient(180deg, var(--background-primary) 0%, var(--input-background) 100%);
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        text-align: left;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      }
+
+      .model-picker-trigger:hover {
+        background: linear-gradient(180deg, var(--background-primary) 0%, var(--background-secondary) 100%);
+        border-color: rgba(0, 122, 255, 0.24);
+        transform: translateY(-1px);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      }
+
+      .model-picker-trigger:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.25);
+        border-color: var(--accent-color);
+      }
+
+      .model-picker-trigger:active {
+        background: linear-gradient(180deg, var(--background-primary) 0%, var(--input-background) 100%);
+        transform: translateY(0);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      }
+
+      .model-picker-trigger-main {
+        min-width: 0;
+        flex: 1;
+      }
+
+      .model-picker-trigger-label {
+        display: block;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-primary);
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .model-picker-trigger-value {
+        display: none;
+      }
+
+      .model-picker-trigger.is-empty .model-picker-trigger-label {
+        color: var(--text-secondary);
+      }
+
+      .model-picker-trigger-icon {
+        width: 12px;
+        height: 12px;
+        flex: none;
+        color: var(--text-secondary);
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: contain;
+      }
+
       select {
         min-width: 100px;
         padding: 6px 25px 6px 10px;
@@ -885,6 +971,186 @@
 
       .modal-body {
         padding: 16px 20px;
+      }
+
+      .model-picker-modal-content {
+        width: calc(100% - 24px);
+        max-width: 420px;
+        max-height: calc(100% - 24px);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .model-picker-modal-body {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        min-height: 0;
+      }
+
+      .model-picker-search {
+        padding-right: 12px;
+      }
+
+      .model-picker-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: 320px;
+        overflow-y: auto;
+        padding-right: 2px;
+      }
+
+      .model-picker-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 11px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 14px;
+        background-color: var(--background-secondary);
+        cursor: pointer;
+        transition: transform 0.18s ease, border-color 0.18s ease, background-color 0.18s ease;
+      }
+
+      .model-picker-item:hover,
+      .model-picker-item:focus-visible {
+        border-color: rgba(0, 122, 255, 0.28);
+        background-color: var(--background-primary);
+        transform: translateY(-1px);
+        outline: none;
+      }
+
+      .model-picker-item.is-selected {
+        border-color: rgba(0, 122, 255, 0.4);
+        background: linear-gradient(180deg, rgba(0, 122, 255, 0.1) 0%, rgba(0, 122, 255, 0.04) 100%);
+      }
+
+      .model-picker-item-main {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .model-picker-item-top {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .model-picker-item-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-primary);
+        line-height: 1.3;
+        word-break: break-word;
+      }
+
+      .model-picker-item-subtitle {
+        font-size: 12px;
+        color: var(--text-secondary);
+        line-height: 1.35;
+        word-break: break-all;
+      }
+
+      .model-picker-badge-row {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+
+      .model-picker-badge {
+        padding: 2px 8px;
+        border-radius: 999px;
+        background-color: rgba(0, 122, 255, 0.08);
+        color: var(--accent-color);
+        font-size: 11px;
+        font-weight: 600;
+        line-height: 1.4;
+        white-space: nowrap;
+      }
+
+      .model-picker-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: none;
+      }
+
+      .model-picker-check {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--accent-color);
+        opacity: 0;
+        transform: scale(0.85);
+        transition: all 0.18s ease;
+      }
+
+      .model-picker-item.is-selected .model-picker-check {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      .model-picker-icon-button {
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
+        padding: 0;
+        border-radius: 50%;
+        background-color: var(--background-primary);
+        border: 1px solid transparent;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-secondary);
+        box-shadow: none;
+      }
+
+      .model-picker-icon-button:hover {
+        color: var(--error-color);
+        background-color: var(--error-background);
+        border-color: rgba(255, 59, 48, 0.12);
+        transform: none;
+        box-shadow: none;
+      }
+
+      .model-picker-icon-button svg {
+        width: 16px;
+        height: 16px;
+        fill: currentColor;
+      }
+
+      .model-picker-empty {
+        padding: 18px 12px;
+        border: 1px dashed var(--border-color);
+        border-radius: 14px;
+        color: var(--text-secondary);
+        font-size: 12px;
+        text-align: center;
+        background-color: var(--background-secondary);
+      }
+
+      .model-picker-footer {
+        padding-top: 2px;
+      }
+
+      .model-picker-add-button {
+        width: 100%;
+        height: 38px;
+        justify-content: center;
+        background-color: transparent;
+        border: 1px dashed var(--border-color);
+        color: var(--accent-color);
+        box-shadow: none;
+      }
+
+      .model-picker-add-button:hover {
+        background-color: rgba(0, 122, 255, 0.06);
+        border-color: rgba(0, 122, 255, 0.2);
+        box-shadow: none;
       }
 
       .form-group {
@@ -1591,11 +1857,24 @@
           </div>
         </div>
 
-        <div class="language-switch">
-          <label for="model" id="modelLabel">Model</label>
-          <div class="custom-select-container">
-            <select id="model"></select>
-            <div id="custom-model-dropdown" class="custom-select-dropdown"></div>
+        <div class="language-switch model-setting-row">
+          <label id="modelLabel">Model</label>
+          <div class="model-picker-field">
+            <select id="model" class="model-native-select" aria-hidden="true" tabindex="-1"></select>
+            <button
+              type="button"
+              id="modelPickerTrigger"
+              class="model-picker-trigger is-empty"
+              aria-haspopup="dialog"
+              aria-expanded="false"
+              aria-labelledby="modelLabel modelPickerTriggerLabel"
+            >
+              <span class="model-picker-trigger-main">
+                <span id="modelPickerTriggerLabel" class="model-picker-trigger-label">Select a model</span>
+                <span id="modelPickerTriggerValue" class="model-picker-trigger-value">Choose the model to use for this provider</span>
+              </span>
+              <span class="model-picker-trigger-icon" aria-hidden="true"></span>
+            </button>
           </div>
         </div>
 
@@ -1826,7 +2105,7 @@
             <input
               type="text"
               id="customModelIdInput"
-              placeholder="例如: deepseek-chat"
+              placeholder="例如: deepseek-v4-flash"
               class="form-control"
             />
           </div>
@@ -1906,6 +2185,32 @@
           <div class="modal-footer">
             <button id="cancelModelButton" class="cancel-button">取消</button>
             <button id="saveModelButton" class="save-button">保存</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="modelPickerModal" class="modal">
+      <div class="modal-content model-picker-modal-content">
+        <div class="modal-header">
+          <span id="modelPickerTitle">Choose Model</span>
+          <span id="closeModelPickerModal" class="close">&times;</span>
+        </div>
+        <div class="modal-body model-picker-modal-body">
+          <input
+            type="text"
+            id="modelPickerSearch"
+            class="form-control model-picker-search"
+            placeholder="Search models"
+          />
+          <div id="modelPickerList" class="model-picker-list"></div>
+          <div id="modelPickerEmptyState" class="model-picker-empty" hidden>
+            No matching models
+          </div>
+          <div id="modelPickerFooter" class="model-picker-footer">
+            <button id="modelPickerAddButton" class="model-picker-add-button" type="button">
+              + Add Model
+            </button>
           </div>
         </div>
       </div>

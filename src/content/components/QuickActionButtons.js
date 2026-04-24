@@ -555,33 +555,31 @@ export async function createQuickActionButtons(
         color: rgba(255, 255, 255, 0.9);
     }
 
-	    .send-btn {
-	      width: 26px;
-	      height: 26px;
-	      border-radius: 50%;
-	      background: linear-gradient(135deg, #4D8EFF, #3B7AD9); /* Premium Blue Gradient */
-	      border: none;
-	      display: flex;
-	      align-items: center;
+    .send-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 4px;
+      background: transparent;
+      border: none;
+      display: flex;
+      align-items: center;
       justify-content: center;
       cursor: pointer;
-      color: #fff;
-      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-      box-shadow: 0 4px 12px rgba(60, 120, 255, 0.3); /* Glowing shadow */
-      /* margin-left: auto; REMOVED: using justify-content: space-between */
+      color: inherit;
+      transition: all 0.2s ease;
     }
     .send-btn:hover {
-      transform: scale(1.08) rotate(-10deg);
-      box-shadow: 0 6px 16px rgba(60, 120, 255, 0.4);
-      background: linear-gradient(135deg, #5E9AFF, #4A89E8);
+      background: rgba(255, 255, 255, 0.1);
+      color: inherit;
     }
     .send-btn:active {
-      transform: scale(0.95);
+      background: rgba(255, 255, 255, 0.2);
     }
     .send-btn svg {
       width: 18px;
       height: 18px;
-      fill: currentColor;
+      fill: none;
+      stroke: currentColor;
     }
 
     .input-actions {
@@ -625,9 +623,9 @@ export async function createQuickActionButtons(
 	    /* Light mode popover */
 	    :host(.light-mode) .language-select {
 	        background: rgba(255, 255, 255, 0.95);
-        border: 1px solid rgba(0,0,0,0.1);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    }
+	        border: 1px solid rgba(0,0,0,0.1);
+	        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+	    }
     :host(.light-mode) .language-option { color: #333; }
     :host(.light-mode) .language-option:hover { background: rgba(0,0,0,0.05); }
 
@@ -689,7 +687,7 @@ export async function createQuickActionButtons(
   // --- 1. 创建 Drag Handle (||) ---
   const dragHandleBar = document.createElement("div");
   dragHandleBar.className = "drag-handle-bar";
-  dragHandleBar.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 6a1 1 0 100 2 1 1 0 000-2zm0 5a1 1 0 100 2 1 1 0 000-2zm0 5a1 1 0 100 2 1 1 0 000-2zm8-10a1 1 0 100 2 1 1 0 000-2zm0 5a1 1 0 100 2 1 1 0 000-2zm0 5a1 1 0 100 2 1 1 0 000-2z" /></svg>`;
+  dragHandleBar.innerHTML = ICONS.dragHandle;
   shadowRoot.appendChild(dragHandleBar);
 
   // --- 2. 创建 Brand/Avatar ---
@@ -808,7 +806,7 @@ export async function createQuickActionButtons(
   inputTrigger.className = "input-trigger";
   // Using a Chat Bubble icon for "Ask AI"
   inputTrigger.innerHTML = `
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+    ${ICONS.askAi}
     <span>Ask AI</span>
   `;
 
@@ -836,7 +834,7 @@ export async function createQuickActionButtons(
 
 	  const expandedDragHandle = document.createElement("div");
 	  expandedDragHandle.className = "expanded-drag-handle";
-	  expandedDragHandle.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 6a1 1 0 100 2 1 1 0 000-2zm0 5a1 1 0 100 2 1 1 0 000-2zm0 5a1 1 0 100 2 1 1 0 000-2zm8-10a1 1 0 100 2 1 1 0 000-2zm0 5a1 1 0 100 2 1 1 0 000-2zm0 5a1 1 0 100 2 1 1 0 000-2z" /></svg>`;
+	  expandedDragHandle.innerHTML = ICONS.dragHandle;
 
   const inputActions = document.createElement("div");
   inputActions.className = "input-actions";

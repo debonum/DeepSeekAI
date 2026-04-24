@@ -1,5 +1,9 @@
 import { getAllowAutoScroll, scrollToBottom, updateAllowAutoScroll } from "../utils/scrollManager";
 import { render, showCodeCopyButtons, isMathBalanced } from "../utils/markdownRenderer";
+import {
+  getDeepSeekModelLabel,
+  resolveDeepSeekModel,
+} from "../../popup/deepseekModelConfig.js";
 
 // 全局变量用于存储对话历史
 let messages = [];
@@ -207,10 +211,17 @@ export async function getAIResponse(
 
     const language = settings.language;
     let model = settings.model;
+    const deepseekSelectedModel = isGreeting ? "deepseek-v4-flash" : model;
+    const deepseekConfig =
+      provider === "deepseek"
+        ? resolveDeepSeekModel(deepseekSelectedModel)
+        : null;
 
     // 获取服务商和模型的显示名称
     let providerDisplayName = provider;
-    let modelDisplayName = model;
+    let modelDisplayName = deepseekConfig
+      ? getDeepSeekModelLabel(deepseekSelectedModel || deepseekConfig.value)
+      : model;
 
     // 如果是自定义Provider，获取显示名称
     if (provider.startsWith('custom_') && settings.customProviders) {
@@ -335,8 +346,8 @@ export async function getAIResponse(
         : 'https://api.deepseek.com/v1/chat/completions'
     );
 
-    const modelName = provider === 'deepseek' ? (isGreeting ? "deepseek-chat" : model) : model;
-    const modelDisplayNameForApi = provider === 'deepseek' ? (isGreeting ? "deepseek-chat" : modelDisplayName) : modelDisplayName;
+    const modelName = deepseekConfig ? deepseekConfig.apiModel : model;
+    const modelDisplayNameForApi = deepseekConfig ? deepseekConfig.label : modelDisplayName;
 
     // 确保每次请求都使用正确的模型名称
     // console.log(`📦 调用API - 使用模型: ${modelDisplayNameForApi}`);
@@ -471,6 +482,10 @@ export async function getAIResponse(
           ...messages
         ],
         stream: true,
+        ...(deepseekConfig?.thinking ? { thinking: deepseekConfig.thinking } : {}),
+        ...(deepseekConfig?.reasoningEffort
+          ? { reasoning_effort: deepseekConfig.reasoningEffort }
+          : {}),
         ...(provider === 'openrouter' && { include_reasoning: true })
       };
 

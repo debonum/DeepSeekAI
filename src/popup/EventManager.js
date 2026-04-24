@@ -65,20 +65,23 @@ export class EventManager {
           const apiKey = await this.managers.providerManager.getApiKey(provider);
 
           if (!apiKey) {
-            // 引导先填写API Key，再添加模型
+            // 已有默认模型时，只需补 API Key，不要误导到“添加模型”流程
             this.managers.uiManager.showMessage(
               this.managers.i18nManager.getTranslation('noApiKey'),
               false
             );
-            // 直接弹出“添加模型”弹窗（ModelManager 会根据是否已有 Key 决定是否显示 Key 输入）
-            try { document.body.dataset.requireModelKeyProvider = provider; } catch (e) {}
-            if (this.managers.modelManager?.showAddModelDialog) {
-              this.managers.modelManager.showAddModelDialog();
+
+            if (provider !== 'deepseek' && (!models || models.length === 0)) {
+              try { document.body.dataset.requireModelKeyProvider = provider; } catch (e) {}
+              if (this.managers.modelManager?.showAddModelDialog) {
+                this.managers.modelManager.showAddModelDialog();
+              } else {
+                this.managers.uiManager.showAddModelModal?.();
+              }
+              this.managers.uiManager.elements.modelApiKey?.focus?.();
             } else {
-              this.managers.uiManager.showAddModelModal?.();
+              this.managers.uiManager.elements.apiKeyInput?.focus?.();
             }
-            // 优先聚焦弹窗中的 Key 输入框（若显示）
-            this.managers.uiManager.elements.modelApiKey?.focus?.();
             return;
           }
 
@@ -106,6 +109,26 @@ export class EventManager {
     this.managers.uiManager.elements.closeModelModal?.addEventListener(
       "click",
       () => this.handleCloseModelModal()
+    );
+
+    this.managers.uiManager.elements.modelPickerTrigger?.addEventListener(
+      "click",
+      () => this.managers.modelManager.openModelPicker()
+    );
+
+    this.managers.uiManager.elements.closeModelPickerModal?.addEventListener(
+      "click",
+      () => this.managers.modelManager.closeModelPicker()
+    );
+
+    this.managers.uiManager.elements.modelPickerSearch?.addEventListener(
+      "input",
+      (e) => this.managers.modelManager.handleModelPickerSearch(e.target.value)
+    );
+
+    this.managers.uiManager.elements.modelPickerAddButton?.addEventListener(
+      "click",
+      () => this.managers.modelManager.handleModelPickerAdd()
     );
 
       // 取消添加模型按钮
@@ -177,6 +200,15 @@ export class EventManager {
       }
     );
 
+    this.managers.uiManager.elements.modelPickerModal?.addEventListener(
+      "click",
+      (e) => {
+        if (e.target === this.managers.uiManager.elements.modelPickerModal) {
+          this.managers.modelManager.closeModelPicker();
+        }
+      }
+    );
+
     this.managers.uiManager.elements.customProviderModal?.addEventListener(
       "click",
       (e) => {
@@ -225,6 +257,7 @@ export class EventManager {
       "change",
       (e) => {
         const model = e.target.value;
+        this.managers.modelManager.setCurrentModel(model);
         // 保存模型选择
         this.managers.storageManager.saveModel(model).then(() => {
           console.log(`✅ 模型已切换为: ${model}`);

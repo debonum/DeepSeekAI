@@ -15,9 +15,9 @@
 
 ## 📖 简介
 
-DeepSeekAI 是一个开源的非官方浏览器扩展，可以在任何网页上随时呼出私有的 DeepSeek 助手。只需划词、点击快捷操作或按下快捷键，即可打开一个浮动聊天工作区，实时流式展示回答、推理轨迹，并记住你偏好的布局。项目与 DeepSeek 官方无关，所有请求都需要你自行配置 API Key（DeepSeek 或任何兼容 OpenAI `/chat/completions` 规范的服务商）。
+DeepSeekAI 是一个开源浏览器扩展，可以在任何网页上随时呼出私有的 DeepSeek 助手。只需划词、点击快捷操作或按下快捷键，即可打开一个浮动聊天工作区，实时流式展示回答、推理轨迹，并记住你偏好的布局。所有请求都需要你自行配置 API Key（DeepSeek 或任何兼容 OpenAI `/chat/completions` 规范的服务商）。
 
-> **提示**：本扩展完全由社区维护，与 DeepSeek 官方无关联。API Key、自定义 Endpoint 和偏好设置只会保存在你浏览器的 `chrome.storage.sync` 中。
+> **提示**：本扩展由社区维护。API Key、自定义 Endpoint 和偏好设置只会保存在你浏览器的 `chrome.storage.sync` 中。
 
 ### 🔌 支持的 API 服务商
 - [DeepSeek](https://deepseek.com)（官方接口）

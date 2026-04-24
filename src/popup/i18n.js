@@ -25,7 +25,7 @@ export class I18nManager {
         customProviderNameExamplePlaceholder: '例如: 我的自定义服务商',
         customProviderApiKeyPlaceholder: '请输入API密钥',
         customProviderUrlExamplePlaceholder: 'https://api.example.com/v1/chat/completions',
-        customProviderModelNameExamplePlaceholder: '例如: deepseek-chat',
+        customProviderModelNameExamplePlaceholder: '例如: deepseek-v4-flash',
         apiUrlHint: '📝 需使用 OpenAI 兼容的 API 接口格式',
         customProviderEmpty: '服务商名称不能为空',
         customProviderSaveSuccess: '自定义服务商已保存',
@@ -39,10 +39,17 @@ export class I18nManager {
         saveCustomProviderBtnText: '保存',
         addModel: '添加模型',
         addModelTitle: '添加模型',
+        modelPickerTitle: '选择模型',
+        modelPickerSearchPlaceholder: '搜索模型名称或 ID',
+        modelPickerTriggerPlaceholder: '选择一个模型',
+        modelPickerTriggerHint: '为当前服务商选择要使用的模型',
+        modelPickerEmptyState: '没有找到匹配的模型',
+        modelPickerLegacyBadge: '旧别名',
+        modelPickerCustomBadge: '自定义',
         modelApiKeyLabel: 'API密钥',
         modelApiId: '模型API标识',
         modelDisplayName: '模型显示名称',
-        modelApiIdPlaceholder: '输入模型API标识（如 deepseek-chat）',
+        modelApiIdPlaceholder: '输入模型API标识（如 deepseek-v4-flash）',
         modelDisplayNamePlaceholder: '输入模型显示名称（如 DeepSeek AI）',
         saveModel: '保存',
         cancelModel: '取消',
@@ -80,6 +87,9 @@ export class I18nManager {
         deleteProviderBtnTitle: '删除服务商',
         confirmDeleteModel: '确定要删除模型 {model}？此操作不可撤销。',
         deleteModelSuccess: '模型删除成功',
+        deleteModelError: '删除模型失败',
+        modelIdEmpty: '模型API标识不能为空',
+        modelNameEmpty: '模型显示名称不能为空',
         deleting: '删除中...',
         saving: '保存中...',
         checkModelOrKeyOrPermission: '请检查模型ID或者API Key，或确认该模型是否有权限使用',
@@ -119,7 +129,7 @@ export class I18nManager {
         customProviderNameExamplePlaceholder: 'e.g. My Custom Provider',
         customProviderApiKeyPlaceholder: 'Please enter API key',
         customProviderUrlExamplePlaceholder: 'https://api.example.com/v1/chat/completions',
-        customProviderModelNameExamplePlaceholder: 'e.g. deepseek-chat',
+        customProviderModelNameExamplePlaceholder: 'e.g. deepseek-v4-flash',
         apiUrlHint: '📝 Must use OpenAI compatible API format',
         customProviderEmpty: 'Provider name cannot be empty',
         customProviderSaveSuccess: 'Custom provider saved',
@@ -133,10 +143,17 @@ export class I18nManager {
         saveCustomProviderBtnText: 'Save',
         addModel: 'Add Model',
         addModelTitle: 'Add Model',
+        modelPickerTitle: 'Choose Model',
+        modelPickerSearchPlaceholder: 'Search by model name or ID',
+        modelPickerTriggerPlaceholder: 'Select a model',
+        modelPickerTriggerHint: 'Choose the model to use for this provider',
+        modelPickerEmptyState: 'No matching models found',
+        modelPickerLegacyBadge: 'Legacy',
+        modelPickerCustomBadge: 'Custom',
         modelApiKeyLabel: 'API Key',
         modelApiId: 'Model API ID',
         modelDisplayName: 'Model Display Name',
-        modelApiIdPlaceholder: 'Enter model API ID (e.g. deepseek-chat)',
+        modelApiIdPlaceholder: 'Enter model API ID (e.g. deepseek-v4-flash)',
         modelDisplayNamePlaceholder: 'Enter model display name (e.g. DeepSeek AI)',
         saveModel: 'Save',
         cancelModel: 'Cancel',
@@ -174,6 +191,9 @@ export class I18nManager {
         deleteProviderBtnTitle: 'Delete Provider',
         confirmDeleteModel: 'Are you sure you want to delete model {model}? This action cannot be undone.',
         deleteModelSuccess: 'Model deleted successfully',
+        deleteModelError: 'Failed to delete model',
+        modelIdEmpty: 'Model API ID cannot be empty',
+        modelNameEmpty: 'Model display name cannot be empty',
         deleting: 'Deleting...',
         saving: 'Saving...',
         checkModelOrKeyOrPermission: 'Please check the model ID or API key, or whether the model is permitted for your account',
@@ -272,6 +292,7 @@ export class I18nManager {
       this.updateElementText('customModelNameInputLabel', 'customModelNameLabel');
 
       this.updateElementText('addModelTitle', 'addModelTitle');
+      this.updateElementText('modelPickerTitle', 'modelPickerTitle');
       this.updateElementText('modelApiKeyLabel', 'modelApiKeyLabel');
       this.updateElementText('modelIdLabel', 'modelApiId');
       this.updateElementText('modelDisplayNameLabel', 'modelDisplayName');
@@ -285,12 +306,15 @@ export class I18nManager {
       // 更新按钮文本
       this.updateElementText('saveCustomProviderButton', 'saveCustomProviderBtnText');
       this.updateElementText('cancelCustomProviderButton', 'cancelModel');
+      this.updateElementText('modelPickerAddButton', 'addModel');
       this.updateElementText('saveModelButton', 'saveModel');
       this.updateElementText('cancelModelButton', 'cancelModel');
       this.updateElementText('confirmDeleteProviderButton', 'deleteProvider');
       this.updateElementText('cancelDeleteProviderButton', 'cancelModel');
       this.updateElementText('confirmDeleteModelButton', 'deleteModel');
       this.updateElementText('cancelDeleteModelButton', 'cancelModel');
+
+      this.updateInputPlaceholder('modelPickerSearch', 'modelPickerSearchPlaceholder');
     } catch (error) {
       console.error('更新标签错误:', error);
     }
