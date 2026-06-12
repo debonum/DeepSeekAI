@@ -1,4 +1,4 @@
-(function() {
+(function () {
   try {
     if (window.__DeepSeekMathDebugBridgeInstalledPage) return;
     window.__DeepSeekMathDebugBridgeInstalledPage = true;
@@ -9,7 +9,7 @@
       try {
         window.postMessage(
           { source: SOURCE, type: EVENT, enabled: !!flag },
-          "*"
+          "*",
         );
       } catch (err) {
         console.warn("DeepSeek math debug notify failed:", err);
@@ -24,7 +24,7 @@
       set(value) {
         window.__DeepSeekMathDebugFlag = !!value;
         notify(window.__DeepSeekMathDebugFlag);
-      }
+      },
     };
 
     if (!Object.getOwnPropertyDescriptor(window, "__DeepSeekMathDebug")) {

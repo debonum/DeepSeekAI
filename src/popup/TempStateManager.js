@@ -1,14 +1,14 @@
 export class TempStateManager {
   constructor() {
-    this.STORAGE_PREFIX = 'temp_state_';
+    this.STORAGE_PREFIX = "temp_state_";
     this.AUTO_SAVE_DELAY = 1000; // 1秒延迟自动保存
     this.saveTimeouts = new Map(); // 防抖用的超时映射
   }
 
   // 临时状态类型
   static TYPES = {
-    ADD_MODEL: 'add_model',
-    ADD_PROVIDER: 'add_provider'
+    ADD_MODEL: "add_model",
+    ADD_PROVIDER: "add_provider",
   };
 
   // 获取临时状态存储键
@@ -26,12 +26,12 @@ export class TempStateManager {
         const stateData = {
           ...formData,
           timestamp: Date.now(),
-          lastModified: new Date().toISOString()
+          lastModified: new Date().toISOString(),
         };
 
         localStorage.setItem(key, JSON.stringify(stateData));
       } catch (error) {
-        console.error('保存临时状态失败:', error);
+        console.error("保存临时状态失败:", error);
       }
     };
 
@@ -68,7 +68,7 @@ export class TempStateManager {
 
       return parsedData;
     } catch (error) {
-      console.error('获取临时状态失败:', error);
+      console.error("获取临时状态失败:", error);
       return null;
     }
   }
@@ -84,9 +84,8 @@ export class TempStateManager {
         clearTimeout(this.saveTimeouts.get(type));
         this.saveTimeouts.delete(type);
       }
-
     } catch (error) {
-      console.error('清除临时状态失败:', error);
+      console.error("清除临时状态失败:", error);
     }
   }
 
@@ -123,8 +122,8 @@ export class TempStateManager {
     const { timestamp, lastModified, ...formData } = state;
 
     // 检查是否有任何非空的内容
-    return Object.values(formData).some(value =>
-      value && value.toString().trim() !== ''
+    return Object.values(formData).some(
+      (value) => value && value.toString().trim() !== "",
     );
   }
 
@@ -134,8 +133,8 @@ export class TempStateManager {
       const formData = getFormDataCallback();
 
       // 检查是否有任何非空的内容
-      const hasContent = Object.values(formData).some(value =>
-        value && value.toString().trim() !== ''
+      const hasContent = Object.values(formData).some(
+        (value) => value && value.toString().trim() !== "",
       );
 
       if (hasContent) {
@@ -146,21 +145,21 @@ export class TempStateManager {
         this.clearTempState(type);
       }
     } catch (error) {
-      console.error('自动保存临时状态失败:', error);
+      console.error("自动保存临时状态失败:", error);
     }
   }
 
   // 获取模型添加表单数据
   getModelFormData() {
-    const modelApiId = document.getElementById('modelApiId');
-    const modelDisplayName = document.getElementById('modelDisplayName');
-    const modelApiKey = document.getElementById('modelApiKey');
+    const modelApiId = document.getElementById("modelApiId");
+    const modelDisplayName = document.getElementById("modelDisplayName");
+    const modelApiKey = document.getElementById("modelApiKey");
 
     const data = {
-      modelApiId: modelApiId?.value || '',
-      modelDisplayName: modelDisplayName?.value || '',
-      modelApiKey: modelApiKey?.value || '',
-      currentProvider: document.getElementById('provider')?.value || ''
+      modelApiId: modelApiId?.value || "",
+      modelDisplayName: modelDisplayName?.value || "",
+      modelApiKey: modelApiKey?.value || "",
+      currentProvider: document.getElementById("provider")?.value || "",
     };
 
     return data;
@@ -169,9 +168,9 @@ export class TempStateManager {
   // 恢复模型添加表单数据
   restoreModelFormData(data) {
     try {
-      const modelApiId = document.getElementById('modelApiId');
-      const modelDisplayName = document.getElementById('modelDisplayName');
-      const modelApiKey = document.getElementById('modelApiKey');
+      const modelApiId = document.getElementById("modelApiId");
+      const modelDisplayName = document.getElementById("modelDisplayName");
+      const modelApiKey = document.getElementById("modelApiKey");
 
       // 修复：不检查值是否为空字符串，因为空字符串也是有效的数据
       if (modelApiId && data.modelApiId !== undefined) {
@@ -185,26 +184,31 @@ export class TempStateManager {
       if (modelApiKey && data.modelApiKey !== undefined) {
         modelApiKey.value = data.modelApiKey;
       }
-
     } catch (error) {
-      console.error('恢复模型表单数据失败:', error);
+      console.error("恢复模型表单数据失败:", error);
     }
   }
 
   // 获取服务商添加表单数据
   getProviderFormData() {
-    const customProviderNameInput = document.getElementById('customProviderNameInput');
-    const customProviderApiKey = document.getElementById('customProviderApiKey');
-    const customApiUrlInput = document.getElementById('customApiUrlInput');
-    const customModelIdInput = document.getElementById('customModelIdInput');
-    const customModelNameInput = document.getElementById('customModelNameInput');
+    const customProviderNameInput = document.getElementById(
+      "customProviderNameInput",
+    );
+    const customProviderApiKey = document.getElementById(
+      "customProviderApiKey",
+    );
+    const customApiUrlInput = document.getElementById("customApiUrlInput");
+    const customModelIdInput = document.getElementById("customModelIdInput");
+    const customModelNameInput = document.getElementById(
+      "customModelNameInput",
+    );
 
     const data = {
-      providerName: customProviderNameInput?.value || '',
-      apiKey: customProviderApiKey?.value || '',
-      apiUrl: customApiUrlInput?.value || '',
-      modelId: customModelIdInput?.value || '',
-      modelName: customModelNameInput?.value || ''
+      providerName: customProviderNameInput?.value || "",
+      apiKey: customProviderApiKey?.value || "",
+      apiUrl: customApiUrlInput?.value || "",
+      modelId: customModelIdInput?.value || "",
+      modelName: customModelNameInput?.value || "",
     };
 
     return data;
@@ -213,11 +217,17 @@ export class TempStateManager {
   // 恢复服务商添加表单数据
   restoreProviderFormData(data) {
     try {
-      const customProviderNameInput = document.getElementById('customProviderNameInput');
-      const customProviderApiKey = document.getElementById('customProviderApiKey');
-      const customApiUrlInput = document.getElementById('customApiUrlInput');
-      const customModelIdInput = document.getElementById('customModelIdInput');
-      const customModelNameInput = document.getElementById('customModelNameInput');
+      const customProviderNameInput = document.getElementById(
+        "customProviderNameInput",
+      );
+      const customProviderApiKey = document.getElementById(
+        "customProviderApiKey",
+      );
+      const customApiUrlInput = document.getElementById("customApiUrlInput");
+      const customModelIdInput = document.getElementById("customModelIdInput");
+      const customModelNameInput = document.getElementById(
+        "customModelNameInput",
+      );
 
       // 修复：不检查值是否为空字符串，因为空字符串也是有效的数据
       if (customProviderNameInput && data.providerName !== undefined) {
@@ -239,9 +249,8 @@ export class TempStateManager {
       if (customModelNameInput && data.modelName !== undefined) {
         customModelNameInput.value = data.modelName;
       }
-
     } catch (error) {
-      console.error('恢复服务商表单数据失败:', error);
+      console.error("恢复服务商表单数据失败:", error);
     }
   }
 
@@ -251,30 +260,26 @@ export class TempStateManager {
     let getFormDataCallback;
 
     if (type === TempStateManager.TYPES.ADD_MODEL) {
-      elements = [
-        'modelApiId',
-        'modelDisplayName',
-        'modelApiKey'
-      ];
+      elements = ["modelApiId", "modelDisplayName", "modelApiKey"];
       getFormDataCallback = () => this.getModelFormData();
     } else if (type === TempStateManager.TYPES.ADD_PROVIDER) {
       elements = [
-        'customProviderNameInput',
-        'customProviderApiKey',
-        'customApiUrlInput',
-        'customModelIdInput',
-        'customModelNameInput'
+        "customProviderNameInput",
+        "customProviderApiKey",
+        "customApiUrlInput",
+        "customModelIdInput",
+        "customModelNameInput",
       ];
       getFormDataCallback = () => this.getProviderFormData();
     }
 
     // 为每个表单元素添加输入监听器
-    elements.forEach(elementId => {
+    elements.forEach((elementId) => {
       const element = document.getElementById(elementId);
       if (element) {
         // 移除可能存在的旧监听器
-        element.removeEventListener('input', element._tempStateListener);
-        element.removeEventListener('change', element._tempStateListener);
+        element.removeEventListener("input", element._tempStateListener);
+        element.removeEventListener("change", element._tempStateListener);
 
         // 创建新的监听器
         const listener = () => {
@@ -285,8 +290,8 @@ export class TempStateManager {
         element._tempStateListener = listener;
 
         // 添加事件监听器
-        element.addEventListener('input', listener);
-        element.addEventListener('change', listener);
+        element.addEventListener("input", listener);
+        element.addEventListener("change", listener);
       }
     });
 
@@ -298,22 +303,22 @@ export class TempStateManager {
     let elements = [];
 
     if (type === TempStateManager.TYPES.ADD_MODEL) {
-      elements = ['modelApiId', 'modelDisplayName', 'modelApiKey'];
+      elements = ["modelApiId", "modelDisplayName", "modelApiKey"];
     } else if (type === TempStateManager.TYPES.ADD_PROVIDER) {
       elements = [
-        'customProviderNameInput',
-        'customProviderApiKey',
-        'customApiUrlInput',
-        'customModelIdInput',
-        'customModelNameInput'
+        "customProviderNameInput",
+        "customProviderApiKey",
+        "customApiUrlInput",
+        "customModelIdInput",
+        "customModelNameInput",
       ];
     }
 
-    elements.forEach(elementId => {
+    elements.forEach((elementId) => {
       const element = document.getElementById(elementId);
       if (element && element._tempStateListener) {
-        element.removeEventListener('input', element._tempStateListener);
-        element.removeEventListener('change', element._tempStateListener);
+        element.removeEventListener("input", element._tempStateListener);
+        element.removeEventListener("change", element._tempStateListener);
         delete element._tempStateListener;
       }
     });

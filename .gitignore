@@ -1,3 +1,10 @@
-node_modules
-dist
+#
+# .gitignore
+#
+
+/node_modules
+/dist
 dist.zip
+chrome-submission.zip
+edge-submission.zip
+/*.zip

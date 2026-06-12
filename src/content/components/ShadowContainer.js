@@ -14,10 +14,10 @@ function detectPageInvertFilter() {
   const checkElement = (el) => {
     if (!el) return false;
     const style = window.getComputedStyle(el);
-    const filter = style.filter || style.webkitFilter || '';
-    return filter.includes('invert');
+    const filter = style.filter || style.webkitFilter || "";
+    return filter.includes("invert");
   };
-  
+
   return checkElement(document.documentElement) || checkElement(document.body);
 }
 
@@ -33,33 +33,33 @@ export function createShadowContainer(cssText) {
   }
 
   // 创建宿主元素
-  const host = document.createElement('div');
-  host.id = 'deepseek-shadow-host';
+  const host = document.createElement("div");
+  host.id = "deepseek-shadow-host";
 
   // 检测页面是否使用了 invert filter
   const pageUsesInvert = detectPageInvertFilter();
 
   // 设置宿主元素的样式，确保它不被宿主网页影响
   Object.assign(host.style, {
-    all: 'initial',
-    position: 'fixed',
-    top: '0',
-    left: '0',
-    width: '0',
-    height: '0',
-    overflow: 'visible',
-    zIndex: '2147483647',
-    pointerEvents: 'none', // 宿主元素不拦截事件
+    all: "initial",
+    position: "fixed",
+    top: "0",
+    left: "0",
+    width: "0",
+    height: "0",
+    overflow: "visible",
+    zIndex: "2147483647",
+    pointerEvents: "none", // 宿主元素不拦截事件
     // 如果页面使用了 invert，我们也应用 invert 来抵消效果
-    filter: pageUsesInvert ? 'invert(1) hue-rotate(180deg)' : 'none',
-    isolation: 'isolate',  // 创建新的层叠上下文，隔离混合模式
+    filter: pageUsesInvert ? "invert(1) hue-rotate(180deg)" : "none",
+    isolation: "isolate", // 创建新的层叠上下文，隔离混合模式
   });
 
   // 创建 Shadow DOM
-  const shadow = host.attachShadow({ mode: 'open' });
+  const shadow = host.attachShadow({ mode: "open" });
 
   // 注入样式
-  const style = document.createElement('style');
+  const style = document.createElement("style");
   style.textContent = `
     /* Shadow DOM 根容器重置样式 */
     :host {
@@ -108,8 +108,8 @@ export function createShadowContainer(cssText) {
   shadow.appendChild(style);
 
   // 创建内容容器
-  const container = document.createElement('div');
-  container.id = 'deepseek-popup-root';
+  const container = document.createElement("div");
+  container.id = "deepseek-popup-root";
   shadow.appendChild(container);
 
   // 键盘事件隔离：阻止宿主页面的快捷键/热键抢占焦点（尤其是英文键盘输入）
@@ -117,21 +117,25 @@ export function createShadowContainer(cssText) {
   // 处理：在 Shadow 边界的冒泡阶段截断键盘事件，但保留 ESC 以维持关闭快捷键
   const stopKeyboardEventPropagation = (event) => {
     // 允许 ESC 继续冒泡以便全局关闭逻辑生效
-    if (event.key === 'Escape') return;
+    if (event.key === "Escape") return;
 
     // 仅处理从当前 Shadow 容器内冒泡的事件
-    const path = typeof event.composedPath === 'function' ? event.composedPath() : [];
-    const withinPopup = path.some(node => node && (node.id === 'deepseek-popup-root' || node.id === 'ai-popup'));
+    const path =
+      typeof event.composedPath === "function" ? event.composedPath() : [];
+    const withinPopup = path.some(
+      (node) =>
+        node && (node.id === "deepseek-popup-root" || node.id === "ai-popup"),
+    );
     if (!withinPopup) return;
 
     // 阻断向宿主页冒泡，避免宿主页快捷键劫持焦点
     event.stopPropagation();
-    if (typeof event.stopImmediatePropagation === 'function') {
+    if (typeof event.stopImmediatePropagation === "function") {
       event.stopImmediatePropagation();
     }
   };
 
-  ['keydown', 'keypress', 'keyup'].forEach((type) => {
+  ["keydown", "keypress", "keyup"].forEach((type) => {
     shadow.addEventListener(type, stopKeyboardEventPropagation);
   });
 
@@ -205,7 +209,7 @@ export function shadowQuerySelectorAll(selector) {
   if (container && container.shadow) {
     return container.shadow.querySelectorAll(selector);
   }
-  return document.createDocumentFragment().querySelectorAll('*'); // 返回空 NodeList
+  return document.createDocumentFragment().querySelectorAll("*"); // 返回空 NodeList
 }
 
 /**
@@ -215,9 +219,9 @@ export function shadowQuerySelectorAll(selector) {
 export function getPopupElement() {
   const container = getShadowContainer();
   if (container && container.shadow) {
-    return container.shadow.querySelector('#ai-popup');
+    return container.shadow.querySelector("#ai-popup");
   }
-  return document.getElementById('ai-popup');
+  return document.getElementById("ai-popup");
 }
 
 /**
@@ -227,9 +231,9 @@ export function getPopupElement() {
 export function getAiResponseElement() {
   const container = getShadowContainer();
   if (container && container.shadow) {
-    return container.shadow.querySelector('#ai-response');
+    return container.shadow.querySelector("#ai-response");
   }
-  return document.getElementById('ai-response');
+  return document.getElementById("ai-response");
 }
 
 /**
@@ -243,7 +247,7 @@ export function getAiResponseContainer() {
   }
   const container = getShadowContainer();
   if (container && container.shadow) {
-    return container.shadow.querySelector('#ai-response-container');
+    return container.shadow.querySelector("#ai-response-container");
   }
-  return document.getElementById('ai-response-container');
+  return document.getElementById("ai-response-container");
 }

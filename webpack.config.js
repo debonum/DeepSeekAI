@@ -9,39 +9,39 @@ module.exports = {
     filename: "content.js",
     path: path.resolve(__dirname, "dist"),
     clean: true,
-    publicPath: ""
+    publicPath: "",
   },
   module: {
     rules: [
       {
         test: /\.js$/,
         use: {
-          loader: 'babel-loader',
+          loader: "babel-loader",
           options: {
-            presets: ['@babel/preset-env']
-          }
+            presets: ["@babel/preset-env"],
+          },
         },
-        exclude: /node_modules/
+        exclude: /node_modules/,
       },
       {
-        // 普通 CSS 导入（注入到页面）
+        // Regular CSS import (injected into the page)
         test: /\.css$/,
         resourceQuery: { not: [/raw/] },
         use: ["style-loader", "css-loader"],
       },
       {
-        // CSS 字符串导入（用于 Shadow DOM）
+        // Import CSS strings (for Shadow DOM)
         test: /\.css$/,
         resourceQuery: /raw/,
-        type: 'asset/source',
+        type: "asset/source",
       },
       {
         test: /\.(woff|woff2|eot|ttf|otf)$/i,
-        type: 'asset/resource',
+        type: "asset/resource",
         generator: {
-          filename: 'fonts/[name][ext][query]'
-        }
-      }
+          filename: "fonts/[name][ext][query]",
+        },
+      },
     ],
   },
   plugins: [
@@ -51,8 +51,11 @@ module.exports = {
           from: "./src/manifest.json",
           to: "manifest.json",
           transform(content) {
-            return Buffer.from(JSON.stringify(JSON.parse(content), null, 2), 'utf-8')
-          }
+            return Buffer.from(
+              JSON.stringify(JSON.parse(content), null, 2),
+              "utf-8",
+            );
+          },
         },
         { from: "./src/icons", to: "icons" },
         { from: "./src/content/styles/style.css", to: "style.css" },
@@ -61,8 +64,8 @@ module.exports = {
         { from: "./src/Instructions", to: "Instructions" },
         {
           from: "node_modules/katex/dist/fonts",
-          to: "fonts"
-        }
+          to: "fonts",
+        },
       ],
     }),
   ],
@@ -72,17 +75,17 @@ module.exports = {
       new TerserPlugin({
         terserOptions: {
           compress: {
-            drop_console: true,  // 临时开启 console 以调试根号渲染问题
+            drop_console: true, // Temporarily enable console to debug square root rendering issues
             drop_debugger: true,
             passes: 2,
             pure_getters: true,
-            module: true
+            module: true,
           },
           mangle: true,
           format: {
             comments: false,
-            ascii_only: true
-          }
+            ascii_only: true,
+          },
         },
         extractComments: false,
       }),

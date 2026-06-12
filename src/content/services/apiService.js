@@ -1,5 +1,13 @@
-import { getAllowAutoScroll, scrollToBottom, updateAllowAutoScroll } from "../utils/scrollManager";
-import { render, showCodeCopyButtons, isMathBalanced } from "../utils/markdownRenderer";
+import {
+  getAllowAutoScroll,
+  scrollToBottom,
+  updateAllowAutoScroll,
+} from "../utils/scrollManager";
+import {
+  render,
+  showCodeCopyButtons,
+  isMathBalanced,
+} from "../utils/markdownRenderer";
 import {
   getDeepSeekModelLabel,
   resolveDeepSeekModel,
@@ -22,8 +30,8 @@ export function getIsGenerating() {
 }
 
 const processText = (text, type) => {
-  if (type === 'cleanup') {
-    return text.trim().replace(/\s+/g, ' ');
+  if (type === "cleanup") {
+    return text.trim().replace(/\s+/g, " ");
   }
   return text;
 };
@@ -46,10 +54,11 @@ async function processRenderQueue(responseElement, ps, aiResponseContainer) {
   try {
     // 获取或创建reasoning content元素
     if (currentChunk.reasoningContent) {
-      let reasoningContentElement = responseElement.querySelector('.reasoning-content');
+      let reasoningContentElement =
+        responseElement.querySelector(".reasoning-content");
       if (!reasoningContentElement) {
-        reasoningContentElement = document.createElement('div');
-        reasoningContentElement.className = 'reasoning-content collapsed';
+        reasoningContentElement = document.createElement("div");
+        reasoningContentElement.className = "reasoning-content collapsed";
         reasoningContentElement.innerHTML = `
           <div class="reasoning-header">
             <div class="reasoning-toggle"></div>
@@ -57,28 +66,36 @@ async function processRenderQueue(responseElement, ps, aiResponseContainer) {
           </div>
           <div class="reasoning-content-inner"></div>
         `;
-        responseElement.insertBefore(reasoningContentElement, responseElement.firstChild);
+        responseElement.insertBefore(
+          reasoningContentElement,
+          responseElement.firstChild,
+        );
 
         // 直接绑定点击事件到 reasoning-header
-        const reasoningHeader = reasoningContentElement.querySelector('.reasoning-header');
+        const reasoningHeader =
+          reasoningContentElement.querySelector(".reasoning-header");
         if (reasoningHeader) {
-          reasoningHeader.addEventListener('click', (e) => {
+          reasoningHeader.addEventListener("click", (e) => {
             e.preventDefault();
             e.stopPropagation();
-            reasoningContentElement.classList.toggle('collapsed');
-            reasoningContentElement.classList.toggle('expanded');
+            reasoningContentElement.classList.toggle("collapsed");
+            reasoningContentElement.classList.toggle("expanded");
           });
         }
       }
 
-      const reasoningInner = reasoningContentElement.querySelector('.reasoning-content-inner');
+      const reasoningInner = reasoningContentElement.querySelector(
+        ".reasoning-content-inner",
+      );
       if (reasoningInner) {
         const wasAtBottom = isElementAtBottom(reasoningInner);
         const reasoningHtml = render(currentChunk.reasoningContent);
         reasoningInner.innerHTML = reasoningHtml;
 
-        const isCollapsed = reasoningContentElement.classList.contains('collapsed');
-        const shouldAutoScrollReasoning = isCollapsed || (getAllowAutoScroll() && wasAtBottom);
+        const isCollapsed =
+          reasoningContentElement.classList.contains("collapsed");
+        const shouldAutoScrollReasoning =
+          isCollapsed || (getAllowAutoScroll() && wasAtBottom);
 
         if (shouldAutoScrollReasoning) {
           requestAnimationFrame(() => {
@@ -90,14 +107,14 @@ async function processRenderQueue(responseElement, ps, aiResponseContainer) {
 
     // 获取或创建content容器
     if (currentChunk.content) {
-      let contentElement = responseElement.querySelector('.content-container');
+      let contentElement = responseElement.querySelector(".content-container");
       if (!contentElement) {
-        contentElement = document.createElement('div');
-        contentElement.className = 'content-container';
+        contentElement = document.createElement("div");
+        contentElement.className = "content-container";
         responseElement.appendChild(contentElement);
       }
 
-      const text = currentChunk.content?.replace(/^\s+/, '') || "";
+      const text = currentChunk.content?.replace(/^\s+/, "") || "";
       // 流式期间：如果文本中包含数学且尚未闭合，则暂缓渲染，避免中间态错乱
       const containsMath = /\$|\\\(|\\\[/.test(text);
       if (containsMath && !isMathBalanced(text)) {
@@ -110,7 +127,6 @@ async function processRenderQueue(responseElement, ps, aiResponseContainer) {
 
     // 使用requestAnimationFrame优化滚动和更新
 
-
     if (getAllowAutoScroll() && aiResponseContainer?.isConnected) {
       requestAnimationFrame(() => {
         scrollToBottom(aiResponseContainer, true);
@@ -118,7 +134,7 @@ async function processRenderQueue(responseElement, ps, aiResponseContainer) {
       });
     }
   } catch (error) {
-    console.error('Error processing render queue:', error);
+    console.error("Error processing render queue:", error);
   }
 }
 
@@ -126,8 +142,8 @@ async function processRenderQueue(responseElement, ps, aiResponseContainer) {
 function validateAndCleanMessages() {
   // 如果发现连续的user消息，删除前一条
   for (let i = messages.length - 1; i > 0; i--) {
-    if (messages[i].role === 'user' && messages[i-1].role === 'user') {
-      messages.splice(i-1, 1);
+    if (messages[i].role === "user" && messages[i - 1].role === "user") {
+      messages.splice(i - 1, 1);
     }
   }
 }
@@ -142,9 +158,9 @@ export async function getAIResponse(
   isRefresh = false,
   onComplete,
   isGreeting = false,
-  quickActionPrompt = '',
+  quickActionPrompt = "",
   onGenerationComplete = null,
-  onGenerationError = null
+  onGenerationError = null,
 ) {
   if (!text) return;
   console.log("🚀 getAIResponse called with text:", text);
@@ -153,7 +169,7 @@ export async function getAIResponse(
   window.currentAbortController = signal?.controller || new AbortController();
 
   // 设置中止信号处理
-  window.currentAbortController.signal.addEventListener('abort', () => {
+  window.currentAbortController.signal.addEventListener("abort", () => {
     // 发送中止请求消息到background
     chrome.runtime.sendMessage({ action: "abortRequest" });
   });
@@ -167,7 +183,8 @@ export async function getAIResponse(
     messages.push({ role: "user", content: text });
   }
 
-  const existingIconContainer = responseElement.querySelector('.icon-container');
+  const existingIconContainer =
+    responseElement.querySelector(".icon-container");
   const originalClassName = responseElement.className;
   responseElement.textContent = "";
   if (existingIconContainer) {
@@ -176,15 +193,15 @@ export async function getAIResponse(
   responseElement.className = originalClassName;
 
   try {
-    const settings = await new Promise(resolve => {
+    const settings = await new Promise((resolve) => {
       chrome.runtime.sendMessage({ action: "getSettings" }, resolve);
     });
 
-    const provider = settings.provider || 'deepseek';
-    let apiKey = '';
+    const provider = settings.provider || "deepseek";
+    let apiKey = "";
 
     // 根据provider选择Api Key
-    if (provider.startsWith('custom_')) {
+    if (provider.startsWith("custom_")) {
       // 对于自定义服务商，API key可能来自两个地方
       // 1. settings.customApiKey (background.js已经处理过)
       // 2. 如果customApiKey为空，尝试从customProviders数组中获取
@@ -192,21 +209,32 @@ export async function getAIResponse(
 
       // 如果从background获取的customApiKey为空，尝试从customProviders中获取
       if (!apiKey && settings.customProviders) {
-        const customProvider = settings.customProviders.find(p => p.id === provider);
+        const customProvider = settings.customProviders.find(
+          (p) => p.id === provider,
+        );
         if (customProvider && customProvider.apiKey) {
           apiKey = customProvider.apiKey;
         }
       }
     } else {
-      apiKey = provider === 'siliconflow' ? settings.siliconflowApiKey :
-              provider === 'openrouter' ? settings.openrouterApiKey :
-              provider === 'volcengine' ? settings.volcengineApiKey :
-              provider === 'tencentcloud' ? settings.tencentcloudApiKey :
-              provider === 'iflytekstar' ? settings.iflytekstarApiKey :
-              provider === 'baiducloud' ? settings.baiducloudApiKey :
-              provider === 'aliyun' ? settings.aliyunApiKey :
-              provider === 'aihubmix' ? settings.aihubmixApiKey :
-              settings.deepseekApiKey;
+      apiKey =
+        provider === "siliconflow"
+          ? settings.siliconflowApiKey
+          : provider === "openrouter"
+            ? settings.openrouterApiKey
+            : provider === "volcengine"
+              ? settings.volcengineApiKey
+              : provider === "tencentcloud"
+                ? settings.tencentcloudApiKey
+                : provider === "iflytekstar"
+                  ? settings.iflytekstarApiKey
+                  : provider === "baiducloud"
+                    ? settings.baiducloudApiKey
+                    : provider === "aliyun"
+                      ? settings.aliyunApiKey
+                      : provider === "aihubmix"
+                        ? settings.aihubmixApiKey
+                        : settings.deepseekApiKey;
     }
 
     const language = settings.language;
@@ -224,8 +252,10 @@ export async function getAIResponse(
       : model;
 
     // 如果是自定义Provider，获取显示名称
-    if (provider.startsWith('custom_') && settings.customProviders) {
-      const customProvider = settings.customProviders.find(p => p.id === provider);
+    if (provider.startsWith("custom_") && settings.customProviders) {
+      const customProvider = settings.customProviders.find(
+        (p) => p.id === provider,
+      );
       if (customProvider) {
         // 获取显示名称
         providerDisplayName = customProvider.name || provider;
@@ -238,16 +268,16 @@ export async function getAIResponse(
     }
 
     // 异步获取模型显示名称
-    if (provider.startsWith('custom_') && model) {
+    if (provider.startsWith("custom_") && model) {
       // 尝试从storage获取模型列表
       const modelStorageKey = `${provider}Models`;
-      const modelData = await new Promise(resolve => {
+      const modelData = await new Promise((resolve) => {
         chrome.storage.sync.get(modelStorageKey, resolve);
       });
 
       if (modelData && modelData[modelStorageKey]) {
         const models = modelData[modelStorageKey];
-        const foundModel = models.find(m => m.value === model);
+        const foundModel = models.find((m) => m.value === model);
         if (foundModel && foundModel.label) {
           modelDisplayName = foundModel.label;
         }
@@ -258,26 +288,36 @@ export async function getAIResponse(
     // console.log(`🔍 使用模型: ${modelDisplayName}, Provider: ${providerDisplayName}`);
 
     // 获取自定义API URL
-    let customApiUrl = '';
+    let customApiUrl = "";
 
-    if (provider.startsWith('custom_')) {
+    if (provider.startsWith("custom_")) {
       customApiUrl = settings.customApiUrl;
     } else {
-      customApiUrl = provider === 'siliconflow' ? settings.siliconflowCustomApiUrl :
-                    provider === 'openrouter' ? settings.openrouterCustomApiUrl :
-                    provider === 'volcengine' ? settings.volcengineCustomApiUrl :
-                    provider === 'tencentcloud' ? settings.tencentcloudCustomApiUrl :
-                    provider === 'iflytekstar' ? settings.iflytekstarCustomApiUrl :
-                    provider === 'baiducloud' ? settings.baiducloudCustomApiUrl :
-                    provider === 'aliyun' ? settings.aliyunCustomApiUrl :
-                    provider === 'aihubmix' ? settings.aihubmixCustomApiUrl :
-                    settings.deepseekCustomApiUrl;
+      customApiUrl =
+        provider === "siliconflow"
+          ? settings.siliconflowCustomApiUrl
+          : provider === "openrouter"
+            ? settings.openrouterCustomApiUrl
+            : provider === "volcengine"
+              ? settings.volcengineCustomApiUrl
+              : provider === "tencentcloud"
+                ? settings.tencentcloudCustomApiUrl
+                : provider === "iflytekstar"
+                  ? settings.iflytekstarCustomApiUrl
+                  : provider === "baiducloud"
+                    ? settings.baiducloudCustomApiUrl
+                    : provider === "aliyun"
+                      ? settings.aliyunCustomApiUrl
+                      : provider === "aihubmix"
+                        ? settings.aihubmixCustomApiUrl
+                        : settings.deepseekCustomApiUrl;
     }
 
     if (!apiKey) {
       const linkElement = document.createElement("a");
       linkElement.href = "#";
-      linkElement.textContent = "Please first set your API key in extension popup.";
+      linkElement.textContent =
+        "Please first set your API key in extension popup.";
       linkElement.style.color = "#0066cc";
       linkElement.style.textDecoration = "underline";
       linkElement.style.cursor = "pointer";
@@ -286,7 +326,7 @@ export async function getAIResponse(
         try {
           await chrome.runtime.sendMessage({ action: "openPopup" });
         } catch (error) {
-          console.error('Failed to open popup:', error);
+          console.error("Failed to open popup:", error);
           chrome.runtime.sendMessage({ action: "getSelectedText" });
         }
       });
@@ -299,10 +339,14 @@ export async function getAIResponse(
     }
 
     // 在缺少模型时进行拦截（非 deepseek 必须手动填写模型）
-    if (provider !== 'deepseek' && (!model || (typeof model === 'string' && model.trim() === ''))) {
+    if (
+      provider !== "deepseek" &&
+      (!model || (typeof model === "string" && model.trim() === ""))
+    ) {
       const linkElement = document.createElement("a");
       linkElement.href = "#";
-      linkElement.textContent = "Please first set your Model in extension popup.";
+      linkElement.textContent =
+        "Please first set your Model in extension popup.";
       linkElement.style.color = "#0066cc";
       linkElement.style.textDecoration = "underline";
       linkElement.style.cursor = "pointer";
@@ -311,7 +355,7 @@ export async function getAIResponse(
         try {
           await chrome.runtime.sendMessage({ action: "openPopup" });
         } catch (error) {
-          console.error('Failed to open popup:', error);
+          console.error("Failed to open popup:", error);
           chrome.runtime.sendMessage({ action: "getSelectedText" });
         }
       });
@@ -324,50 +368,53 @@ export async function getAIResponse(
     }
 
     // 使用自定义API URL或默认URL
-    const apiUrl = customApiUrl || (
-      provider.startsWith('custom_')
+    const apiUrl =
+      customApiUrl ||
+      (provider.startsWith("custom_")
         ? settings.customApiUrl // 自定义Provider直接使用其绑定的URL
-        : provider === 'siliconflow'
-        ? 'https://api.siliconflow.cn/v1/chat/completions'
-        : provider === 'openrouter'
-        ? 'https://openrouter.ai/api/v1/chat/completions'
-        : provider === 'volcengine'
-        ? 'https://ark.cn-beijing.volces.com/api/v3/chat/completions'
-        : provider === 'tencentcloud'
-        ? 'https://api.lkeap.cloud.tencent.com/v1/chat/completions'
-        : provider === 'iflytekstar'
-        ? 'https://maas-api.cn-huabei-1.xf-yun.com/v1/chat/completions'
-        : provider === 'baiducloud'
-        ? 'https://qianfan.baidubce.com/v2/chat/completions'
-        : provider === 'aliyun'
-        ? 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions'
-        : provider === 'aihubmix'
-        ? 'https://aihubmix.com/v1/chat/completions'
-        : 'https://api.deepseek.com/v1/chat/completions'
-    );
+        : provider === "siliconflow"
+          ? "https://api.siliconflow.cn/v1/chat/completions"
+          : provider === "openrouter"
+            ? "https://openrouter.ai/api/v1/chat/completions"
+            : provider === "volcengine"
+              ? "https://ark.cn-beijing.volces.com/api/v3/chat/completions"
+              : provider === "tencentcloud"
+                ? "https://api.lkeap.cloud.tencent.com/v1/chat/completions"
+                : provider === "iflytekstar"
+                  ? "https://maas-api.cn-huabei-1.xf-yun.com/v1/chat/completions"
+                  : provider === "baiducloud"
+                    ? "https://qianfan.baidubce.com/v2/chat/completions"
+                    : provider === "aliyun"
+                      ? "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
+                      : provider === "aihubmix"
+                        ? "https://aihubmix.com/v1/chat/completions"
+                        : "https://api.deepseek.com/v1/chat/completions");
 
     const modelName = deepseekConfig ? deepseekConfig.apiModel : model;
-    const modelDisplayNameForApi = deepseekConfig ? deepseekConfig.label : modelDisplayName;
+    const modelDisplayNameForApi = deepseekConfig
+      ? deepseekConfig.label
+      : modelDisplayName;
 
     // 确保每次请求都使用正确的模型名称
     // console.log(`📦 调用API - 使用模型: ${modelDisplayNameForApi}`);
 
     // 获取自定义系统提示
-    const customSystemPrompt = settings.customSystemPrompt || '';
+    const customSystemPrompt = settings.customSystemPrompt || "";
 
     // 构建系统提示
     // 🎯 关键逻辑：如果存在 quickActionPrompt，则完全使用快捷按钮的专用提示，不受自定义系统提示影响
     // 否则，将自定义系统提示与语言设置结合使用
-    let systemPrompt = '';
+    let systemPrompt = "";
 
     if (quickActionPrompt) {
       // 快捷按钮有自己的专用提示，直接使用，不与自定义系统提示混合
       systemPrompt = quickActionPrompt;
     } else {
       // 常规对话：结合语言设置和自定义系统提示
-      const languagePrompt = language === "auto"
-        ? "Detect and respond in the same language as the user's input. If the user's input is in Chinese, respond in Chinese. If the user's input is in English, respond in English, etc."
-        : `You MUST respond ONLY in ${language}. Including your reasoningContent language. This is a strict requirement. Do not use any other language except ${language}.`;
+      const languagePrompt =
+        language === "auto"
+          ? "Detect and respond in the same language as the user's input. If the user's input is in Chinese, respond in Chinese. If the user's input is in English, respond in English, etc."
+          : `You MUST respond ONLY in ${language}. Including your reasoningContent language. This is a strict requirement. Do not use any other language except ${language}.`;
 
       // 如果有自定义系统提示，将其添加到语言提示之后
       systemPrompt = customSystemPrompt
@@ -381,7 +428,7 @@ export async function getAIResponse(
       let aborted = false;
       let isLogged = false;
 
-      window.currentAbortController.signal.addEventListener('abort', () => {
+      window.currentAbortController.signal.addEventListener("abort", () => {
         aborted = true;
         resolve({ ok: true, content: aiResponse });
       });
@@ -390,14 +437,16 @@ export async function getAIResponse(
         if (aborted) return;
 
         if (chrome.runtime.lastError) {
-          const error = new Error(chrome.runtime.lastError.message || 'Chrome runtime error');
+          const error = new Error(
+            chrome.runtime.lastError.message || "Chrome runtime error",
+          );
           error.originalError = chrome.runtime.lastError;
           reject(error);
           return;
         }
 
         if (!response.ok) {
-          const error = new Error(response.error || 'Request failed');
+          const error = new Error(response.error || "Request failed");
           error.status = response.status;
           error.originalResponse = response;
           reject(error);
@@ -406,10 +455,17 @@ export async function getAIResponse(
 
         if (response.done) {
           if (!isLogged) {
-            console.log("LLM Final Response:", JSON.stringify({
-              content: aiResponse,
-              reasoning_content: reasoningContent
-            }, null, 2));
+            console.log(
+              "LLM Final Response:",
+              JSON.stringify(
+                {
+                  content: aiResponse,
+                  reasoning_content: reasoningContent,
+                },
+                null,
+                2,
+              ),
+            );
             isLogged = true;
           }
           resolve({ ok: true, content: aiResponse });
@@ -423,10 +479,17 @@ export async function getAIResponse(
           const jsonLine = line.slice(6);
           if (jsonLine === "[DONE]") {
             if (!isLogged) {
-              console.log("LLM Final Response:", JSON.stringify({
-                content: aiResponse,
-                reasoning_content: reasoningContent
-              }, null, 2));
+              console.log(
+                "LLM Final Response:",
+                JSON.stringify(
+                  {
+                    content: aiResponse,
+                    reasoning_content: reasoningContent,
+                  },
+                  null,
+                  2,
+                ),
+              );
               isLogged = true;
             }
             resolve({ ok: true, content: aiResponse });
@@ -436,7 +499,10 @@ export async function getAIResponse(
           const data = JSON.parse(jsonLine);
 
           // Synchronous accumulation
-          if (provider === 'openrouter' && data.choices?.[0]?.delta?.reasoning) {
+          if (
+            provider === "openrouter" &&
+            data.choices?.[0]?.delta?.reasoning
+          ) {
             reasoningContent += data.choices[0].delta.reasoning;
             currentReasoningContent = reasoningContent;
           } else if (data.choices?.[0]?.delta?.reasoning_content) {
@@ -450,10 +516,12 @@ export async function getAIResponse(
           }
 
           requestAnimationFrame(() => {
-            renderQueue = [{
-              reasoningContent,
-              content: aiResponse
-            }];
+            renderQueue = [
+              {
+                reasoningContent,
+                content: aiResponse,
+              },
+            ];
             processRenderQueue(responseElement, ps, aiResponseContainer);
           });
         } catch (e) {
@@ -477,16 +545,15 @@ export async function getAIResponse(
       // 确保请求中包含正确的模型名称
       const requestBody = {
         model: modelName,
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...messages
-        ],
+        messages: [{ role: "system", content: systemPrompt }, ...messages],
         stream: true,
-        ...(deepseekConfig?.thinking ? { thinking: deepseekConfig.thinking } : {}),
+        ...(deepseekConfig?.thinking
+          ? { thinking: deepseekConfig.thinking }
+          : {}),
         ...(deepseekConfig?.reasoningEffort
           ? { reasoning_effort: deepseekConfig.reasoningEffort }
           : {}),
-        ...(provider === 'openrouter' && { include_reasoning: true })
+        ...(provider === "openrouter" && { include_reasoning: true }),
       };
 
       // console.log(`📦 请求数据 - 模型: ${modelDisplayNameForApi}`);
@@ -500,37 +567,42 @@ export async function getAIResponse(
           "Content-Type": "application/json",
           Authorization: `Bearer ${apiKey}`,
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
       });
     });
 
     if (currentContent) {
       messages.push({ role: "assistant", content: currentContent });
     }
-    requestIdleCallback(() => {
-      if (window.addIconsToElement) {
-        window.addIconsToElement(responseElement);
-      }
-      if (window.updateLastAnswerIcons) {
-        window.updateLastAnswerIcons();
-      }
-    }, { timeout: 1000 });
+    requestIdleCallback(
+      () => {
+        if (window.addIconsToElement) {
+          window.addIconsToElement(responseElement);
+        }
+        if (window.updateLastAnswerIcons) {
+          window.updateLastAnswerIcons();
+        }
+      },
+      { timeout: 1000 },
+    );
 
     if (iconContainer) {
-      iconContainer.style.display = 'flex';
-      iconContainer.dataset.initialShow = 'true';
+      iconContainer.style.display = "flex";
+      iconContainer.dataset.initialShow = "true";
 
       const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
+        entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            const buttonContainer = responseElement.querySelector('.icon-container');
+            const buttonContainer =
+              responseElement.querySelector(".icon-container");
             if (buttonContainer && aiResponseContainer) {
               const buttonRect = buttonContainer.getBoundingClientRect();
               const containerRect = aiResponseContainer.getBoundingClientRect();
               const buttonBottom = buttonRect.bottom - containerRect.top;
 
               if (buttonBottom > aiResponseContainer.clientHeight) {
-                const extraScroll = buttonBottom - aiResponseContainer.clientHeight + 40;
+                const extraScroll =
+                  buttonBottom - aiResponseContainer.clientHeight + 40;
                 aiResponseContainer.scrollTop += extraScroll;
                 if (ps) ps.update();
               }
@@ -553,10 +625,10 @@ export async function getAIResponse(
   } catch (error) {
     console.error("Error:", error);
 
-    if (error.name !== 'AbortError') {
+    if (error.name !== "AbortError") {
       // 使用handleError函数处理错误，传递原始错误信息
       const errorData = error.originalResponse || error.originalError || error;
-      const errorStatus = error.status || (error.originalResponse?.status) || 500;
+      const errorStatus = error.status || error.originalResponse?.status || 500;
       handleError(errorStatus, responseElement, errorData, onGenerationError);
     }
   } finally {
@@ -577,16 +649,16 @@ function handleError(status, responseElement, errorInfo, onGenerationError) {
   // 优先使用API返回的原始错误信息
   let errorMessage = "Failed to connect to AI service.";
 
-  if (errorInfo && typeof errorInfo === 'object') {
+  if (errorInfo && typeof errorInfo === "object") {
     // 如果有API返回的详细错误信息，优先使用
     if (errorInfo.message) {
       errorMessage = errorInfo.message;
     } else if (errorInfo.error && errorInfo.error.message) {
       errorMessage = errorInfo.error.message;
-    } else if (typeof errorInfo.error === 'string') {
+    } else if (typeof errorInfo.error === "string") {
       errorMessage = errorInfo.error;
     }
-  } else if (errorInfo && typeof errorInfo === 'string') {
+  } else if (errorInfo && typeof errorInfo === "string") {
     // 如果错误信息是字符串，直接使用
     errorMessage = errorInfo;
   } else {
@@ -603,10 +675,10 @@ function handleError(status, responseElement, errorInfo, onGenerationError) {
   }
 
   responseElement.textContent = errorMessage;
-  responseElement.classList.add('error'); // 添加错误状态类
+  responseElement.classList.add("error"); // 添加错误状态类
 
   // 调用错误回调
-  if (typeof onGenerationError === 'function') {
+  if (typeof onGenerationError === "function") {
     onGenerationError(errorMessage);
   }
 }

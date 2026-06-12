@@ -1,9 +1,13 @@
-import { getAIResponse } from '../services/apiService';
+import { getAIResponse } from "../services/apiService";
 import PerfectScrollbar from "perfect-scrollbar";
 import { setAllowAutoScroll } from "../utils/scrollManager";
-import { focusInputIfSafe } from '../utils/focusManager';
-import { ICONS } from './Icons';
-import { getPopupElement, getAiResponseElement, getAiResponseContainer } from './ShadowContainer';
+import { focusInputIfSafe } from "../utils/focusManager";
+import { ICONS } from "./Icons";
+import {
+  getPopupElement,
+  getAiResponseElement,
+  getAiResponseContainer,
+} from "./ShadowContainer";
 
 export function createIcon(x, y) {
   const icon = document.createElement("img");
@@ -21,7 +25,7 @@ export function createIcon(x, y) {
     border: "none",
     outline: "none",
     userSelect: "none",
-    pointerEvents: "auto"
+    pointerEvents: "auto",
   });
 
   return icon;
@@ -51,7 +55,7 @@ export function createSvgIcon(iconName, title) {
     console.warn(`Icon ${iconName} not found in ICONS`);
   }
 
-  const svgElement = iconContainer.querySelector('svg');
+  const svgElement = iconContainer.querySelector("svg");
   if (svgElement) {
     svgElement.style.width = "100%";
     svgElement.style.height = "100%";
@@ -101,7 +105,7 @@ export function addIconsToElement(element) {
     return;
   }
 
-  const existingContainer = element.querySelector('.icon-container');
+  const existingContainer = element.querySelector(".icon-container");
   if (existingContainer) {
     existingContainer.remove();
   }
@@ -124,7 +128,7 @@ export function addIconsToElement(element) {
   copyIconContainer.innerHTML = ICONS.copy;
   copyIconContainer.title = "Copy";
 
-  const copySvg = copyIconContainer.querySelector('svg');
+  const copySvg = copyIconContainer.querySelector("svg");
   if (copySvg) {
     copySvg.style.width = "100%";
     copySvg.style.height = "100%";
@@ -135,20 +139,22 @@ export function addIconsToElement(element) {
   copyWrapper.addEventListener("click", (event) => {
     event.stopPropagation();
     const textContent = Array.from(element.childNodes)
-      .filter(node => {
+      .filter((node) => {
         // 排除图标容器和reasoning content
-        return (!node.classList ||
-                (!node.classList.contains('icon-container') &&
-                 !node.classList.contains('reasoning-content')))
+        return (
+          !node.classList ||
+          (!node.classList.contains("icon-container") &&
+            !node.classList.contains("reasoning-content"))
+        );
       })
-      .map(node => node.textContent)
-      .join('')
+      .map((node) => node.textContent)
+      .join("")
       .trim()
-      .replace(/^\n+|\n+$/g, '');
+      .replace(/^\n+|\n+$/g, "");
 
     navigator.clipboard.writeText(textContent).then(() => {
       const originalIcon = copyIconContainer.innerHTML;
-      
+
       // Apple 风格：勾选图标 + 系统绿 + 弹性动画
       copyIconContainer.innerHTML = ICONS.check;
       copyIconContainer.style.cssText = `
@@ -159,11 +165,13 @@ export function addIconsToElement(element) {
         transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
       `;
       copyIconContainer.title = "Copied!";
-      
-      const checkSvg = copyIconContainer.querySelector('svg');
-      if (checkSvg) checkSvg.style.cssText = 'width:100%;height:100%';
 
-      setTimeout(() => { copyIconContainer.style.transform = 'scale(1)'; }, 120);
+      const checkSvg = copyIconContainer.querySelector("svg");
+      if (checkSvg) checkSvg.style.cssText = "width:100%;height:100%";
+
+      setTimeout(() => {
+        copyIconContainer.style.transform = "scale(1)";
+      }, 120);
 
       setTimeout(() => {
         copyIconContainer.innerHTML = originalIcon;
@@ -173,8 +181,8 @@ export function addIconsToElement(element) {
           transition: all 0.2s ease;
         `;
         copyIconContainer.title = "Copy";
-        const svg = copyIconContainer.querySelector('svg');
-        if (svg) svg.style.cssText = 'width:100%;height:100%';
+        const svg = copyIconContainer.querySelector("svg");
+        if (svg) svg.style.cssText = "width:100%;height:100%";
       }, 1500);
     });
   });
@@ -196,7 +204,7 @@ export function addIconsToElement(element) {
       regenerateIconContainer.innerHTML = ICONS.regenerate;
       regenerateIconContainer.title = "Regenerate";
 
-      const regSvg = regenerateIconContainer.querySelector('svg');
+      const regSvg = regenerateIconContainer.querySelector("svg");
       if (regSvg) {
         regSvg.style.width = "100%";
         regSvg.style.height = "100%";
@@ -209,7 +217,7 @@ export function addIconsToElement(element) {
         const questionText = userQuestion.textContent;
         element.textContent = "";
         // 显示生成中动画
-        element.classList.add('generating');
+        element.classList.add("generating");
         const abortController = new AbortController();
         const aiResponseContainer = window.aiResponseContainer;
 
@@ -218,7 +226,10 @@ export function addIconsToElement(element) {
         requestAnimationFrame(() => {
           const questionTop = userQuestion.offsetTop;
           aiResponseContainer.scrollTop = Math.max(0, questionTop - 20);
-          if (aiResponseContainer.perfectScrollbar && aiResponseContainer.perfectScrollbar.update) {
+          if (
+            aiResponseContainer.perfectScrollbar &&
+            aiResponseContainer.perfectScrollbar.update
+          ) {
             aiResponseContainer.perfectScrollbar.update();
           }
         });
@@ -226,19 +237,22 @@ export function addIconsToElement(element) {
         // 完成与错误回调：移除生成中状态
         const onGenerationComplete = () => {
           if (element) {
-            element.classList.remove('generating');
-            element.style.transition = 'background-color 0.5s ease';
+            element.classList.remove("generating");
+            element.style.transition = "background-color 0.5s ease";
             const originalColor = getComputedStyle(element).backgroundColor;
-            element.style.backgroundColor = 'var(--success-color-alpha, rgba(52, 199, 89, 0.1))';
-            setTimeout(() => { element.style.backgroundColor = originalColor; }, 1000);
+            element.style.backgroundColor =
+              "var(--success-color-alpha, rgba(52, 199, 89, 0.1))";
+            setTimeout(() => {
+              element.style.backgroundColor = originalColor;
+            }, 1000);
           }
           requestAnimationFrame(() => focusInputIfSafe(getPopupElement()));
         };
 
         const onGenerationError = () => {
           if (element) {
-            element.classList.remove('generating');
-            element.classList.add('error');
+            element.classList.remove("generating");
+            element.classList.add("error");
           }
         };
 
@@ -252,9 +266,9 @@ export function addIconsToElement(element) {
           true,
           null,
           false,
-          '',
+          "",
           onGenerationComplete,
-          onGenerationError
+          onGenerationError,
         );
       });
 
@@ -274,20 +288,20 @@ export function addIconsToElement(element) {
   });
 
   // 修改鼠标移出事件处理
-  element.addEventListener('mouseleave', (event) => {
-    if (iconContainer.dataset.initialShow === 'true') {
+  element.addEventListener("mouseleave", (event) => {
+    if (iconContainer.dataset.initialShow === "true") {
       delete iconContainer.dataset.initialShow;
-      iconContainer.style.opacity = '0';
+      iconContainer.style.opacity = "0";
 
-      element.addEventListener('mouseenter', () => {
+      element.addEventListener("mouseenter", () => {
         if (!iconContainer.dataset.initialShow) {
-          iconContainer.style.opacity = '1';
+          iconContainer.style.opacity = "1";
         }
       });
 
-      element.addEventListener('mouseleave', () => {
+      element.addEventListener("mouseleave", () => {
         if (!iconContainer.dataset.initialShow) {
-          iconContainer.style.opacity = '0';
+          iconContainer.style.opacity = "0";
         }
       });
     }
@@ -308,15 +322,17 @@ export function updateLastAnswerIcons() {
   const aiResponseContainer = getAiResponseContainer();
   if (!aiResponseContainer) return;
 
-  Array.from(answers).forEach(answer => {
-    const iconContainer = answer.querySelector('.icon-container');
+  Array.from(answers).forEach((answer) => {
+    const iconContainer = answer.querySelector(".icon-container");
     if (iconContainer) {
       // Check for regenerate icon by checking title or SVG content, but title is safer if we set it
-      const regenerateIconContainer = iconContainer.querySelector('div[title="Regenerate"]');
+      const regenerateIconContainer = iconContainer.querySelector(
+        'div[title="Regenerate"]',
+      );
       if (regenerateIconContainer) {
         regenerateIconContainer.parentElement.remove();
         if (iconContainer.children.length === 0) {
-          iconContainer.style.display = 'none';
+          iconContainer.style.display = "none";
         }
       }
     }
@@ -326,11 +342,15 @@ export function updateLastAnswerIcons() {
   if (!lastAnswer) return;
 
   const userQuestion = lastAnswer.previousElementSibling;
-  const iconContainer = lastAnswer.querySelector('.icon-container');
+  const iconContainer = lastAnswer.querySelector(".icon-container");
 
-  if (iconContainer && !iconContainer.querySelector('div[title="Regenerate"]') &&
-      userQuestion && userQuestion.classList.contains("user-question")) {
-    iconContainer.style.opacity = '1';
+  if (
+    iconContainer &&
+    !iconContainer.querySelector('div[title="Regenerate"]') &&
+    userQuestion &&
+    userQuestion.classList.contains("user-question")
+  ) {
+    iconContainer.style.opacity = "1";
     const regenerateWrapper = document.createElement("div");
     regenerateWrapper.className = "icon-wrapper";
 
@@ -343,7 +363,7 @@ export function updateLastAnswerIcons() {
     regenerateIconContainer.innerHTML = ICONS.regenerate;
     regenerateIconContainer.title = "Regenerate";
 
-    const regSvg = regenerateIconContainer.querySelector('svg');
+    const regSvg = regenerateIconContainer.querySelector("svg");
     if (regSvg) {
       regSvg.style.width = "100%";
       regSvg.style.height = "100%";
@@ -354,9 +374,9 @@ export function updateLastAnswerIcons() {
     regenerateWrapper.addEventListener("click", (event) => {
       event.stopPropagation();
       const questionText = userQuestion.textContent;
-        lastAnswer.textContent = "";
-        // 显示生成中动画
-        lastAnswer.classList.add('generating');
+      lastAnswer.textContent = "";
+      // 显示生成中动画
+      lastAnswer.classList.add("generating");
       const abortController = new AbortController();
       const ps = aiResponseContainer.perfectScrollbar;
 
@@ -368,38 +388,41 @@ export function updateLastAnswerIcons() {
         }
       });
 
-        // 完成与错误回调：移除生成中状态
-        const onGenerationComplete = () => {
-          if (lastAnswer) {
-            lastAnswer.classList.remove('generating');
-            lastAnswer.style.transition = 'background-color 0.5s ease';
-            const originalColor = getComputedStyle(lastAnswer).backgroundColor;
-            lastAnswer.style.backgroundColor = 'var(--success-color-alpha, rgba(52, 199, 89, 0.1))';
-            setTimeout(() => { lastAnswer.style.backgroundColor = originalColor; }, 1000);
-          }
-          requestAnimationFrame(() => focusInputIfSafe(getPopupElement()));
-        };
+      // 完成与错误回调：移除生成中状态
+      const onGenerationComplete = () => {
+        if (lastAnswer) {
+          lastAnswer.classList.remove("generating");
+          lastAnswer.style.transition = "background-color 0.5s ease";
+          const originalColor = getComputedStyle(lastAnswer).backgroundColor;
+          lastAnswer.style.backgroundColor =
+            "var(--success-color-alpha, rgba(52, 199, 89, 0.1))";
+          setTimeout(() => {
+            lastAnswer.style.backgroundColor = originalColor;
+          }, 1000);
+        }
+        requestAnimationFrame(() => focusInputIfSafe(getPopupElement()));
+      };
 
-        const onGenerationError = () => {
-          if (lastAnswer) {
-            lastAnswer.classList.remove('generating');
-            lastAnswer.classList.add('error');
-          }
-        };
+      const onGenerationError = () => {
+        if (lastAnswer) {
+          lastAnswer.classList.remove("generating");
+          lastAnswer.classList.add("error");
+        }
+      };
 
       getAIResponse(
         questionText,
         lastAnswer,
-          { controller: abortController },
-          ps,
-          null,
-          aiResponseContainer,
-          true,
-          null,
-          false,
-          '',
-          onGenerationComplete,
-          onGenerationError
+        { controller: abortController },
+        ps,
+        null,
+        aiResponseContainer,
+        true,
+        null,
+        false,
+        "",
+        onGenerationComplete,
+        onGenerationError,
       );
     });
     iconContainer.appendChild(regenerateWrapper);
@@ -411,57 +434,60 @@ window.addIconsToElement = addIconsToElement;
 
 // 创建最小化小图标
 export function createMinimizeIcon(restoreCallback, initialPosition) {
-  const icon = document.createElement('div');
-  icon.id = 'ai-minimize-icon';
-  icon.className = 'theme-adaptive minimize-icon-enter';
+  const icon = document.createElement("div");
+  icon.id = "ai-minimize-icon";
+  icon.className = "theme-adaptive minimize-icon-enter";
 
   // 设置基础样式
   Object.assign(icon.style, {
-    position: 'fixed',
-    width: '48px',
-    height: '48px',
-    borderRadius: '50%',
-    boxShadow: '0 2px 12px rgba(0,0,0,0.15), 0 4px 24px rgba(0,0,0,0.1)',
-    cursor: 'pointer',
-    zIndex: '2147483647',
-    transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease',
-    background: 'var(--bg-primary)',
-    backdropFilter: 'blur(10px)',
-    border: '2px solid var(--border-color)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    position: "fixed",
+    width: "48px",
+    height: "48px",
+    borderRadius: "50%",
+    boxShadow: "0 2px 12px rgba(0,0,0,0.15), 0 4px 24px rgba(0,0,0,0.1)",
+    cursor: "pointer",
+    zIndex: "2147483647",
+    transition:
+      "transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease",
+    background: "var(--bg-primary)",
+    backdropFilter: "blur(10px)",
+    border: "2px solid var(--border-color)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
     bottom: `${initialPosition.bottom}px`,
     right: `${initialPosition.right}px`,
-    userSelect: 'none',
-    WebkitUserSelect: 'none'
+    userSelect: "none",
+    WebkitUserSelect: "none",
   });
 
   // 添加图标图片
-  const img = document.createElement('img');
-  img.src = chrome.runtime.getURL('icons/icon48.png');
+  const img = document.createElement("img");
+  img.src = chrome.runtime.getURL("icons/icon48.png");
   Object.assign(img.style, {
-    width: '32px',
-    height: '32px',
-    borderRadius: '50%',
-    pointerEvents: 'none',
-    userSelect: 'none',
-    WebkitUserSelect: 'none',
-    WebkitUserDrag: 'none',
-    draggable: 'false'
+    width: "32px",
+    height: "32px",
+    borderRadius: "50%",
+    pointerEvents: "none",
+    userSelect: "none",
+    WebkitUserSelect: "none",
+    WebkitUserDrag: "none",
+    draggable: "false",
   });
-  img.setAttribute('draggable', 'false');
+  img.setAttribute("draggable", "false");
   icon.appendChild(img);
 
   // 添加悬停效果
-  icon.addEventListener('mouseenter', () => {
-    icon.style.transform = 'scale(1.15)';
-    icon.style.boxShadow = '0 4px 16px rgba(0,0,0,0.2), 0 8px 32px rgba(0,0,0,0.15)';
+  icon.addEventListener("mouseenter", () => {
+    icon.style.transform = "scale(1.15)";
+    icon.style.boxShadow =
+      "0 4px 16px rgba(0,0,0,0.2), 0 8px 32px rgba(0,0,0,0.15)";
   });
 
-  icon.addEventListener('mouseleave', () => {
-    icon.style.transform = 'scale(1)';
-    icon.style.boxShadow = '0 2px 12px rgba(0,0,0,0.15), 0 4px 24px rgba(0,0,0,0.1)';
+  icon.addEventListener("mouseleave", () => {
+    icon.style.transform = "scale(1)";
+    icon.style.boxShadow =
+      "0 2px 12px rgba(0,0,0,0.15), 0 4px 24px rgba(0,0,0,0.1)";
   });
 
   // 实现拖动功能
@@ -483,11 +509,11 @@ export function createMinimizeIcon(restoreCallback, initialPosition) {
     initialBottom = window.innerHeight - rect.bottom;
     initialRight = window.innerWidth - rect.right;
 
-    icon.style.cursor = 'grabbing';
-    icon.style.transition = 'none';
+    icon.style.cursor = "grabbing";
+    icon.style.transition = "none";
 
     // 触觉反馈
-    if ('vibrate' in navigator) {
+    if ("vibrate" in navigator) {
       navigator.vibrate(8);
     }
   };
@@ -524,11 +550,12 @@ export function createMinimizeIcon(restoreCallback, initialPosition) {
     if (!isDragging) return;
 
     isDragging = false;
-    icon.style.cursor = 'pointer';
-    icon.style.transition = 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease';
+    icon.style.cursor = "pointer";
+    icon.style.transition =
+      "transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease";
 
     // 触觉反馈
-    if ('vibrate' in navigator) {
+    if ("vibrate" in navigator) {
       navigator.vibrate(5);
     }
 
@@ -538,13 +565,13 @@ export function createMinimizeIcon(restoreCallback, initialPosition) {
       const currentRight = parseInt(icon.style.right);
 
       // 使用 popupStateManager 保存位置
-      const { popupStateManager } = await import('../utils/popupStateManager');
+      const { popupStateManager } = await import("../utils/popupStateManager");
       await popupStateManager.saveIconPosition(currentBottom, currentRight);
     }
   };
 
   // 点击恢复窗口（只在未拖拽时触发）
-  icon.addEventListener('click', (e) => {
+  icon.addEventListener("click", (e) => {
     e.stopPropagation();
 
     // 如果刚刚拖拽过，不触发点击事件
@@ -558,15 +585,15 @@ export function createMinimizeIcon(restoreCallback, initialPosition) {
     }
   });
 
-  icon.addEventListener('mousedown', handleMouseDown);
-  document.addEventListener('mousemove', handleMouseMove);
-  document.addEventListener('mouseup', handleMouseUp);
+  icon.addEventListener("mousedown", handleMouseDown);
+  document.addEventListener("mousemove", handleMouseMove);
+  document.addEventListener("mouseup", handleMouseUp);
 
   // 清理函数
   icon.cleanup = () => {
-    icon.removeEventListener('mousedown', handleMouseDown);
-    document.removeEventListener('mousemove', handleMouseMove);
-    document.removeEventListener('mouseup', handleMouseUp);
+    icon.removeEventListener("mousedown", handleMouseDown);
+    document.removeEventListener("mousemove", handleMouseMove);
+    document.removeEventListener("mouseup", handleMouseUp);
   };
 
   return icon;

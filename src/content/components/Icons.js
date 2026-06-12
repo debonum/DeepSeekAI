@@ -10,16 +10,16 @@ import {
   RefreshCw,
   Send,
   Check,
-  GripVertical
-} from 'lucide';
+  GripVertical,
+} from "lucide";
 
 // Helper to render Lucide icon to SVG string
 const getSvg = (icon, attrs = {}) => {
   const element = createElement(icon);
   // Default styling to match existing (stroke-width 2 is standard in Lucide)
   // Ensure currentColor inheritance for dark/light mode adaptability
-  element.setAttribute('stroke', 'currentColor');
-  element.setAttribute('fill', 'none');
+  element.setAttribute("stroke", "currentColor");
+  element.setAttribute("fill", "none");
 
   Object.entries(attrs).forEach(([k, v]) => element.setAttribute(k, v));
   return element.outerHTML;
@@ -59,5 +59,5 @@ export const ICONS = {
 
   // New: Extracted from QuickActionButtons.js inline SVGs
   dragHandle: getSvg(GripVertical),
-  askAi: getSvg(MessageCircle)
+  askAi: getSvg(MessageCircle),
 };

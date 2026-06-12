@@ -3,9 +3,9 @@ export function initDraggable(dragHandle, popup) {
   let startX, startY;
   let initialX, initialY;
 
-  dragHandle.addEventListener('mousedown', startDragging);
-  document.addEventListener('mousemove', drag);
-  document.addEventListener('mouseup', stopDragging);
+  dragHandle.addEventListener("mousedown", startDragging);
+  document.addEventListener("mousemove", drag);
+  document.addEventListener("mouseup", stopDragging);
 
   function startDragging(e) {
     isDragging = true;
@@ -13,15 +13,15 @@ export function initDraggable(dragHandle, popup) {
     startY = e.clientY;
     initialX = popup.offsetLeft;
     initialY = popup.offsetTop;
-    popup.style.transition = 'none';
+    popup.style.transition = "none";
 
     // 添加拖拽状态样式，提供更好的视觉反馈
-    popup.classList.add('dragging');
+    popup.classList.add("dragging");
     // 改变光标样式
-    dragHandle.style.cursor = 'grabbing';
+    dragHandle.style.cursor = "grabbing";
 
     // 添加拖拽开始的触感反馈
-    if ('vibrate' in navigator) {
+    if ("vibrate" in navigator) {
       navigator.vibrate(10);
     }
   }
@@ -49,51 +49,51 @@ export function initDraggable(dragHandle, popup) {
     if (!isDragging) return;
 
     isDragging = false;
-    popup.style.transition = 'transform 0.05s cubic-bezier(0.4, 0, 0.2, 1)';
+    popup.style.transition = "transform 0.05s cubic-bezier(0.4, 0, 0.2, 1)";
 
     // 移除拖拽状态样式
-    popup.classList.remove('dragging');
+    popup.classList.remove("dragging");
     // 恢复光标样式
-    dragHandle.style.cursor = 'grab';
+    dragHandle.style.cursor = "grab";
 
     // 移除拖拽距离指示器
-    const distanceIndicator = popup.querySelector('.drag-distance');
+    const distanceIndicator = popup.querySelector(".drag-distance");
     if (distanceIndicator) {
       distanceIndicator.remove();
     }
 
     // 添加"放置"的触感反馈
-    if ('vibrate' in navigator) {
+    if ("vibrate" in navigator) {
       navigator.vibrate(5);
     }
 
     // 添加放置动画效果
-    popup.classList.add('drag-placed');
+    popup.classList.add("drag-placed");
     setTimeout(() => {
-      popup.classList.remove('drag-placed');
+      popup.classList.remove("drag-placed");
     }, 150);
   }
 
   // 显示拖拽距离指示器
   function showDragDistance(popup, distance) {
-    let distanceIndicator = popup.querySelector('.drag-distance');
+    let distanceIndicator = popup.querySelector(".drag-distance");
 
     if (!distanceIndicator) {
-      distanceIndicator = document.createElement('div');
-      distanceIndicator.className = 'drag-distance';
-      distanceIndicator.style.position = 'absolute';
-      distanceIndicator.style.bottom = '-25px';
-      distanceIndicator.style.left = '50%';
-      distanceIndicator.style.transform = 'translateX(-50%)';
-      distanceIndicator.style.backgroundColor = 'var(--bg-secondary)';
-      distanceIndicator.style.color = 'var(--text-secondary)';
-      distanceIndicator.style.padding = '4px 8px';
-      distanceIndicator.style.borderRadius = '4px';
-      distanceIndicator.style.fontSize = '10px';
-      distanceIndicator.style.pointerEvents = 'none';
-      distanceIndicator.style.zIndex = '2000';
-      distanceIndicator.style.opacity = '0.9';
-      distanceIndicator.style.boxShadow = 'var(--shadow-sm)';
+      distanceIndicator = document.createElement("div");
+      distanceIndicator.className = "drag-distance";
+      distanceIndicator.style.position = "absolute";
+      distanceIndicator.style.bottom = "-25px";
+      distanceIndicator.style.left = "50%";
+      distanceIndicator.style.transform = "translateX(-50%)";
+      distanceIndicator.style.backgroundColor = "var(--bg-secondary)";
+      distanceIndicator.style.color = "var(--text-secondary)";
+      distanceIndicator.style.padding = "4px 8px";
+      distanceIndicator.style.borderRadius = "4px";
+      distanceIndicator.style.fontSize = "10px";
+      distanceIndicator.style.pointerEvents = "none";
+      distanceIndicator.style.zIndex = "2000";
+      distanceIndicator.style.opacity = "0.9";
+      distanceIndicator.style.boxShadow = "var(--shadow-sm)";
       popup.appendChild(distanceIndicator);
     }
 
@@ -101,9 +101,9 @@ export function initDraggable(dragHandle, popup) {
   }
 
   return () => {
-    dragHandle.removeEventListener('mousedown', startDragging);
-    document.removeEventListener('mousemove', drag);
-    document.removeEventListener('mouseup', stopDragging);
+    dragHandle.removeEventListener("mousedown", startDragging);
+    document.removeEventListener("mousemove", drag);
+    document.removeEventListener("mouseup", stopDragging);
   };
 }
 
@@ -112,7 +112,7 @@ export function resizeMoveListener(event) {
 
   Object.assign(target.style, {
     width: `${rect.width}px`,
-    height: `${rect.height}px`
+    height: `${rect.height}px`,
   });
 
   if (event.edges.left) {
@@ -123,7 +123,11 @@ export function resizeMoveListener(event) {
   }
 }
 
-export function createDragHandle(removeCallback, minimizeCallback, pinCallback) {
+export function createDragHandle(
+  removeCallback,
+  minimizeCallback,
+  pinCallback,
+) {
   const dragHandle = document.createElement("div");
   Object.assign(dragHandle.style, {
     position: "absolute",
@@ -139,7 +143,7 @@ export function createDragHandle(removeCallback, minimizeCallback, pinCallback) 
     boxSizing: "border-box",
   });
 
-  dragHandle.classList.add('drag-handle');
+  dragHandle.classList.add("drag-handle");
 
   // 临时固定状态（仅对当前窗口有效）
   let isTempPinned = false;
@@ -150,7 +154,7 @@ export function createDragHandle(removeCallback, minimizeCallback, pinCallback) 
     alignItems: "center",
     userSelect: "none",
     WebkitUserSelect: "none",
-    pointerEvents: "none"
+    pointerEvents: "none",
   });
 
   const logo = document.createElement("img");
@@ -163,7 +167,7 @@ export function createDragHandle(removeCallback, minimizeCallback, pinCallback) 
     pointerEvents: "none",
     WebkitUserDrag: "none",
     WebkitAppRegion: "no-drag",
-    draggable: false
+    draggable: false,
   });
   logo.setAttribute("draggable", "false");
 
@@ -172,7 +176,7 @@ export function createDragHandle(removeCallback, minimizeCallback, pinCallback) 
     fontWeight: "bold",
     userSelect: "none",
     WebkitUserSelect: "none",
-    pointerEvents: "none"
+    pointerEvents: "none",
   });
   textNode.textContent = "DeepSeek AI";
   titleContainer.appendChild(logo);
@@ -217,7 +221,7 @@ export function createDragHandle(removeCallback, minimizeCallback, pinCallback) 
     borderRadius: "6px",
     display: "flex",
     alignItems: "center",
-    justifyContent: "center"
+    justifyContent: "center",
   });
 
   const closeIcon = document.createElement("div");
@@ -240,7 +244,7 @@ export function createDragHandle(removeCallback, minimizeCallback, pinCallback) 
     color: "var(--text-secondary)",
     transition: "transform 0.15s ease, color 0.15s ease",
     padding: "0",
-    zIndex: "10"
+    zIndex: "10",
   });
 
   closeButton.appendChild(closeIcon);
@@ -267,7 +271,7 @@ export function createDragHandle(removeCallback, minimizeCallback, pinCallback) 
     closeButton.style.top = "50%";
 
     // 触觉反馈
-    if ('vibrate' in navigator) {
+    if ("vibrate" in navigator) {
       navigator.vibrate(8);
     }
   });
@@ -327,7 +331,7 @@ export function createDragHandle(removeCallback, minimizeCallback, pinCallback) 
     borderRadius: "6px",
     display: "flex",
     alignItems: "center",
-    justifyContent: "center"
+    justifyContent: "center",
   });
 
   const minimizeIcon = document.createElement("div");
@@ -347,7 +351,7 @@ export function createDragHandle(removeCallback, minimizeCallback, pinCallback) 
     color: "var(--text-secondary)",
     transition: "transform 0.15s ease, color 0.15s ease",
     padding: "0",
-    zIndex: "10"
+    zIndex: "10",
   });
   minimizeButton.appendChild(minimizeIcon);
 
@@ -364,7 +368,7 @@ export function createDragHandle(removeCallback, minimizeCallback, pinCallback) 
     minimizeIcon.style.transform = "scale(1.2)";
     minimizeButton.style.transform = "translateY(-50%)";
     minimizeButton.style.top = "50%";
-    if ('vibrate' in navigator) navigator.vibrate(8);
+    if ("vibrate" in navigator) navigator.vibrate(8);
   });
   minimizeButton.addEventListener("mouseup", () => {
     minimizeIcon.style.transform = "scale(1.1)";
@@ -375,7 +379,7 @@ export function createDragHandle(removeCallback, minimizeCallback, pinCallback) 
     e.preventDefault();
     minimizeButton.style.transform = "translateY(-50%)";
     minimizeIcon.style.transform = "scale(1)";
-    if (typeof minimizeCallback === 'function') {
+    if (typeof minimizeCallback === "function") {
       minimizeCallback();
     }
   });
@@ -417,7 +421,7 @@ export function createDragHandle(removeCallback, minimizeCallback, pinCallback) 
     borderRadius: "6px",
     display: "flex",
     alignItems: "center",
-    justifyContent: "center"
+    justifyContent: "center",
   });
 
   const copyIcon = document.createElement("div");
@@ -437,17 +441,17 @@ export function createDragHandle(removeCallback, minimizeCallback, pinCallback) 
     color: "var(--text-secondary)",
     transition: "transform 0.15s ease, color 0.15s ease",
     padding: "0",
-    zIndex: "10"
+    zIndex: "10",
   });
   copyButton.appendChild(copyIcon);
 
   // 添加工具提示
-  const copyTooltip = document.createElement('div');
-  copyTooltip.className = 'tool-tip';
-  copyTooltip.textContent = 'Copy entire conversation';
-  copyTooltip.style.top = '35px';
-  copyTooltip.style.right = '-20px';
-  copyTooltip.style.width = 'max-content';
+  const copyTooltip = document.createElement("div");
+  copyTooltip.className = "tool-tip";
+  copyTooltip.textContent = "Copy entire conversation";
+  copyTooltip.style.top = "35px";
+  copyTooltip.style.right = "-20px";
+  copyTooltip.style.width = "max-content";
   copyButton.appendChild(copyTooltip);
 
   copyButton.addEventListener("mouseenter", () => {
@@ -465,7 +469,7 @@ export function createDragHandle(removeCallback, minimizeCallback, pinCallback) 
     copyIcon.style.transform = "scale(1.2)";
     copyButton.style.transform = "translateY(-50%)";
     copyButton.style.top = "50%"; // 确保位置
-    if ('vibrate' in navigator) navigator.vibrate(8);
+    if ("vibrate" in navigator) navigator.vibrate(8);
   });
 
   copyButton.addEventListener("mouseup", () => {
@@ -484,30 +488,35 @@ export function createDragHandle(removeCallback, minimizeCallback, pinCallback) 
     if (!aiResponseContainer) return;
 
     // 收集所有对话
-    const userQuestions = aiResponseContainer.querySelectorAll('.user-question');
-    const aiAnswers = aiResponseContainer.querySelectorAll('.ai-answer');
+    const userQuestions =
+      aiResponseContainer.querySelectorAll(".user-question");
+    const aiAnswers = aiResponseContainer.querySelectorAll(".ai-answer");
 
-    let conversationText = '';
+    let conversationText = "";
 
     // 假设问答是一一对应的，或者是交替的
     // 更稳健的方法是按文档顺序遍历
-    const allMessages = aiResponseContainer.querySelectorAll('.user-question, .ai-answer');
+    const allMessages = aiResponseContainer.querySelectorAll(
+      ".user-question, .ai-answer",
+    );
 
-    allMessages.forEach(msg => {
-      const isUser = msg.classList.contains('user-question');
+    allMessages.forEach((msg) => {
+      const isUser = msg.classList.contains("user-question");
       // 提取文本，移除图标容器等干扰内容
       const cleanText = Array.from(msg.childNodes)
-        .filter(node => {
-          return (!node.classList ||
-                 (!node.classList.contains('icon-container') &&
-                  !node.classList.contains('reasoning-content')));
+        .filter((node) => {
+          return (
+            !node.classList ||
+            (!node.classList.contains("icon-container") &&
+              !node.classList.contains("reasoning-content"))
+          );
         })
-        .map(node => node.textContent)
-        .join('')
+        .map((node) => node.textContent)
+        .join("")
         .trim();
 
       if (cleanText) {
-        conversationText += `${isUser ? 'User' : 'DeepSeek'}: ${cleanText}\n\n`;
+        conversationText += `${isUser ? "User" : "DeepSeek"}: ${cleanText}\n\n`;
       }
     });
 
@@ -519,7 +528,7 @@ export function createDragHandle(removeCallback, minimizeCallback, pinCallback) 
         copyIcon.style.color = "var(--success-color, #34c759)";
         copyIcon.style.transform = "scale(1.25)";
 
-        if ('vibrate' in navigator) navigator.vibrate([10, 50, 10]);
+        if ("vibrate" in navigator) navigator.vibrate([10, 50, 10]);
 
         setTimeout(() => {
           copyIcon.style.transform = "scale(1)";
@@ -527,14 +536,13 @@ export function createDragHandle(removeCallback, minimizeCallback, pinCallback) 
           copyIcon.innerHTML = copySvgContent;
           copyIcon.style.color = "var(--text-secondary)";
           // 恢复 hover 状态（如果鼠标还在上面的话）
-          if (copyButton.matches(':hover')) {
-             copyIcon.style.color = "var(--accent-color, #007aff)";
+          if (copyButton.matches(":hover")) {
+            copyIcon.style.color = "var(--accent-color, #007aff)";
           }
         }, 1500);
       });
     }
   });
-
 
   // 固定按钮（在最小化按钮左侧）
   const pinButton = document.createElement("button");
@@ -567,7 +575,7 @@ export function createDragHandle(removeCallback, minimizeCallback, pinCallback) 
     borderRadius: "6px",
     display: "flex",
     alignItems: "center",
-    justifyContent: "center"
+    justifyContent: "center",
   });
 
   const pinIcon = document.createElement("div");
@@ -588,7 +596,7 @@ export function createDragHandle(removeCallback, minimizeCallback, pinCallback) 
     color: "var(--text-secondary)",
     transition: "transform 0.15s ease, color 0.15s ease",
     padding: "0",
-    zIndex: "10"
+    zIndex: "10",
   });
   pinButton.appendChild(pinIcon);
 
@@ -628,7 +636,7 @@ export function createDragHandle(removeCallback, minimizeCallback, pinCallback) 
     pinIcon.style.transform = "scale(1.2)";
     pinButton.style.transform = "translateY(-50%)";
     pinButton.style.top = "50%";
-    if ('vibrate' in navigator) navigator.vibrate(8);
+    if ("vibrate" in navigator) navigator.vibrate(8);
   });
   pinButton.addEventListener("mouseup", () => {
     pinIcon.style.transform = "scale(1.1)";
@@ -646,7 +654,7 @@ export function createDragHandle(removeCallback, minimizeCallback, pinCallback) 
     updatePinIcon(isTempPinned);
 
     // 调用回调函数通知状态变化
-    if (typeof pinCallback === 'function') {
+    if (typeof pinCallback === "function") {
       pinCallback(isTempPinned);
     }
   });

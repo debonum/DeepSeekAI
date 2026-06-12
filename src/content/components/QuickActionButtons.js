@@ -12,7 +12,8 @@ const QUICK_ACTIONS = [
     id: "main",
     icon: "icon24",
     title: "Chat",
-    prompt: "Please respond in the same language as the user's input. If the user's input is in Chinese, respond in Chinese. If the user's input is in English, respond in English, etc.",
+    prompt:
+      "Please respond in the same language as the user's input. If the user's input is in Chinese, respond in Chinese. If the user's input is in English, respond in English, etc.",
   },
   {
     id: "copy",
@@ -49,19 +50,22 @@ const QUICK_ACTIONS = [
     id: "explain",
     icon: "explain",
     title: "Explain",
-    prompt: "Act as an AI assistant with MBTI persona INTJ-INFJ. Explain the following content clearly and directly, focusing on key points and practical clarity. Output only the final explanation; do not include analysis or chain-of-thought unless explicitly requested.",
+    prompt:
+      "Act as an AI assistant with MBTI persona INTJ-INFJ. Explain the following content clearly and directly, focusing on key points and practical clarity. Output only the final explanation; do not include analysis or chain-of-thought unless explicitly requested.",
   },
   {
     id: "summarize",
     icon: "summarize",
     title: "Summarize",
-    prompt: "Act as an AI assistant with MBTI persona ISTJ-INTJ. Summarize the content concisely, keep critical information, use a clear structure (bullets if suitable). Output only the summary; no reasoning unless asked.",
+    prompt:
+      "Act as an AI assistant with MBTI persona ISTJ-INTJ. Summarize the content concisely, keep critical information, use a clear structure (bullets if suitable). Output only the summary; no reasoning unless asked.",
   },
   {
     id: "email",
     icon: "email",
     title: "Email",
-    prompt: "Act as an AI assistant with MBTI persona ISTJ-ENFJ. Write an email based on the user's input. Include a clear subject, proper greeting, concise body, actionable points, and a polite closing. Output only the email content with no extra commentary.",
+    prompt:
+      "Act as an AI assistant with MBTI persona ISTJ-ENFJ. Write an email based on the user's input. Include a clear subject, proper greeting, concise body, actionable points, and a polite closing. Output only the email content with no extra commentary.",
   },
 ];
 
@@ -80,7 +84,7 @@ export async function createQuickActionButtons(
   selectedText,
   handleActionClick,
   handleMainClick,
-  handleCopyAction
+  handleCopyAction,
 ) {
   // 🎯 核心逻辑：运用第一性原理，将"视觉选中态"与"浏览器焦点态"解耦
   // 通过 CSS Custom Highlight API 创建独立的视觉层，确保交互时的视觉连续性
@@ -101,24 +105,27 @@ export async function createQuickActionButtons(
   // 这是为了解决"点击焦点外内容时，被选中状态一直保留"的问题
   const clearHighlightHandler = (e) => {
     // 如果点击的是工具栏内部，不清理（兼容旧 class）
-    if (e.target.closest('.deepseek-quick-action-buttons, .quick-action-buttons')) return;
+    if (
+      e.target.closest(".deepseek-quick-action-buttons, .quick-action-buttons")
+    )
+      return;
 
     if (CSS && CSS.highlights) {
       CSS.highlights.delete("deepseek-active-selection");
     }
     // 清理后移除监听器
-    document.removeEventListener('mousedown', clearHighlightHandler, true);
+    document.removeEventListener("mousedown", clearHighlightHandler, true);
   };
-  document.addEventListener('mousedown', clearHighlightHandler, true);
+  document.addEventListener("mousedown", clearHighlightHandler, true);
 
   const container = document.createElement("div");
   // Use a uniquely prefixed class to avoid collisions with host page CSS (some sites define .quick-action-buttons).
   container.className = "deepseek-quick-action-buttons";
   // Hard-enforce sizing on the host element so toolbar height stays consistent across pages.
-  container.style.setProperty('box-sizing', 'border-box', 'important');
-  container.style.setProperty('height', '40px', 'important');
-  container.style.setProperty('padding', '4px 10px', 'important');
-  container.style.opacity = '1';
+  container.style.setProperty("box-sizing", "border-box", "important");
+  container.style.setProperty("height", "40px", "important");
+  container.style.setProperty("padding", "4px 10px", "important");
+  container.style.opacity = "1";
   const shadowRoot = container.attachShadow({ mode: "open" });
 
   // 关闭快捷栏的小工具，避免与会话窗口并存
@@ -129,11 +136,11 @@ export async function createQuickActionButtons(
     }
 
     try {
-      const wrapper = document.getElementById('quick-actions-wrapper');
+      const wrapper = document.getElementById("quick-actions-wrapper");
       if (wrapper) {
         // 🎯 清理滚动监听器
         if (wrapper._scrollHandler) {
-          window.removeEventListener('scroll', wrapper._scrollHandler, true);
+          window.removeEventListener("scroll", wrapper._scrollHandler, true);
           delete wrapper._scrollHandler;
         }
 
@@ -142,21 +149,27 @@ export async function createQuickActionButtons(
         }
       }
 
-      const legacy = document.getElementById('fixed-quick-actions-container');
+      const legacy = document.getElementById("fixed-quick-actions-container");
       if (legacy) {
-        legacy.style.opacity = '0';
-        legacy.style.pointerEvents = 'none';
-        legacy.innerHTML = '';
+        legacy.style.opacity = "0";
+        legacy.style.pointerEvents = "none";
+        legacy.innerHTML = "";
       }
       // 兜底：移除任何遗留的工具栏节点（包含旧 class 以兼容历史版本）
-      document.querySelectorAll('.deepseek-quick-action-buttons, .quick-action-buttons').forEach(node => {
-        if (node && node !== container && node.parentNode) {
-          node.parentNode.removeChild(node);
-        }
-      });
+      document
+        .querySelectorAll(
+          ".deepseek-quick-action-buttons, .quick-action-buttons",
+        )
+        .forEach((node) => {
+          if (node && node !== container && node.parentNode) {
+            node.parentNode.removeChild(node);
+          }
+        });
 
       // 抑制 500ms 内的再次唤起
-      try { window.suppressQuickActionsUntil = Date.now() + 500; } catch(_) {}
+      try {
+        window.suppressQuickActionsUntil = Date.now() + 500;
+      } catch (_) {}
     } catch (_) {}
   };
 
@@ -171,7 +184,7 @@ export async function createQuickActionButtons(
   }
 
   // 添加Shadow DOM所需样式 - 苹果设计哲学
-  const style = document.createElement('style');
+  const style = document.createElement("style");
   style.textContent = `
     /* 主容器 - 豆包风格 Pill Shape */
 	    :host {
@@ -713,9 +726,9 @@ export async function createQuickActionButtons(
     btn.appendChild(iconWrapper);
 
     btn.addEventListener("click", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        onClick(e);
+      e.preventDefault();
+      e.stopPropagation();
+      onClick(e);
     });
 
     // Prevent interfering with drag
@@ -726,73 +739,77 @@ export async function createQuickActionButtons(
   };
 
   // Populate Actions
-  actions.forEach(action => {
+  actions.forEach((action) => {
     if (action.id === "logo") return;
 
     if (action.id === "translate") {
-        const wrapper = document.createElement("div");
-        wrapper.className = "quick-action-translate";
-        wrapper.style.display = "flex";
+      const wrapper = document.createElement("div");
+      wrapper.className = "quick-action-translate";
+      wrapper.style.display = "flex";
 
-        const btn = document.createElement("button");
-        btn.className = "quick-action-button";
-        btn.appendChild(createSvgIcon(action.icon, action.title));
+      const btn = document.createElement("button");
+      btn.className = "quick-action-button";
+      btn.appendChild(createSvgIcon(action.icon, action.title));
 
-        const menu = document.createElement("div");
-        menu.className = "language-select";
+      const menu = document.createElement("div");
+      menu.className = "language-select";
 
-        btn.onclick = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            closeQAB();
-            handleActionClick(action, selectedText);
+      btn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        closeQAB();
+        handleActionClick(action, selectedText);
+      };
+
+      action.languages.forEach((lang) => {
+        const option = document.createElement("button");
+        option.className = "language-option";
+        option.textContent = lang.native;
+        if (lang.native === lastLanguage) {
+          option.style.fontWeight = "600";
+          option.style.backgroundColor = "rgba(0, 122, 255, 0.1)";
+        }
+        option.onclick = async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          await chrome.storage.sync.set({ lastLanguage: lang.native });
+          action.prompt = `Act as an AI assistant with MBTI persona ISTJ-INFJ, functioning as a professional multilingual translation engine that provides the ${lang.native} version of user-given content while preserving the original format (such as poetry, code, glossaries). If no target language is specified, ask proactively. The translation MUST be accurate and natural in ${lang.native}. Output only the translated text directly without any additional explanation or clarification.`;
+          closeQAB();
+          handleActionClick(action, selectedText);
         };
+        menu.appendChild(option);
+      });
 
-        action.languages.forEach(lang => {
-             const option = document.createElement("button");
-             option.className = "language-option";
-             option.textContent = lang.native;
-             if (lang.native === lastLanguage) {
-                 option.style.fontWeight = "600";
-                 option.style.backgroundColor = "rgba(0, 122, 255, 0.1)";
-             }
-             option.onclick = async (e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  await chrome.storage.sync.set({ lastLanguage: lang.native });
-                   action.prompt = `Act as an AI assistant with MBTI persona ISTJ-INFJ, functioning as a professional multilingual translation engine that provides the ${lang.native} version of user-given content while preserving the original format (such as poetry, code, glossaries). If no target language is specified, ask proactively. The translation MUST be accurate and natural in ${lang.native}. Output only the translated text directly without any additional explanation or clarification.`;
-                  closeQAB();
-                  handleActionClick(action, selectedText);
-             };
-             menu.appendChild(option);
-        });
+      let hideTimeout;
+      const showMenu = () => {
+        clearTimeout(hideTimeout);
+        menu.style.display = "block";
+      };
+      const hideMenu = () => {
+        hideTimeout = setTimeout(() => (menu.style.display = "none"), 200);
+      };
 
-       let hideTimeout;
-       const showMenu = () => { clearTimeout(hideTimeout); menu.style.display = "block"; };
-       const hideMenu = () => { hideTimeout = setTimeout(() => menu.style.display = "none", 200); };
+      wrapper.appendChild(btn);
+      wrapper.appendChild(menu);
+      wrapper.onmouseenter = showMenu;
+      wrapper.onmouseleave = hideMenu;
 
-       wrapper.appendChild(btn);
-       wrapper.appendChild(menu);
-       wrapper.onmouseenter = showMenu;
-       wrapper.onmouseleave = hideMenu;
-
-       actionsGroup.appendChild(wrapper);
-
+      actionsGroup.appendChild(wrapper);
     } else if (action.id === "copy") {
-        appendActionButton(action, () => {
-             if (typeof handleCopyAction === 'function') handleCopyAction();
-        });
+      appendActionButton(action, () => {
+        if (typeof handleCopyAction === "function") handleCopyAction();
+      });
     } else if (action.id === "main") {
-         appendActionButton(action, (e) => {
-             closeQAB();
-             const range = window.getSelection().getRangeAt(0);
-             const rect = range.getBoundingClientRect();
-             handleMainClick(e, selectedText, rect);
-         });
+      appendActionButton(action, (e) => {
+        closeQAB();
+        const range = window.getSelection().getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+        handleMainClick(e, selectedText, rect);
+      });
     } else {
-        appendActionButton(action, () => {
-             handleActionClick(action, selectedText);
-        });
+      appendActionButton(action, () => {
+        handleActionClick(action, selectedText);
+      });
     }
   });
 
@@ -812,29 +829,30 @@ export async function createQuickActionButtons(
 
   shadowRoot.appendChild(inputTrigger);
 
-	  // --- 6. Expanded Input Container ---
-	  const expandedContainer = document.createElement("div");
-	  expandedContainer.className = "expanded-input-container";
+  // --- 6. Expanded Input Container ---
+  const expandedContainer = document.createElement("div");
+  expandedContainer.className = "expanded-input-container";
 
-	  const textarea = document.createElement("textarea");
-	  textarea.className = "expanded-textarea";
-	  textarea.placeholder = "Ask DeepSeek AI...";
+  const textarea = document.createElement("textarea");
+  textarea.className = "expanded-textarea";
+  textarea.placeholder = "Ask DeepSeek AI...";
 
-	  const resizeExpandedTextarea = () => {
-	      // Auto-resize to fit content while keeping a compact default height.
-	      textarea.style.height = "auto";
-	      const maxHeight = 240;
-	      const newHeight = Math.min(textarea.scrollHeight, maxHeight);
-	      textarea.style.height = `${newHeight}px`;
-	      textarea.style.overflowY = textarea.scrollHeight > maxHeight ? "auto" : "hidden";
-	  };
+  const resizeExpandedTextarea = () => {
+    // Auto-resize to fit content while keeping a compact default height.
+    textarea.style.height = "auto";
+    const maxHeight = 240;
+    const newHeight = Math.min(textarea.scrollHeight, maxHeight);
+    textarea.style.height = `${newHeight}px`;
+    textarea.style.overflowY =
+      textarea.scrollHeight > maxHeight ? "auto" : "hidden";
+  };
 
-	  const expandedFooter = document.createElement("div");
-	  expandedFooter.className = "expanded-footer";
+  const expandedFooter = document.createElement("div");
+  expandedFooter.className = "expanded-footer";
 
-	  const expandedDragHandle = document.createElement("div");
-	  expandedDragHandle.className = "expanded-drag-handle";
-	  expandedDragHandle.innerHTML = ICONS.dragHandle;
+  const expandedDragHandle = document.createElement("div");
+  expandedDragHandle.className = "expanded-drag-handle";
+  expandedDragHandle.innerHTML = ICONS.dragHandle;
 
   const inputActions = document.createElement("div");
   inputActions.className = "input-actions";
@@ -851,181 +869,183 @@ export async function createQuickActionButtons(
   expandedFooter.appendChild(inputActions); // Keep this if used, or remove if empty
   expandedFooter.appendChild(sendBtn);
 
-	  expandedContainer.appendChild(textarea);
-	  expandedContainer.appendChild(expandedDragHandle);
-	  expandedContainer.appendChild(expandedFooter);
+  expandedContainer.appendChild(textarea);
+  expandedContainer.appendChild(expandedDragHandle);
+  expandedContainer.appendChild(expandedFooter);
 
   shadowRoot.appendChild(expandedContainer);
 
   // --- Logic for Expansion ---
-	  inputTrigger.addEventListener("click", (e) => {
-	      e.stopPropagation();
-	      container.classList.add("expanded-mode");
-	      setTimeout(() => {
-	          resizeExpandedTextarea();
-	          textarea.focus();
-	      }, 50);
-	  });
+  inputTrigger.addEventListener("click", (e) => {
+    e.stopPropagation();
+    container.classList.add("expanded-mode");
+    setTimeout(() => {
+      resizeExpandedTextarea();
+      textarea.focus();
+    }, 50);
+  });
 
-	  // Logic for Collapse
-	  cancelBtn.addEventListener("click", (e) => {
-	      e.stopPropagation();
-	      e.preventDefault();
-	      container.classList.remove("expanded-mode");
-	      textarea.value = ""; // Optional: clear input
-	      textarea.style.height = "";
-	      textarea.style.overflowY = "";
-	  });
+  // Logic for Collapse
+  cancelBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    container.classList.remove("expanded-mode");
+    textarea.value = ""; // Optional: clear input
+    textarea.style.height = "";
+    textarea.style.overflowY = "";
+  });
 
-	  // Prevent closing when clicking inside expanded area
-	  expandedContainer.addEventListener("click", (e) => e.stopPropagation());
-	  expandedContainer.addEventListener("mousedown", (e) => {
-	      // Allow drag handle events to bubble to host for dragging.
-	      if (e.target.closest('.expanded-drag-handle')) return;
-	      e.stopPropagation();
-	  });
+  // Prevent closing when clicking inside expanded area
+  expandedContainer.addEventListener("click", (e) => e.stopPropagation());
+  expandedContainer.addEventListener("mousedown", (e) => {
+    // Allow drag handle events to bubble to host for dragging.
+    if (e.target.closest(".expanded-drag-handle")) return;
+    e.stopPropagation();
+  });
 
   // Send Logic
-	  const handleSend = () => {
-	      const text = textarea.value.trim();
-	      if (!text) {
-	          // If no input, collapse back to quick actions toolbar.
-	          container.classList.remove("expanded-mode");
-	          textarea.value = "";
-	          textarea.style.height = "";
-	          textarea.style.overflowY = "";
-	          return;
-	      }
+  const handleSend = () => {
+    const text = textarea.value.trim();
+    if (!text) {
+      // If no input, collapse back to quick actions toolbar.
+      container.classList.remove("expanded-mode");
+      textarea.value = "";
+      textarea.style.height = "";
+      textarea.style.overflowY = "";
+      return;
+    }
 
-	      const customAction = {
-	          id: "custom",
-          title: "Custom Question",
-          prompt: text
-      };
-      closeQAB();
-      handleActionClick(customAction, selectedText);
+    const customAction = {
+      id: "custom",
+      title: "Custom Question",
+      prompt: text,
+    };
+    closeQAB();
+    handleActionClick(customAction, selectedText);
   };
 
   sendBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      handleSend();
+    e.stopPropagation();
+    handleSend();
   });
 
-	  textarea.addEventListener("keydown", (e) => {
-	      if (e.key === "Escape") {
-	          e.preventDefault();
-	          container.classList.remove("expanded-mode");
-	          textarea.value = "";
-	          textarea.style.height = "";
-	          textarea.style.overflowY = "";
-	          e.stopPropagation();
-	          return;
-	      }
-	      if (e.key === "Enter" && !e.shiftKey) {
-	          e.preventDefault();
-	          handleSend();
-	      }
-	      e.stopPropagation();
-	  });
+  textarea.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      container.classList.remove("expanded-mode");
+      textarea.value = "";
+      textarea.style.height = "";
+      textarea.style.overflowY = "";
+      e.stopPropagation();
+      return;
+    }
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+    e.stopPropagation();
+  });
 
-	  textarea.addEventListener("input", (e) => {
-	      resizeExpandedTextarea();
-	      e.stopPropagation();
-	  });
+  textarea.addEventListener("input", (e) => {
+    resizeExpandedTextarea();
+    e.stopPropagation();
+  });
 
-   // --- Drag Initializer Adaptation (Expanded Area) ---
-   container.initDrag = function() {
-       const wrapper = container.parentElement;
-       if (!wrapper) return;
+  // --- Drag Initializer Adaptation (Expanded Area) ---
+  container.initDrag = function () {
+    const wrapper = container.parentElement;
+    if (!wrapper) return;
 
-       let isDragging = false;
-       let startX, startY;
-       let initialLeft, initialTop;
+    let isDragging = false;
+    let startX, startY;
+    let initialLeft, initialTop;
 
-       const onMouseDown = (e) => {
-           // 只响应左键
-           if (e.button !== 0) return;
+    const onMouseDown = (e) => {
+      // 只响应左键
+      if (e.button !== 0) return;
 
-           // 检查是否点击了交互元素
-           const path = e.composedPath();
-           const isInteractive = path.some(el => {
-               return el.tagName === 'BUTTON' ||
-                      el.tagName === 'INPUT' ||
-                      el.tagName === 'TEXTAREA' ||
-                      (el.classList && el.classList.contains('input-trigger')) ||
-                      (el.classList && el.classList.contains('language-option'));
-           });
+      // 检查是否点击了交互元素
+      const path = e.composedPath();
+      const isInteractive = path.some((el) => {
+        return (
+          el.tagName === "BUTTON" ||
+          el.tagName === "INPUT" ||
+          el.tagName === "TEXTAREA" ||
+          (el.classList && el.classList.contains("input-trigger")) ||
+          (el.classList && el.classList.contains("language-option"))
+        );
+      });
 
-           if (isInteractive) return;
+      if (isInteractive) return;
 
-           // 允许特定元素拖拽，或空白处拖拽
-           // 阻止默认文本选择行为
-           e.preventDefault();
+      // 允许特定元素拖拽，或空白处拖拽
+      // 阻止默认文本选择行为
+      e.preventDefault();
 
-           // 标记手动定位，停止 content.js 的滚动跟随
-           wrapper.dataset.manualPosition = 'true';
+      // 标记手动定位，停止 content.js 的滚动跟随
+      wrapper.dataset.manualPosition = "true";
 
-           const rect = wrapper.getBoundingClientRect();
-           // 使用 bbox 的 viewport 坐标
-           initialLeft = rect.left;
-           initialTop = rect.top;
-           startX = e.clientX;
-           startY = e.clientY;
+      const rect = wrapper.getBoundingClientRect();
+      // 使用 bbox 的 viewport 坐标
+      initialLeft = rect.left;
+      initialTop = rect.top;
+      startX = e.clientX;
+      startY = e.clientY;
 
-           isDragging = true;
+      isDragging = true;
 
-           document.body.style.cursor = "grabbing";
-           container.style.cursor = "grabbing";
-       };
+      document.body.style.cursor = "grabbing";
+      container.style.cursor = "grabbing";
+    };
 
-       const onMouseMove = (e) => {
-           if (!isDragging) return;
+    const onMouseMove = (e) => {
+      if (!isDragging) return;
 
-           e.preventDefault();
+      e.preventDefault();
 
-           const dx = e.clientX - startX;
-           const dy = e.clientY - startY;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
 
-           // 直接更新位置，无 RAF，简单粗暴有效 (Simple is best)
-           // 第一性原理：位置 = 初始位置 + 偏移量
-           wrapper.style.left = `${initialLeft + dx}px`;
-           wrapper.style.top = `${initialTop + dy}px`;
-       };
+      // 直接更新位置，无 RAF，简单粗暴有效 (Simple is best)
+      // 第一性原理：位置 = 初始位置 + 偏移量
+      wrapper.style.left = `${initialLeft + dx}px`;
+      wrapper.style.top = `${initialTop + dy}px`;
+    };
 
-       const onMouseUp = (e) => {
-           if (!isDragging) return;
+    const onMouseUp = (e) => {
+      if (!isDragging) return;
 
-           // P0: 阻止事件传播，它是主要矛盾
-           // 防止 content.js 捕获此事件并错误地重置/移除工具栏
-           e.preventDefault();
-           e.stopPropagation();
-           e.stopImmediatePropagation();
+      // P0: 阻止事件传播，它是主要矛盾
+      // 防止 content.js 捕获此事件并错误地重置/移除工具栏
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
 
-           isDragging = false;
-           document.body.style.cursor = "";
-           container.style.cursor = "";
-       };
+      isDragging = false;
+      document.body.style.cursor = "";
+      container.style.cursor = "";
+    };
 
-       container.addEventListener("mousedown", onMouseDown);
-       document.addEventListener("mousemove", onMouseMove);
-       // 使用捕获阶段 (true)，确保早在 content.js 的冒泡监听器之前拦截事件
-       document.addEventListener("mouseup", onMouseUp, true);
+    container.addEventListener("mousedown", onMouseDown);
+    document.addEventListener("mousemove", onMouseMove);
+    // 使用捕获阶段 (true)，确保早在 content.js 的冒泡监听器之前拦截事件
+    document.addEventListener("mouseup", onMouseUp, true);
 
-       container.cleanupDrag = () => {
-           container.removeEventListener("mousedown", onMouseDown);
-           document.removeEventListener("mousemove", onMouseMove);
-           document.removeEventListener("mouseup", onMouseUp, true);
-       };
-   };
+    container.cleanupDrag = () => {
+      container.removeEventListener("mousedown", onMouseDown);
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp, true);
+    };
+  };
 
   // --- Theme Watching ---
   const applyQuickActionsTheme = (isDark) => {
     if (isDark) {
-      container.classList.add('dark-mode');
-      container.classList.remove('light-mode');
+      container.classList.add("dark-mode");
+      container.classList.remove("light-mode");
     } else {
-      container.classList.add('light-mode');
-      container.classList.remove('dark-mode');
+      container.classList.add("light-mode");
+      container.classList.remove("dark-mode");
     }
   };
   const currentTheme = isDarkMode();

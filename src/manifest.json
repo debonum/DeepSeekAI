@@ -6,7 +6,12 @@
   "permissions": ["storage", "contextMenus", "scripting", "commands", "tabs"],
   "content_scripts": [
     {
-      "matches": ["<all_urls>", "file:///*", "http://localhost/*", "http://127.0.0.1/*"],
+      "matches": [
+        "<all_urls>",
+        "file:///*",
+        "http://localhost/*",
+        "http://127.0.0.1/*"
+      ],
       "js": ["content.js"],
       "css": ["style.css"],
       "all_frames": true,
@@ -47,15 +52,21 @@
         "instructions.js",
         "style.css"
       ],
-      "matches": ["<all_urls>", "file:///*", "http://localhost/*", "http://127.0.0.1/*"]
+      "matches": [
+        "<all_urls>",
+        "file:///*",
+        "http://localhost/*",
+        "http://127.0.0.1/*"
+      ]
     },
     {
-      "resources": [
-        "icons/*.svg",
-        "icons/*.png",
-        "style.css"
-      ],
-      "matches": ["<all_urls>", "file:///*", "http://localhost/*", "http://127.0.0.1/*"]
+      "resources": ["icons/*.svg", "icons/*.png", "style.css"],
+      "matches": [
+        "<all_urls>",
+        "file:///*",
+        "http://localhost/*",
+        "http://127.0.0.1/*"
+      ]
     }
   ],
   "content_security_policy": {
@@ -85,7 +96,5 @@
       "description": "Show or hide the chat window (preserves session)."
     }
   },
-  "host_permissions": [
-    "<all_urls>"
-  ]
+  "host_permissions": ["<all_urls>"]
 }

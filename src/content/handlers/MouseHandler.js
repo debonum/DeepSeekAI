@@ -1,8 +1,10 @@
-
-import { selectionManager, isPointInSavedSelection } from '../components/SelectionManager';
-import { popupManager } from '../components/PopupManager';
-import { popupStateManager } from '../utils/popupStateManager';
-import { createQuickActionButtons } from '../components/QuickActionButtons';
+import {
+  selectionManager,
+  isPointInSavedSelection,
+} from "../components/SelectionManager";
+import { popupManager } from "../components/PopupManager";
+import { popupStateManager } from "../utils/popupStateManager";
+import { createQuickActionButtons } from "../components/QuickActionButtons";
 
 // 全局变量跟踪状态
 let isMouseDown = false;
@@ -18,7 +20,7 @@ let currentQuickActions = null;
 // 判断是否为快速的多击（双击/三击）
 function isRapidMultiClick(event) {
   try {
-    return event && typeof event.detail === 'number' && event.detail >= 2;
+    return event && typeof event.detail === "number" && event.detail >= 2;
   } catch (_) {
     return false;
   }
@@ -27,24 +29,28 @@ function isRapidMultiClick(event) {
 // 隐藏快捷按钮
 export function hideQuickActions() {
   // 兼容旧容器
-  const container = document.getElementById('fixed-quick-actions-container');
+  const container = document.getElementById("fixed-quick-actions-container");
   if (container) {
-    container.style.opacity = '0';
-    container.style.pointerEvents = 'none';
-    setTimeout(() => { container.innerHTML = ''; }, 200);
+    container.style.opacity = "0";
+    container.style.pointerEvents = "none";
+    setTimeout(() => {
+      container.innerHTML = "";
+    }, 200);
   }
 
   // 新容器
-  const wrapper = document.getElementById('quick-actions-wrapper');
+  const wrapper = document.getElementById("quick-actions-wrapper");
   if (wrapper) {
     // 清理滚动监听器
     if (wrapper._scrollHandler) {
-      window.removeEventListener('scroll', wrapper._scrollHandler, true);
+      window.removeEventListener("scroll", wrapper._scrollHandler, true);
       delete wrapper._scrollHandler;
     }
 
     if (wrapper.parentNode) {
-      try { wrapper.parentNode.removeChild(wrapper); } catch (_) {}
+      try {
+        wrapper.parentNode.removeChild(wrapper);
+      } catch (_) {}
     }
     if (currentQuickActions === wrapper) currentQuickActions = null;
   }
@@ -58,7 +64,9 @@ export function removeQuickActions() {
 function findRangeRectNearPoint(range, anchorPoint) {
   if (!range || !anchorPoint) return null;
 
-  const rects = Array.from(range.getClientRects()).filter(rect => rect.width || rect.height);
+  const rects = Array.from(range.getClientRects()).filter(
+    (rect) => rect.width || rect.height,
+  );
   if (!rects.length) return null;
 
   const contains = (rect) =>
@@ -103,7 +111,9 @@ async function handleCopyAction() {
         selectionManager.clear();
         try {
           window.getSelection().removeAllRanges();
-        } catch (err) { /* silent */ }
+        } catch (err) {
+          /* silent */
+        }
       } catch (err) {
         console.error("复制文本失败:", err);
       }
@@ -119,15 +129,16 @@ function handleQuickAction(action, text) {
   const selection = window.getSelection();
   if (!selection || selection.rangeCount === 0) return;
   const rect = selection.getRangeAt(0).getBoundingClientRect();
-  const messages = [ { role: "user", content: text, } ];
+  const messages = [{ role: "user", content: text }];
   removeQuickActions();
   let prompt = action.prompt;
-  if (action.id === 'translate' && !prompt.includes('简体中文')) {
-    prompt = action.prompt.replace('{language}', '简体中文');
+  if (action.id === "translate" && !prompt.includes("简体中文")) {
+    prompt = action.prompt.replace("{language}", "简体中文");
   }
-  if (action.id === 'custom') {
+  if (action.id === "custom") {
     messages[0].userQuestion = action.prompt;
-    prompt = "你是一个帮助用户理解和分析内容的AI助手。用户会提供一段内容以及他们的问题。请基于用户提供的内容回答用户问题。";
+    prompt =
+      "你是一个帮助用户理解和分析内容的AI助手。用户会提供一段内容以及他们的问题。请基于用户提供的内容回答用户问题。";
   }
   popupManager.handlePopupCreation(text, rect, false, messages, prompt);
   selectionManager.scheduleRestore(50, false);
@@ -141,22 +152,24 @@ function showQuickActionsForSelection(selection, anchorPoint) {
       return;
     }
     // 若已有一个实例，先移除
-    const existed = document.getElementById('quick-actions-wrapper');
+    const existed = document.getElementById("quick-actions-wrapper");
     if (existed && existed.parentNode) {
-      try { existed.parentNode.removeChild(existed); } catch (_) {}
+      try {
+        existed.parentNode.removeChild(existed);
+      } catch (_) {}
     }
     selectionManager.saveSelection();
 
-    let wrapper = document.getElementById('quick-actions-wrapper');
+    let wrapper = document.getElementById("quick-actions-wrapper");
     if (!wrapper) {
-      wrapper = document.createElement('div');
-      wrapper.id = 'quick-actions-wrapper';
+      wrapper = document.createElement("div");
+      wrapper.id = "quick-actions-wrapper";
       Object.assign(wrapper.style, {
-        position: 'fixed',
-        zIndex: '2147483647',
-        pointerEvents: 'auto',
-        opacity: '0',
-        transition: 'opacity 0.15s ease',
+        position: "fixed",
+        zIndex: "2147483647",
+        pointerEvents: "auto",
+        opacity: "0",
+        transition: "opacity 0.15s ease",
       });
       document.body.appendChild(wrapper);
       currentQuickActions = wrapper;
@@ -164,11 +177,13 @@ function showQuickActionsForSelection(selection, anchorPoint) {
     const range = selectionManager.savedRange;
     if (!range) return;
     const boundingRect = range.getBoundingClientRect();
-    const anchorRect = anchorPoint ? findRangeRectNearPoint(range, anchorPoint) : null;
+    const anchorRect = anchorPoint
+      ? findRangeRectNearPoint(range, anchorPoint)
+      : null;
     const rect = anchorRect || boundingRect;
     const text = selectionManager.getSavedText();
-    wrapper.innerHTML = '';
-    wrapper.dataset.manualPosition = 'false';
+    wrapper.innerHTML = "";
+    wrapper.dataset.manualPosition = "false";
 
     // 传入 popupManager.handleIconClick 作为 handleIconClick 回调
     // 注意：content.js 里 handleIconClick 是直接用的，但这里我们需要桥接一下
@@ -179,50 +194,56 @@ function showQuickActionsForSelection(selection, anchorPoint) {
     // 那个 handleIconClick 实际上是用于当 QuickAction 切换到 Icon 模式？或者类似的
     // 暂时用一个包装函数
     const handleIconClickWrapper = (e, txt, r) => {
-        // 模拟 handleIconClick 的行为
-        e.stopPropagation();
-        e.preventDefault();
-        removeQuickActions();
-        if (!r) {
-            r = {
-                left: window.innerWidth / 2,
-                top: window.innerHeight / 2 - 190,
-                width: 0,
-                height: 0
-            };
-        }
-        popupManager.handlePopupCreation(txt || "", r);
+      // 模拟 handleIconClick 的行为
+      e.stopPropagation();
+      e.preventDefault();
+      removeQuickActions();
+      if (!r) {
+        r = {
+          left: window.innerWidth / 2,
+          top: window.innerHeight / 2 - 190,
+          width: 0,
+          height: 0,
+        };
+      }
+      popupManager.handlePopupCreation(txt || "", r);
     };
 
-    createQuickActionButtons(text, handleQuickAction, handleIconClickWrapper, handleCopyAction)
-      .then(buttonsContainer => {
+    createQuickActionButtons(
+      text,
+      handleQuickAction,
+      handleIconClickWrapper,
+      handleCopyAction,
+    )
+      .then((buttonsContainer) => {
         if (!buttonsContainer) return;
 
         // 保存初始位置信息
         const initialRect = {
           left: rect.left,
           top: rect.top,
-          bottom: rect.bottom
+          bottom: rect.bottom,
         };
         const initialScroll = {
           x: window.pageXOffset || document.documentElement.scrollLeft,
-          y: window.pageYOffset || document.documentElement.scrollTop
+          y: window.pageYOffset || document.documentElement.scrollTop,
         };
 
         Object.assign(wrapper.style, {
           left: `${rect.left}px`,
           top: `${rect.bottom + 5}px`,
-          zIndex: '2147483646'
+          zIndex: "2147483646",
         });
 
-        buttonsContainer.style.position = 'static';
+        buttonsContainer.style.position = "static";
         wrapper.appendChild(buttonsContainer);
 
         requestAnimationFrame(() => {
           try {
             const containerRect = buttonsContainer.getBoundingClientRect();
             const padding = 8;
-            const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+            const viewportWidth =
+              window.innerWidth || document.documentElement.clientWidth;
             let clampedLeft = initialRect.left;
             const maxLeft = viewportWidth - containerRect.width - padding;
             if (clampedLeft > maxLeft) clampedLeft = Math.max(padding, maxLeft);
@@ -234,17 +255,19 @@ function showQuickActionsForSelection(selection, anchorPoint) {
             }
           } catch (_) {}
 
-          wrapper.style.opacity = '1';
+          wrapper.style.opacity = "1";
         });
 
         quickActionsShownAt = Date.now();
 
         const handleScroll = () => {
-          if (!wrapper || wrapper.dataset.manualPosition === 'true') {
+          if (!wrapper || wrapper.dataset.manualPosition === "true") {
             return;
           }
-          const currentScrollX = window.pageXOffset || document.documentElement.scrollLeft;
-          const currentScrollY = window.pageYOffset || document.documentElement.scrollTop;
+          const currentScrollX =
+            window.pageXOffset || document.documentElement.scrollLeft;
+          const currentScrollY =
+            window.pageYOffset || document.documentElement.scrollTop;
 
           const deltaX = currentScrollX - initialScroll.x;
           const deltaY = currentScrollY - initialScroll.y;
@@ -256,7 +279,7 @@ function showQuickActionsForSelection(selection, anchorPoint) {
         };
 
         wrapper._scrollHandler = handleScroll;
-        window.addEventListener('scroll', handleScroll, true);
+        window.addEventListener("scroll", handleScroll, true);
 
         if (buttonsContainer.initDrag) {
           buttonsContainer.initDrag();
@@ -265,18 +288,18 @@ function showQuickActionsForSelection(selection, anchorPoint) {
           buttonsContainer.initFocus();
         }
       })
-      .catch(err => {
-        console.error('创建快捷按钮出错:', err);
+      .catch((err) => {
+        console.error("创建快捷按钮出错:", err);
       });
   } catch (error) {
-    console.error('显示快捷按钮时出错:', error);
+    console.error("显示快捷按钮时出错:", error);
   }
 }
 
 function getStableSelection(maxWait = 500, settle = 140) {
   return new Promise((resolve) => {
     const start = Date.now();
-    let lastText = '';
+    let lastText = "";
     let lastChange = Date.now();
 
     const tick = () => {
@@ -318,110 +341,164 @@ export function initMouseHandlers(isSelectionEnabledGetter) {
   // 设置 popupManager 的回调
   popupManager.setCallbacks(removeQuickActions, () => {}); // removeIcon logic inside handler?
 
-  document.addEventListener("mousedown", function(e) {
-    if (e.button !== 0) return;
+  document.addEventListener(
+    "mousedown",
+    function (e) {
+      if (e.button !== 0) return;
 
-    isMouseDown = true;
-    hasMovedEnough = false;
-    mouseDownPosition = { x: e.clientX, y: e.clientY };
+      isMouseDown = true;
+      hasMovedEnough = false;
+      mouseDownPosition = { x: e.clientX, y: e.clientY };
 
-    if (selectionChangeTimeout) {
-      clearTimeout(selectionChangeTimeout);
-      selectionChangeTimeout = null;
-    }
-
-    if (!e.target.closest('.deepseek-quick-action-buttons, .quick-action-buttons') &&
-        !e.target.closest('.custom-prompt-input')) {
-      const withinGuardWindow = quickActionsShownAt && (Date.now() - quickActionsShownAt < DOUBLE_CLICK_GUARD_MS);
-      if (!isPointInSavedSelection(e) && !withinGuardWindow) {
-        removeQuickActions();
+      if (selectionChangeTimeout) {
+        clearTimeout(selectionChangeTimeout);
+        selectionChangeTimeout = null;
       }
-    }
-  }, { passive: true });
 
-  document.addEventListener("mousemove", function(e) {
-    if (!isMouseDown || !isSelectionEnabledGetter() || popupStateManager.isCreating()) return;
-
-    const dx = e.clientX - mouseDownPosition.x;
-    const dy = e.clientY - mouseDownPosition.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-
-    if (distance > 5) {
-      hasMovedEnough = true;
-      const selection = window.getSelection();
-      const selectionLength = selection ? selection.toString().trim().length : 0;
-
-      if (selectionLength > 0 && selectionLength !== lastSelectionLength) {
-        lastSelectionLength = selectionLength;
-        if (selectionChangeTimeout) {
-          clearTimeout(selectionChangeTimeout);
+      if (
+        !e.target.closest(
+          ".deepseek-quick-action-buttons, .quick-action-buttons",
+        ) &&
+        !e.target.closest(".custom-prompt-input")
+      ) {
+        const withinGuardWindow =
+          quickActionsShownAt &&
+          Date.now() - quickActionsShownAt < DOUBLE_CLICK_GUARD_MS;
+        if (!isPointInSavedSelection(e) && !withinGuardWindow) {
+          removeQuickActions();
         }
-        selectionChangeTimeout = setTimeout(() => {
-          if (isMouseDown && selectionLength > 0) {
-            prepareSelectionUI(selection);
-          }
-        }, 50);
       }
-    }
-  }, { passive: true });
+    },
+    { passive: true },
+  );
 
-  document.addEventListener("mouseup", function(e) {
-    isMouseDown = false;
-    if (e.button === 2) return;
-    if (!isSelectionEnabledGetter() || popupStateManager.isCreating() || isHandlingIconClick) return;
+  document.addEventListener(
+    "mousemove",
+    function (e) {
+      if (
+        !isMouseDown ||
+        !isSelectionEnabledGetter() ||
+        popupStateManager.isCreating()
+      )
+        return;
 
-    if (e.target.closest && e.target.closest('.deepseek-quick-action-buttons, .quick-action-buttons')) return;
+      const dx = e.clientX - mouseDownPosition.x;
+      const dy = e.clientY - mouseDownPosition.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
 
-    const anchorPoint = { x: e.clientX, y: e.clientY };
-    if (!hasMovedEnough && e.detail >= 2) {
-      getStableSelection(550, 160).then((sel) => {
+      if (distance > 5) {
+        hasMovedEnough = true;
+        const selection = window.getSelection();
+        const selectionLength = selection
+          ? selection.toString().trim().length
+          : 0;
+
+        if (selectionLength > 0 && selectionLength !== lastSelectionLength) {
+          lastSelectionLength = selectionLength;
+          if (selectionChangeTimeout) {
+            clearTimeout(selectionChangeTimeout);
+          }
+          selectionChangeTimeout = setTimeout(() => {
+            if (isMouseDown && selectionLength > 0) {
+              prepareSelectionUI(selection);
+            }
+          }, 50);
+        }
+      }
+    },
+    { passive: true },
+  );
+
+  document.addEventListener(
+    "mouseup",
+    function (e) {
+      isMouseDown = false;
+      if (e.button === 2) return;
+      if (
+        !isSelectionEnabledGetter() ||
+        popupStateManager.isCreating() ||
+        isHandlingIconClick
+      )
+        return;
+
+      if (
+        e.target.closest &&
+        e.target.closest(
+          ".deepseek-quick-action-buttons, .quick-action-buttons",
+        )
+      )
+        return;
+
+      const anchorPoint = { x: e.clientX, y: e.clientY };
+      if (!hasMovedEnough && e.detail >= 2) {
+        getStableSelection(550, 160).then((sel) => {
+          if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+          const textNow = sel.toString().trim();
+          if (!textNow) return;
+          selectionManager.saveSelection();
+          if (!selectionManager.hasSelection()) return;
+          showQuickActionsForSelection(sel, anchorPoint);
+        });
+        return;
+      }
+
+      const delay = hasMovedEnough ? 10 : 180;
+      setTimeout(() => {
+        const sel = window.getSelection();
         if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
         const textNow = sel.toString().trim();
         if (!textNow) return;
         selectionManager.saveSelection();
         if (!selectionManager.hasSelection()) return;
         showQuickActionsForSelection(sel, anchorPoint);
-      });
-      return;
-    }
-
-    const delay = hasMovedEnough ? 10 : 180;
-    setTimeout(() => {
-      const sel = window.getSelection();
-      if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
-      const textNow = sel.toString().trim();
-      if (!textNow) return;
-      selectionManager.saveSelection();
-      if (!selectionManager.hasSelection()) return;
-      showQuickActionsForSelection(sel, anchorPoint);
-    }, delay);
-  }, { passive: true });
+      }, delay);
+    },
+    { passive: true },
+  );
 
   // Context Menu
-  document.addEventListener("contextmenu", function(event) {
-    const targetElement = event.target;
-    // ... logic (similar to original)
-    const isOnQuickActions = targetElement.closest && targetElement.closest('.deepseek-quick-action-buttons, .quick-action-buttons');
-    if (isOnQuickActions) return;
+  document.addEventListener(
+    "contextmenu",
+    function (event) {
+      const targetElement = event.target;
+      // ... logic (similar to original)
+      const isOnQuickActions =
+        targetElement.closest &&
+        targetElement.closest(
+          ".deepseek-quick-action-buttons, .quick-action-buttons",
+        );
+      if (isOnQuickActions) return;
 
-    if (selectionManager.hasSelection()) {
+      if (selectionManager.hasSelection()) {
         selectionManager.restoreSelection(true);
-    }
-  }, { capture: true });
+      }
+    },
+    { capture: true },
+  );
 
   // Capture mousedown
-  document.addEventListener("mousedown", function(e) {
+  document.addEventListener(
+    "mousedown",
+    function (e) {
       if (isHandlingIconClick) return;
       const targetElement = e.target;
-      const isOnQuickActions = targetElement.closest && targetElement.closest('.deepseek-quick-action-buttons, .quick-action-buttons');
-      const isOnInput = targetElement.closest && (targetElement.tagName === 'INPUT' || targetElement.tagName === 'TEXTAREA') && isOnQuickActions;
+      const isOnQuickActions =
+        targetElement.closest &&
+        targetElement.closest(
+          ".deepseek-quick-action-buttons, .quick-action-buttons",
+        );
+      const isOnInput =
+        targetElement.closest &&
+        (targetElement.tagName === "INPUT" ||
+          targetElement.tagName === "TEXTAREA") &&
+        isOnQuickActions;
 
       if (isOnQuickActions) {
         if (e.button === 2) return;
         if (isOnInput) {
-            selectionManager.saveSelection();
+          selectionManager.saveSelection();
         } else {
-            selectionManager.saveSelection();
+          selectionManager.saveSelection();
         }
         return;
       }
@@ -430,49 +507,60 @@ export function initMouseHandlers(isSelectionEnabledGetter) {
 
       if (e.button === 0) {
         if (isPointInSavedSelection(e)) return;
-        const withinGuardWindow = quickActionsShownAt && (Date.now() - quickActionsShownAt < DOUBLE_CLICK_GUARD_MS);
+        const withinGuardWindow =
+          quickActionsShownAt &&
+          Date.now() - quickActionsShownAt < DOUBLE_CLICK_GUARD_MS;
         if (!withinGuardWindow) {
-            removeQuickActions();
-            if (selectionManager.hasSelection()) {
-                selectionManager.clear();
-                try { window.getSelection().removeAllRanges(); } catch (err) {}
-            }
+          removeQuickActions();
+          if (selectionManager.hasSelection()) {
+            selectionManager.clear();
+            try {
+              window.getSelection().removeAllRanges();
+            } catch (err) {}
+          }
         }
       }
 
       // Hack for right click focus preservation (skipped for now or simplified)
-  }, { capture: true, passive: false });
-
+    },
+    { capture: true, passive: false },
+  );
 
   // Global click for Shadow DOM closing
-  document.addEventListener('mousedown', async (event) => {
+  document.addEventListener("mousedown", async (event) => {
     if (!popupManager.currentPopup) return;
     const isTempPinned = popupManager.currentPopup._isTempPinned || false;
     if (isTempPinned) return;
 
-    const shadowHost = document.getElementById('deepseek-shadow-host');
-    if (shadowHost && (event.target === shadowHost || shadowHost.contains(event.target))) {
-        return;
+    const shadowHost = document.getElementById("deepseek-shadow-host");
+    if (
+      shadowHost &&
+      (event.target === shadowHost || shadowHost.contains(event.target))
+    ) {
+      return;
     }
 
     const composedPath = event.composedPath ? event.composedPath() : [];
-    const isClickInShadow = composedPath.some(el => {
-        if (el.id === 'ai-popup') return true;
-        if (el.id === 'deepseek-shadow-host') return true;
-        if (el.classList && (
-          el.classList.contains('icon-wrapper') ||
-          el.classList.contains('icon-container') ||
-          el.classList.contains('regenerate-icon')
-        )) return true;
-        return false;
+    const isClickInShadow = composedPath.some((el) => {
+      if (el.id === "ai-popup") return true;
+      if (el.id === "deepseek-shadow-host") return true;
+      if (
+        el.classList &&
+        (el.classList.contains("icon-wrapper") ||
+          el.classList.contains("icon-container") ||
+          el.classList.contains("regenerate-icon"))
+      )
+        return true;
+      return false;
     });
 
     if (isClickInShadow) return;
 
-    const isClickInside = event.target.closest('#ai-popup') ||
-                         event.target.closest('.icon-wrapper') ||
-                         event.target.closest('.icon-container') ||
-                         event.target.closest('.regenerate-icon');
+    const isClickInside =
+      event.target.closest("#ai-popup") ||
+      event.target.closest(".icon-wrapper") ||
+      event.target.closest(".icon-container") ||
+      event.target.closest(".regenerate-icon");
 
     if (isClickInside) return;
 
@@ -480,70 +568,96 @@ export function initMouseHandlers(isSelectionEnabledGetter) {
   });
 
   // Short cuts
-  document.addEventListener('keydown', (e) => {
+  document.addEventListener("keydown", (e) => {
     if (!popupManager.currentPopup) return;
-    if (e.key === 'Escape') {
-        popupManager.safeRemovePopup();
+    if (e.key === "Escape") {
+      popupManager.safeRemovePopup();
     }
   });
 
   // Global click to close language select
-  document.addEventListener('click', (e) => {
-      const languageSelect = document.querySelector('.language-select');
-      if (languageSelect && languageSelect.style.display === 'block') {
-          const isClickInside = e.target.closest('.quick-action-translate');
-          if (!isClickInside) {
-              languageSelect.style.display = 'none';
-          }
+  document.addEventListener("click", (e) => {
+    const languageSelect = document.querySelector(".language-select");
+    if (languageSelect && languageSelect.style.display === "block") {
+      const isClickInside = e.target.closest(".quick-action-translate");
+      if (!isClickInside) {
+        languageSelect.style.display = "none";
       }
+    }
   });
 
   // Close QD on outside click
-  document.addEventListener('mousedown', (e) => {
-      const wrapper = document.getElementById('quick-actions-wrapper');
+  document.addEventListener(
+    "mousedown",
+    (e) => {
+      const wrapper = document.getElementById("quick-actions-wrapper");
       if (!wrapper) return;
-      if (e.target.closest && e.target.closest('.deepseek-quick-action-buttons, .quick-action-buttons')) return;
+      if (
+        e.target.closest &&
+        e.target.closest(
+          ".deepseek-quick-action-buttons, .quick-action-buttons",
+        )
+      )
+        return;
       hideQuickActions();
-  }, { passive: true });
+    },
+    { passive: true },
+  );
 
-
-    // Copy listeners
-    document.addEventListener('copy', function(event) {
-        if (selectionManager.hasSelection()) {
-            const currentSelection = window.getSelection();
-            if (!currentSelection || currentSelection.isCollapsed || !currentSelection.toString().trim()) {
-                selectionManager.restoreSelection(true);
-            }
+  // Copy listeners
+  document.addEventListener(
+    "copy",
+    function (event) {
+      if (selectionManager.hasSelection()) {
+        const currentSelection = window.getSelection();
+        if (
+          !currentSelection ||
+          currentSelection.isCollapsed ||
+          !currentSelection.toString().trim()
+        ) {
+          selectionManager.restoreSelection(true);
         }
-    }, { capture: true });
+      }
+    },
+    { capture: true },
+  );
 
-    document.addEventListener('keydown', function(event) {
-        const isCopyShortcut = (event.ctrlKey || event.metaKey) && event.key === 'c';
-        if (isCopyShortcut && selectionManager.hasSelection()) {
-            const currentSelection = window.getSelection();
-            if (!currentSelection || currentSelection.isCollapsed || !currentSelection.toString().trim()) {
-                selectionManager.restoreSelection(true);
-            }
+  document.addEventListener(
+    "keydown",
+    function (event) {
+      const isCopyShortcut =
+        (event.ctrlKey || event.metaKey) && event.key === "c";
+      if (isCopyShortcut && selectionManager.hasSelection()) {
+        const currentSelection = window.getSelection();
+        if (
+          !currentSelection ||
+          currentSelection.isCollapsed ||
+          !currentSelection.toString().trim()
+        ) {
+          selectionManager.restoreSelection(true);
         }
-    }, { capture: true });
+      }
+    },
+    { capture: true },
+  );
 }
 
 // Fixed container init
-document.addEventListener('DOMContentLoaded', () => {
-    if (!document.getElementById('fixed-quick-actions-container')) {
-        const container = document.createElement('div');
-        container.id = 'fixed-quick-actions-container';
-        Object.assign(container.style, {
-            position: 'absolute',
-            pointerEvents: 'none',
-            top: '0',
-            left: '0',
-            width: '100%',
-            height: '100%',
-            zIndex: '2147483646',
-            opacity: '0',
-            transition: 'opacity 0.2s ease'
-        });
-        document.body.appendChild(container);
-    }
+document.addEventListener("DOMContentLoaded", () => {
+  if (!document.getElementById("fixed-quick-actions-container")) {
+    const container = document.createElement("div");
+    container.id = "fixed-quick-actions-container";
+    Object.assign(container.style, {
+      position: "absolute",
+      pointerEvents: "none",
+      top: "0",
+      left: "0",
+      width: "100%",
+      height: "100%",
+      zIndex: "2147483646",
+      opacity: "0",
+      transition: "opacity 0.2s ease",
+    });
+    document.body.appendChild(container);
+  }
 });

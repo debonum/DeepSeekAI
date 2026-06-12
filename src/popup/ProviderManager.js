@@ -91,7 +91,6 @@ export class ProviderManager {
 
       // 加载隐藏服务商
       this.hiddenProviders = await this.loadHiddenProviders();
-
     } catch (error) {
       console.error("ProviderManager初始化错误:", error);
     }
@@ -110,7 +109,7 @@ export class ProviderManager {
 
     // 过滤默认服务商
     const visibleDefaultProviders = this.defaultProviders.filter(
-      (p) => !filteredIds.includes(p.id)
+      (p) => !filteredIds.includes(p.id),
     );
 
     return [...visibleDefaultProviders, ...this.customProviders];
@@ -182,7 +181,7 @@ export class ProviderManager {
             } else {
               resolve(true);
             }
-          }
+          },
         );
       });
     } catch (error) {
@@ -212,7 +211,7 @@ export class ProviderManager {
             } else {
               resolve(true);
             }
-          }
+          },
         );
       });
     } catch (error) {
@@ -226,7 +225,7 @@ export class ProviderManager {
     try {
       // 从隐藏列表中移除
       this.hiddenProviders = this.hiddenProviders.filter(
-        (p) => p.id !== providerId
+        (p) => p.id !== providerId,
       );
 
       return new Promise((resolve) => {
@@ -239,7 +238,7 @@ export class ProviderManager {
             } else {
               resolve(true);
             }
-          }
+          },
         );
       });
     } catch (error) {
@@ -260,7 +259,7 @@ export class ProviderManager {
       if (isCustom) {
         // 从自定义列表中移除
         this.customProviders = this.customProviders.filter(
-          (p) => p.id !== providerId
+          (p) => p.id !== providerId,
         );
 
         // 保存更新后的自定义服务商列表
@@ -271,13 +270,13 @@ export class ProviderManager {
               if (chrome.runtime.lastError) {
                 console.error(
                   "删除自定义服务商错误:",
-                  chrome.runtime.lastError
+                  chrome.runtime.lastError,
                 );
                 resolve(false);
               } else {
                 resolve(true);
               }
-            }
+            },
           );
         });
       } else {
@@ -299,7 +298,7 @@ export class ProviderManager {
             } else {
               // 同时也添加到隐藏列表中，确保立即在UI中隐藏
               const provider = this.defaultProviders.find(
-                (p) => p.id === providerId
+                (p) => p.id === providerId,
               );
               if (
                 provider &&
@@ -394,13 +393,13 @@ export class ProviderManager {
               }
 
               console.log(
-                `获取${providerId}的API密钥: ${apiKey ? "已设置" : "未设置"}`
+                `获取${providerId}的API密钥: ${apiKey ? "已设置" : "未设置"}`,
               );
               resolve(apiKey);
             });
           } else {
             console.log(
-              `获取${providerId}的API密钥: ${apiKey ? "已设置" : "未设置"}`
+              `获取${providerId}的API密钥: ${apiKey ? "已设置" : "未设置"}`,
             );
             resolve(apiKey);
           }
@@ -478,11 +477,11 @@ export class ProviderManager {
 
     // 如果是自定义服务商，从自定义列表中获取
     const customProvider = this.customProviders?.find(
-      (p) => p.id === providerId
+      (p) => p.id === providerId,
     );
     if (customProvider) {
       console.log(
-        `获取自定义服务商${providerId}的API URL: ${customProvider.apiUrl}`
+        `获取自定义服务商${providerId}的API URL: ${customProvider.apiUrl}`,
       );
       return customProvider.apiUrl;
     }
@@ -502,18 +501,29 @@ export class ProviderManager {
 
   // 验证API密钥并区分失败原因（必要时使用一次“歧义消解”二次探测）
   async validateApiKey(providerId, apiKey, model) {
-    if (!apiKey) return { ok: false, reason: 'invalid_key', status: 0, message: 'Empty API key' };
+    if (!apiKey)
+      return {
+        ok: false,
+        reason: "invalid_key",
+        status: 0,
+        message: "Empty API key",
+      };
 
     try {
       console.log(
-        `🔍 开始验证API密钥 - providerId: ${providerId}, model: ${model}`
+        `🔍 开始验证API密钥 - providerId: ${providerId}, model: ${model}`,
       );
 
       // 获取服务商信息
       const provider = await this.getProviderById(providerId);
       if (!provider) {
         console.error(`❌ 未找到服务商信息: ${providerId}`);
-        return { ok: false, reason: 'unknown', status: 0, message: 'Provider not found' };
+        return {
+          ok: false,
+          reason: "unknown",
+          status: 0,
+          message: "Provider not found",
+        };
       }
 
       // 获取API URL
@@ -521,7 +531,12 @@ export class ProviderManager {
       console.log(`🌐 API URL: ${apiUrl}`);
       if (!apiUrl) {
         console.error(`❌ 未找到API URL`);
-        return { ok: false, reason: 'unknown', status: 0, message: 'API URL missing' };
+        return {
+          ok: false,
+          reason: "unknown",
+          status: 0,
+          message: "API URL missing",
+        };
       }
 
       // 非 deepseek 必须提供模型，deepseek 通过兼容层解析成真实请求参数
@@ -533,8 +548,13 @@ export class ProviderManager {
           : model;
 
       if (!resolvedModel) {
-        console.error('❌ 验证失败：模型未设置');
-        return { ok: false, reason: 'invalid_model', status: 0, message: 'Model not set' };
+        console.error("❌ 验证失败：模型未设置");
+        return {
+          ok: false,
+          reason: "invalid_model",
+          status: 0,
+          message: "Model not set",
+        };
       }
 
       const createProbeBody = (probeModel) => {
@@ -572,7 +592,7 @@ export class ProviderManager {
               },
               body: JSON.stringify(reqBody),
             },
-            (result) => resolve(result)
+            (result) => resolve(result),
           );
         });
       };
@@ -589,32 +609,64 @@ export class ProviderManager {
       const classify = (resp) => {
         const status = resp?.status || 0;
         const data = resp?.data || {};
-        const text = (resp?.text || resp?.error || '') + '';
+        const text = (resp?.text || resp?.error || "") + "";
         const errorObj = data?.error || {};
-        const code = (errorObj.code || errorObj.type || '').toString().toLowerCase();
-        const message = (errorObj.message || resp?.error || resp?.text || '').toString();
+        const code = (errorObj.code || errorObj.type || "")
+          .toString()
+          .toLowerCase();
+        const message = (
+          errorObj.message ||
+          resp?.error ||
+          resp?.text ||
+          ""
+        ).toString();
         const msgLower = message.toLowerCase();
 
         const isKeyStatus = status === 401 || status === 403;
-        const keyHints = ['invalid api key','invalid key','api key','apikey','api-key','unauthorized','authentication','auth','access denied','bearer','token'];
-        const modelHints = ['model','not found','no such','does not exist','unknown','unsupported'];
+        const keyHints = [
+          "invalid api key",
+          "invalid key",
+          "api key",
+          "apikey",
+          "api-key",
+          "unauthorized",
+          "authentication",
+          "auth",
+          "access denied",
+          "bearer",
+          "token",
+        ];
+        const modelHints = [
+          "model",
+          "not found",
+          "no such",
+          "does not exist",
+          "unknown",
+          "unsupported",
+        ];
 
-        const matchAny = (hay, arr) => arr.some(w => hay.includes(w));
+        const matchAny = (hay, arr) => arr.some((w) => hay.includes(w));
 
-        const isKeyKeyword = matchAny(code, keyHints) || matchAny(msgLower, keyHints);
-        const isModelKeyword = matchAny(code, modelHints) || (msgLower.includes('model') && matchAny(msgLower, modelHints));
+        const isKeyKeyword =
+          matchAny(code, keyHints) || matchAny(msgLower, keyHints);
+        const isModelKeyword =
+          matchAny(code, modelHints) ||
+          (msgLower.includes("model") && matchAny(msgLower, modelHints));
 
-        if (isKeyStatus || isKeyKeyword) return { reason: 'invalid_key', status, message };
-        if (status === 404 || isModelKeyword) return { reason: 'invalid_model', status, message };
-        if (status === 429) return { reason: 'rate_limited', status, message };
-        if (status >= 500 && status < 600) return { reason: 'server_error', status, message };
-        return { reason: 'unknown', status, message };
+        if (isKeyStatus || isKeyKeyword)
+          return { reason: "invalid_key", status, message };
+        if (status === 404 || isModelKeyword)
+          return { reason: "invalid_model", status, message };
+        if (status === 429) return { reason: "rate_limited", status, message };
+        if (status >= 500 && status < 600)
+          return { reason: "server_error", status, message };
+        return { reason: "unknown", status, message };
       };
 
       let verdict = classify(response);
 
       // 歧义消解：当原因为 unknown 或 400 且无明显关键词时，再用“已知有效模型”二次探测
-      if (verdict.reason === 'unknown' || verdict.status === 400) {
+      if (verdict.reason === "unknown" || verdict.status === 400) {
         try {
           const defaults = this.getDefaultModels(providerId);
           const fallbackModel =
@@ -625,15 +677,31 @@ export class ProviderManager {
             // 如果 fallback 仍然失败且被判定为 key 错，则认定 key 错
             const probeVerdict = classify(probeResp);
             if (!probeResp?.ok) {
-              if (probeVerdict.reason === 'invalid_key' || probeResp?.status === 401 || probeResp?.status === 403) {
-                verdict = { reason: 'invalid_key', status: probeResp?.status || verdict.status, message: probeVerdict.message };
-              } else if (probeVerdict.reason === 'invalid_model') {
+              if (
+                probeVerdict.reason === "invalid_key" ||
+                probeResp?.status === 401 ||
+                probeResp?.status === 403
+              ) {
+                verdict = {
+                  reason: "invalid_key",
+                  status: probeResp?.status || verdict.status,
+                  message: probeVerdict.message,
+                };
+              } else if (probeVerdict.reason === "invalid_model") {
                 // fallback 也报模型，说明可能不是模型问题而是服务端报文差异，保留 unknown 但倾向 key
-                verdict = { reason: 'unknown', status: probeResp?.status || verdict.status, message: probeVerdict.message };
+                verdict = {
+                  reason: "unknown",
+                  status: probeResp?.status || verdict.status,
+                  message: probeVerdict.message,
+                };
               }
             } else {
               // fallback 成功 → key 正常，原模型异常
-              verdict = { reason: 'invalid_model', status: response?.status || 400, message: verdict.message };
+              verdict = {
+                reason: "invalid_model",
+                status: response?.status || 400,
+                message: verdict.message,
+              };
             }
           }
         } catch (e) {
@@ -641,23 +709,53 @@ export class ProviderManager {
         }
       }
 
-      if (verdict.reason === 'invalid_key') {
-        return { ok: false, reason: 'invalid_key', status: verdict.status, message: verdict.message };
+      if (verdict.reason === "invalid_key") {
+        return {
+          ok: false,
+          reason: "invalid_key",
+          status: verdict.status,
+          message: verdict.message,
+        };
       }
-      if (verdict.reason === 'invalid_model') {
-        return { ok: false, reason: 'invalid_model', status: verdict.status, message: verdict.message };
+      if (verdict.reason === "invalid_model") {
+        return {
+          ok: false,
+          reason: "invalid_model",
+          status: verdict.status,
+          message: verdict.message,
+        };
       }
-      if (verdict.reason === 'rate_limited') {
-        return { ok: false, reason: 'rate_limited', status: verdict.status, message: verdict.message };
+      if (verdict.reason === "rate_limited") {
+        return {
+          ok: false,
+          reason: "rate_limited",
+          status: verdict.status,
+          message: verdict.message,
+        };
       }
-      if (verdict.reason === 'server_error') {
-        return { ok: false, reason: 'server_error', status: verdict.status, message: verdict.message };
+      if (verdict.reason === "server_error") {
+        return {
+          ok: false,
+          reason: "server_error",
+          status: verdict.status,
+          message: verdict.message,
+        };
       }
 
-      return { ok: false, reason: 'unknown', status: verdict.status, message: verdict.message };
+      return {
+        ok: false,
+        reason: "unknown",
+        status: verdict.status,
+        message: verdict.message,
+      };
     } catch (error) {
       console.error("❌ 验证API密钥错误:", error);
-      return { ok: false, reason: 'network', status: 0, message: String(error?.message || error) };
+      return {
+        ok: false,
+        reason: "network",
+        status: 0,
+        message: String(error?.message || error),
+      };
     }
   }
 
@@ -667,10 +765,11 @@ export class ProviderManager {
       const { models: storedModels, hasStoredValue } =
         await this.getStoredModelsSnapshot(providerId);
 
-      const deletedDefaultModels = await this.getDeletedDefaultModels(providerId);
+      const deletedDefaultModels =
+        await this.getDeletedDefaultModels(providerId);
       const defaultModels = this.getDefaultModels(providerId);
       const availableDefaultModels = defaultModels.filter(
-        (model) => !deletedDefaultModels.includes(model.value)
+        (model) => !deletedDefaultModels.includes(model.value),
       );
 
       // 只要用户已经显式保存过该 provider 的模型列表，就以它为准。
@@ -697,8 +796,14 @@ export class ProviderManager {
 
     return new Promise((resolve) => {
       chrome.storage.sync.get(keyName, (data) => {
-        const hasStoredValue = Object.prototype.hasOwnProperty.call(data, keyName);
-        const models = this.normalizeModels(providerId, Array.isArray(data[keyName]) ? data[keyName] : []);
+        const hasStoredValue = Object.prototype.hasOwnProperty.call(
+          data,
+          keyName,
+        );
+        const models = this.normalizeModels(
+          providerId,
+          Array.isArray(data[keyName]) ? data[keyName] : [],
+        );
         resolve({ models, hasStoredValue });
       });
     });
@@ -724,7 +829,7 @@ export class ProviderManager {
 
       return this.normalizeModels(
         providerId,
-        this.mergeModels(syncModels, localModels)
+        this.mergeModels(syncModels, localModels),
       );
     } catch (error) {
       console.error("获取 legacy 模型列表错误:", error);
@@ -779,13 +884,21 @@ export class ProviderManager {
       const keyName = `${providerId}DeletedDefaultModels`;
       return await new Promise((resolve) => {
         chrome.storage.sync.get(keyName, (data) => {
-          const deletedModels = Array.isArray(data[keyName]) ? data[keyName] : [];
+          const deletedModels = Array.isArray(data[keyName])
+            ? data[keyName]
+            : [];
           if (providerId !== "deepseek") {
             resolve(deletedModels);
             return;
           }
 
-          resolve([...new Set(deletedModels.map((modelId) => getCanonicalDeepSeekModelValue(modelId)).filter(Boolean))]);
+          resolve([
+            ...new Set(
+              deletedModels
+                .map((modelId) => getCanonicalDeepSeekModelValue(modelId))
+                .filter(Boolean),
+            ),
+          ]);
         });
       });
     } catch (error) {
@@ -807,7 +920,10 @@ export class ProviderManager {
       openrouter: [
         { value: "deepseek/deepseek-chat-v3-0324", label: "DeepSeek-V3" },
         { value: "deepseek/deepseek-r1-0528", label: "DeepSeek-R1" },
-        { value: "deepseek/deepseek-chat-v3-0324:free", label: "DeepSeek-V3 free" },
+        {
+          value: "deepseek/deepseek-chat-v3-0324:free",
+          label: "DeepSeek-V3 free",
+        },
         { value: "deepseek/deepseek-r1-0528:free", label: "DeepSeek-R1 free" },
       ],
       tencentcloud: [
@@ -950,7 +1066,7 @@ export class ProviderManager {
             if (chrome.runtime.lastError) {
               console.error(
                 "保存已删除默认模型列表错误:",
-                chrome.runtime.lastError
+                chrome.runtime.lastError,
               );
               resolve(false);
             } else {

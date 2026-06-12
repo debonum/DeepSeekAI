@@ -77,7 +77,7 @@ const DEEPSEEK_MODEL_OPTIONS = [
 ];
 
 const DEEPSEEK_MODEL_OPTION_MAP = new Map(
-  DEEPSEEK_MODEL_OPTIONS.map((option) => [option.value, option])
+  DEEPSEEK_MODEL_OPTIONS.map((option) => [option.value, option]),
 );
 
 function getDeepSeekOptionCanonicalValue(option) {
@@ -85,9 +85,9 @@ function getDeepSeekOptionCanonicalValue(option) {
 }
 
 export function getDeepSeekDefaultModels() {
-  return DEEPSEEK_MODEL_OPTIONS
-    .filter((option) => option.isVisible !== false)
-    .map(({ value, label }) => ({ value, label }));
+  return DEEPSEEK_MODEL_OPTIONS.filter(
+    (option) => option.isVisible !== false,
+  ).map(({ value, label }) => ({ value, label }));
 }
 
 export function getDeepSeekModelLabel(modelValue) {
@@ -95,17 +95,24 @@ export function getDeepSeekModelLabel(modelValue) {
 }
 
 export function getCanonicalDeepSeekModelValue(modelValue) {
-  const normalizedModel = typeof modelValue === "string" ? modelValue.trim() : "";
+  const normalizedModel =
+    typeof modelValue === "string" ? modelValue.trim() : "";
   if (!normalizedModel) {
     return "";
   }
 
   const matchedOption = DEEPSEEK_MODEL_OPTION_MAP.get(normalizedModel);
-  return matchedOption ? getDeepSeekOptionCanonicalValue(matchedOption) : normalizedModel;
+  return matchedOption
+    ? getDeepSeekOptionCanonicalValue(matchedOption)
+    : normalizedModel;
 }
 
-export function resolveDeepSeekModel(modelValue, fallbackValue = DEEPSEEK_DEFAULT_MODEL) {
-  const normalizedModel = typeof modelValue === "string" ? modelValue.trim() : "";
+export function resolveDeepSeekModel(
+  modelValue,
+  fallbackValue = DEEPSEEK_DEFAULT_MODEL,
+) {
+  const normalizedModel =
+    typeof modelValue === "string" ? modelValue.trim() : "";
   const matchedOption = DEEPSEEK_MODEL_OPTION_MAP.get(normalizedModel);
 
   if (matchedOption) {
@@ -113,10 +120,9 @@ export function resolveDeepSeekModel(modelValue, fallbackValue = DEEPSEEK_DEFAUL
       ...matchedOption,
       canonicalValue: getDeepSeekOptionCanonicalValue(matchedOption),
       isKnownModel: true,
-      thinking:
-        matchedOption.thinkingType
-          ? { type: matchedOption.thinkingType }
-          : null,
+      thinking: matchedOption.thinkingType
+        ? { type: matchedOption.thinkingType }
+        : null,
     };
   }
 

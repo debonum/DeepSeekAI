@@ -1,9 +1,13 @@
-import { getIsGenerating } from '../services/apiService';
-import { getAIResponse } from '../services/apiService';
-import { addIconsToElement } from './IconManager';
-import { isDarkMode } from '../utils/themeManager';
-import { focusInputIfSafe } from '../utils/focusManager';
-import { getPopupElement, getAiResponseElement, getShadowContainer } from './ShadowContainer';
+import { getIsGenerating } from "../services/apiService";
+import { getAIResponse } from "../services/apiService";
+import { addIconsToElement } from "./IconManager";
+import { isDarkMode } from "../utils/themeManager";
+import { focusInputIfSafe } from "../utils/focusManager";
+import {
+  getPopupElement,
+  getAiResponseElement,
+  getShadowContainer,
+} from "./ShadowContainer";
 
 const INPUT_SINGLE_LINE_HEIGHT = "48px";
 const INPUT_MULTILINE_LINE_HEIGHT = "1.3";
@@ -45,37 +49,38 @@ export const createQuestionInputContainer = (aiResponseContainer) => {
   // 立即应用正确的主题色
   const darkMode = isDarkMode();
   if (darkMode) {
-    textarea.style.backgroundColor = 'rgba(58, 58, 60, 0.8)'; // 暗色模式输入框背景
-    textarea.style.color = '#ffffff'; // 暗色模式文本颜色
-    inputContainer.style.backgroundColor = 'rgba(44, 44, 46, 0.9)'; // 暗色模式容器背景
-    container.style.backgroundColor = 'rgba(44, 44, 46, 0.9)'; // 暗色模式外部容器背景
+    textarea.style.backgroundColor = "rgba(58, 58, 60, 0.8)"; // 暗色模式输入框背景
+    textarea.style.color = "#ffffff"; // 暗色模式文本颜色
+    inputContainer.style.backgroundColor = "rgba(44, 44, 46, 0.9)"; // 暗色模式容器背景
+    container.style.backgroundColor = "rgba(44, 44, 46, 0.9)"; // 暗色模式外部容器背景
   } else {
-    textarea.style.backgroundColor = 'rgba(242, 242, 247, 0.9)'; // 亮色模式输入框背景
-    textarea.style.color = '#000000'; // 亮色模式文本颜色
-    inputContainer.style.backgroundColor = 'rgba(242, 242, 247, 0.9)'; // 亮色模式容器背景
-    container.style.backgroundColor = 'rgba(242, 242, 247, 0.9)'; // 亮色模式外部容器背景
+    textarea.style.backgroundColor = "rgba(242, 242, 247, 0.9)"; // 亮色模式输入框背景
+    textarea.style.color = "#000000"; // 亮色模式文本颜色
+    inputContainer.style.backgroundColor = "rgba(242, 242, 247, 0.9)"; // 亮色模式容器背景
+    container.style.backgroundColor = "rgba(242, 242, 247, 0.9)"; // 亮色模式外部容器背景
   }
 
   // 在下一帧过渡到CSS变量控制的样式，确保平滑过渡
   requestAnimationFrame(() => {
-    textarea.style.transition = 'background-color 0.2s ease, color 0.2s ease';
-    inputContainer.style.transition = 'background-color 0.2s ease';
-    container.style.transition = 'background-color 0.2s ease';
+    textarea.style.transition = "background-color 0.2s ease, color 0.2s ease";
+    inputContainer.style.transition = "background-color 0.2s ease";
+    container.style.transition = "background-color 0.2s ease";
 
-    textarea.style.backgroundColor = '';
-    textarea.style.color = '';
-    inputContainer.style.backgroundColor = '';
-    container.style.backgroundColor = '';
+    textarea.style.backgroundColor = "";
+    textarea.style.color = "";
+    inputContainer.style.backgroundColor = "";
+    container.style.backgroundColor = "";
   });
 
   // 设置loading图标的样式并监听主题变化
   const updateLoadingIconStyle = () => {
-    const isDark = document.body.classList.contains('dark-mode') ||
-                   document.documentElement.classList.contains('dark-mode') ||
-                   document.querySelector('.theme-adaptive.dark-mode');
+    const isDark =
+      document.body.classList.contains("dark-mode") ||
+      document.documentElement.classList.contains("dark-mode") ||
+      document.querySelector(".theme-adaptive.dark-mode");
     // 与发送按钮保持一致：亮色用 --text-secondary (#86868b)，暗色用白色
-    loadingIcon.style.color = isDark ? '#fff' : '#86868b';
-    loadingIcon.style.filter = 'none';
+    loadingIcon.style.color = isDark ? "#fff" : "#86868b";
+    loadingIcon.style.filter = "none";
   };
 
   // 初始化时调用一次
@@ -84,9 +89,11 @@ export const createQuestionInputContainer = (aiResponseContainer) => {
   // 添加主题变化监听器
   const themeObserver = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
-      if (mutation.attributeName === 'class' &&
-          (mutation.target.classList.contains('theme-adaptive') ||
-           mutation.target.classList.contains('dark-mode'))) {
+      if (
+        mutation.attributeName === "class" &&
+        (mutation.target.classList.contains("theme-adaptive") ||
+          mutation.target.classList.contains("dark-mode"))
+      ) {
         updateLoadingIconStyle();
       }
     });
@@ -108,9 +115,9 @@ const setupTextarea = (textarea) => {
   const initTextareaState = (element) => ({
     isComposing: false,
     lastHeight: 40,
-    compositionText: '',
-    originalValue: '',
-    lock: false
+    compositionText: "",
+    originalValue: "",
+    lock: false,
   });
 
   const getState = (element) => {
@@ -119,9 +126,9 @@ const setupTextarea = (textarea) => {
 
   const updateHasContent = (element) => {
     if (element.value.trim()) {
-      element.classList.add('has-content');
+      element.classList.add("has-content");
     } else {
-      element.classList.remove('has-content');
+      element.classList.remove("has-content");
     }
   };
 
@@ -131,26 +138,27 @@ const setupTextarea = (textarea) => {
 
     if (!element.value.trim()) {
       // 对于空内容，恢复单行样式
-      element.style.transition = 'none';
+      element.style.transition = "none";
       resetTextareaLayout(element);
 
       // 恢复过渡效果
       setTimeout(() => {
-        element.style.transition = 'height 0.2s ease, line-height 0.2s ease';
+        element.style.transition = "height 0.2s ease, line-height 0.2s ease";
       }, 0);
 
       // 确保父容器也调整高度
-      const inputContainer = element.closest('.input-container');
+      const inputContainer = element.closest(".input-container");
       if (inputContainer) {
-        inputContainer.style.height = 'auto';
+        inputContainer.style.height = "auto";
       }
 
       // 添加轻微的视觉反馈
-      element.style.backgroundColor = 'var(--input-bg)';
+      element.style.backgroundColor = "var(--input-bg)";
     } else {
       // 检查是否真正需要多行
-      const lines = element.value.split('\n');
-      const hasMultipleLines = lines.length > 1 || (lines.length === 1 && lines[0].length > 30);
+      const lines = element.value.split("\n");
+      const hasMultipleLines =
+        lines.length > 1 || (lines.length === 1 && lines[0].length > 30);
 
       if (hasMultipleLines) {
         // 多行文本时切换到正常的 line-height 和 padding
@@ -158,7 +166,7 @@ const setupTextarea = (textarea) => {
         element.style.padding = INPUT_MULTILINE_PADDING; // 减小padding
 
         // 清除之前设置的高度以获得准确的scrollHeight
-        element.style.height = '0px';
+        element.style.height = "0px";
         // 然后设置为scrollHeight，降低最小高度
         const newHeight = Math.min(Math.max(40, element.scrollHeight), 100); // 降低最小和最大高度
         element.style.height = `${newHeight}px`;
@@ -168,13 +176,13 @@ const setupTextarea = (textarea) => {
       }
 
       // 确保父容器也调整高度
-      const inputContainer = element.closest('.input-container');
+      const inputContainer = element.closest(".input-container");
       if (inputContainer) {
-        inputContainer.style.height = 'auto';
+        inputContainer.style.height = "auto";
       }
 
       // 添加轻微的视觉反馈，让用户感知到内容变化
-      element.style.backgroundColor = 'var(--input-bg-active, var(--input-bg))';
+      element.style.backgroundColor = "var(--input-bg-active, var(--input-bg))";
     }
 
     // 恢复光标位置
@@ -204,34 +212,41 @@ const setupTextarea = (textarea) => {
     updateHasContent(event.target);
 
     // 内容变化时提供轻微的输入反馈
-    const sendIcon = event.target.parentElement.querySelector('.send-icon');
+    const sendIcon = event.target.parentElement.querySelector(".send-icon");
     if (event.target.value.trim()) {
       // 有内容时高亮发送按钮
       if (sendIcon) {
-        sendIcon.style.opacity = '0.8';
-        sendIcon.style.color = 'var(--accent-color)';
+        sendIcon.style.opacity = "0.8";
+        sendIcon.style.color = "var(--accent-color)";
       }
     } else {
       // 无内容时恢复默认状态
       if (sendIcon) {
-        sendIcon.style.opacity = '0.6';
-        sendIcon.style.color = 'var(--text-secondary)';
+        sendIcon.style.opacity = "0.6";
+        sendIcon.style.color = "var(--text-secondary)";
       }
     }
 
     // 更新行数计数器
-    lastLineCount = event.target.value.split('\n').length;
+    lastLineCount = event.target.value.split("\n").length;
   });
 
   textarea.addEventListener("keydown", (event) => {
     const state = getState(event.target);
 
     // 按键反馈 - 使用更自然、更微妙的背景变化
-    if (event.key !== 'Tab' && event.key !== 'Meta' && event.key !== 'Alt' && event.key !== 'Control' && event.key !== 'Shift') {
+    if (
+      event.key !== "Tab" &&
+      event.key !== "Meta" &&
+      event.key !== "Alt" &&
+      event.key !== "Control" &&
+      event.key !== "Shift"
+    ) {
       // 用更微妙的变化替代明显的背景色改变
-      event.target.style.backgroundColor = 'var(--input-bg-active-subtle-minimal, var(--input-bg))';
+      event.target.style.backgroundColor =
+        "var(--input-bg-active-subtle-minimal, var(--input-bg))";
       setTimeout(() => {
-        event.target.style.backgroundColor = 'var(--input-bg)';
+        event.target.style.backgroundColor = "var(--input-bg)";
       }, 120); // 延长恢复时间，使过渡更自然
     }
 
@@ -240,15 +255,17 @@ const setupTextarea = (textarea) => {
         event.preventDefault();
         if (!getIsGenerating()) {
           // 回车发送时提供明确的视觉反馈
-          const sendIcon = event.target.parentElement.querySelector('.send-icon');
+          const sendIcon =
+            event.target.parentElement.querySelector(".send-icon");
           if (sendIcon) {
             // 发送按钮动画：缩小 → 弹回
-            sendIcon.style.transition = 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)';
-            sendIcon.style.transform = 'translateY(-50%) scale(0.85)';
-            sendIcon.style.opacity = '1';
+            sendIcon.style.transition =
+              "all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)";
+            sendIcon.style.transform = "translateY(-50%) scale(0.85)";
+            sendIcon.style.opacity = "1";
 
             setTimeout(() => {
-              sendIcon.style.transform = 'translateY(-50%) scale(1)';
+              sendIcon.style.transform = "translateY(-50%) scale(1)";
               sendQuestion(textarea, aiResponseContainer);
             }, 120);
             return;
@@ -257,9 +274,10 @@ const setupTextarea = (textarea) => {
           sendQuestion(textarea, aiResponseContainer);
         } else {
           // 当AI正在生成时，Enter键提供"无法发送"的反馈
-          event.target.style.animation = 'shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both';
+          event.target.style.animation =
+            "shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both";
           setTimeout(() => {
-            event.target.style.animation = '';
+            event.target.style.animation = "";
           }, 400);
         }
       } else {
@@ -272,8 +290,9 @@ const setupTextarea = (textarea) => {
 
   textarea.addEventListener("focus", () => {
     // 添加聚焦状态样式，提供明确的视觉反馈
-    textarea.style.boxShadow = '0 0 0 2px var(--accent-color-alpha, rgba(0, 122, 255, 0.2))';
-    textarea.style.borderColor = 'var(--accent-color)';
+    textarea.style.boxShadow =
+      "0 0 0 2px var(--accent-color-alpha, rgba(0, 122, 255, 0.2))";
+    textarea.style.borderColor = "var(--accent-color)";
 
     // 确保当前高度正确
     performHeightUpdate(textarea);
@@ -281,8 +300,8 @@ const setupTextarea = (textarea) => {
 
   textarea.addEventListener("blur", (event) => {
     // 移除聚焦状态样式
-    textarea.style.boxShadow = 'none';
-    textarea.style.borderColor = 'var(--border-color)';
+    textarea.style.boxShadow = "none";
+    textarea.style.borderColor = "var(--border-color)";
 
     if (!event.target.value) {
       resetTextareaLayout(event.target);
@@ -293,7 +312,7 @@ const setupTextarea = (textarea) => {
   const resizeHandler = () => {
     performHeightUpdate(textarea);
   };
-  window.addEventListener('resize', resizeHandler);
+  window.addEventListener("resize", resizeHandler);
 
   // 初始化时执行一次高度调整
   textarea.style.height = "48px";
@@ -302,13 +321,13 @@ const setupTextarea = (textarea) => {
 
   // 为cleanup添加事件移除
   textarea._cleanupEvents = () => {
-    window.removeEventListener('resize', resizeHandler);
+    window.removeEventListener("resize", resizeHandler);
   };
 
   // 添加输入框动画样式到document
-  if (!document.getElementById('input-feedback-styles')) {
-    const style = document.createElement('style');
-    style.id = 'input-feedback-styles';
+  if (!document.getElementById("input-feedback-styles")) {
+    const style = document.createElement("style");
+    style.id = "input-feedback-styles";
     style.textContent = `
       @keyframes shake {
         10%, 90% { transform: translate3d(-1px, 0, 0); }
@@ -341,19 +360,19 @@ const setupSendButton = (sendIcon, textarea, aiResponseContainer) => {
   const addButtonFeedback = () => {
     // 光标悬停时的视觉反馈
     if (!getIsGenerating()) {
-      sendIcon.classList.add('pulse-animation');
-      sendIcon.style.color = 'var(--accent-color)';
-      sendIcon.style.opacity = '1';
-      sendIcon.style.transform = 'translateY(-50%) scale(1.1)';
+      sendIcon.classList.add("pulse-animation");
+      sendIcon.style.color = "var(--accent-color)";
+      sendIcon.style.opacity = "1";
+      sendIcon.style.transform = "translateY(-50%) scale(1.1)";
     }
   };
 
   const removeButtonFeedback = () => {
     // 移除光标悬停效果
-    sendIcon.classList.remove('pulse-animation');
-    sendIcon.style.color = 'var(--text-secondary)';
-    sendIcon.style.opacity = '0.6';
-    sendIcon.style.transform = 'translateY(-50%)';
+    sendIcon.classList.remove("pulse-animation");
+    sendIcon.style.color = "var(--text-secondary)";
+    sendIcon.style.opacity = "0.6";
+    sendIcon.style.transform = "translateY(-50%)";
   };
 
   // 鼠标悬停效果
@@ -363,13 +382,13 @@ const setupSendButton = (sendIcon, textarea, aiResponseContainer) => {
   // 点击反馈动画
   sendIcon.addEventListener("mousedown", () => {
     if (!getIsGenerating()) {
-      sendIcon.style.transform = 'translateY(-50%) scale(0.95)';
+      sendIcon.style.transform = "translateY(-50%) scale(0.95)";
     }
   });
 
   sendIcon.addEventListener("mouseup", () => {
     if (!getIsGenerating()) {
-      sendIcon.style.transform = 'translateY(-50%) scale(1.1)';
+      sendIcon.style.transform = "translateY(-50%) scale(1.1)";
     }
   });
 
@@ -377,11 +396,11 @@ const setupSendButton = (sendIcon, textarea, aiResponseContainer) => {
   sendIcon.addEventListener("click", () => {
     if (!getIsGenerating()) {
       // 点击反馈动画：缩小 → 弹回
-      sendIcon.style.transition = 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)';
-      sendIcon.style.transform = 'translateY(-50%) scale(0.85)';
+      sendIcon.style.transition = "all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)";
+      sendIcon.style.transform = "translateY(-50%) scale(0.85)";
 
       setTimeout(() => {
-        sendIcon.style.transform = 'translateY(-50%) scale(1)';
+        sendIcon.style.transform = "translateY(-50%) scale(1)";
         sendQuestion(textarea, aiResponseContainer);
       }, 120);
     }
@@ -393,12 +412,13 @@ const setupLoadingIcon = (loadingIconWrapper) => {
 
   const updateIconStyle = () => {
     if (loadingIcon) {
-      const isDark = document.body.classList.contains('dark-mode') ||
-                     document.documentElement.classList.contains('dark-mode') ||
-                     document.querySelector('.theme-adaptive.dark-mode');
+      const isDark =
+        document.body.classList.contains("dark-mode") ||
+        document.documentElement.classList.contains("dark-mode") ||
+        document.querySelector(".theme-adaptive.dark-mode");
       // 与发送按钮保持一致：亮色用 #86868b，暗色用白色
-      loadingIcon.style.color = isDark ? '#fff' : '#86868b';
-      loadingIcon.style.filter = 'none';
+      loadingIcon.style.color = isDark ? "#fff" : "#86868b";
+      loadingIcon.style.filter = "none";
     }
   };
 
@@ -408,16 +428,25 @@ const setupLoadingIcon = (loadingIconWrapper) => {
   // 监听主题变化，更新图标颜色
   const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
-      if (mutation.type === 'attributes' &&
-          (mutation.attributeName === 'class' || mutation.attributeName === 'data-theme')) {
+      if (
+        mutation.type === "attributes" &&
+        (mutation.attributeName === "class" ||
+          mutation.attributeName === "data-theme")
+      ) {
         updateIconStyle();
       }
     });
   });
 
   // 监听document.body和documentElement的class变化
-  observer.observe(document.body, { attributes: true, attributeFilter: ['class', 'data-theme'] });
-  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme'] });
+  observer.observe(document.body, {
+    attributes: true,
+    attributeFilter: ["class", "data-theme"],
+  });
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["class", "data-theme"],
+  });
 
   loadingIconWrapper.addEventListener("click", () => {
     if (getIsGenerating() && window.currentAbortController) {
@@ -465,65 +494,68 @@ const setupUpdateButtonState = (container) => {
 
     if (isGenerating) {
       // 切换到生成状态时增加过渡效果
-      sendIcon.style.transition = 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)';
-      sendIcon.style.transform = 'translateY(-50%) scale(0.8)';
-      sendIcon.style.opacity = '0';
+      sendIcon.style.transition = "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)";
+      sendIcon.style.transform = "translateY(-50%) scale(0.8)";
+      sendIcon.style.opacity = "0";
 
       setTimeout(() => {
         sendIcon.style.display = "none";
         loadingIconWrapper.style.display = "block";
-        loadingIconWrapper.style.opacity = '0';
-        loadingIconWrapper.style.transform = 'translateY(-50%) scale(0.8)';
+        loadingIconWrapper.style.opacity = "0";
+        loadingIconWrapper.style.transform = "translateY(-50%) scale(0.8)";
 
         // 强制重绘以应用初始状态
         void loadingIconWrapper.offsetWidth;
 
         // 应用过渡动画
-        loadingIconWrapper.style.transition = 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)';
-        loadingIconWrapper.style.opacity = '1';
-        loadingIconWrapper.style.transform = 'translateY(-50%) scale(1)';
+        loadingIconWrapper.style.transition =
+          "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)";
+        loadingIconWrapper.style.opacity = "1";
+        loadingIconWrapper.style.transform = "translateY(-50%) scale(1)";
         loadingIcon.classList.add("active");
 
         // 更新loading图标样式，与发送按钮颜色一致
-        const isDarkMode = document.body.classList.contains('dark-mode') ||
-                           document.documentElement.classList.contains('dark-mode') ||
-                           document.querySelector('.theme-adaptive.dark-mode');
+        const isDarkMode =
+          document.body.classList.contains("dark-mode") ||
+          document.documentElement.classList.contains("dark-mode") ||
+          document.querySelector(".theme-adaptive.dark-mode");
 
-        loadingIcon.style.color = isDarkMode ? '#fff' : '#86868b';
-        loadingIcon.style.filter = 'none';
+        loadingIcon.style.color = isDarkMode ? "#fff" : "#86868b";
+        loadingIcon.style.filter = "none";
       }, 150);
 
       // 禁用输入框
       textarea.style.cursor = "not-allowed";
       textarea.setAttribute("disabled", "disabled");
       textarea.setAttribute("placeholder", "AI is answering...");
-      textarea.style.opacity = '0.8';
+      textarea.style.opacity = "0.8";
     } else {
       // 切换回正常状态
-      loadingIconWrapper.style.transition = 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)';
-      loadingIconWrapper.style.transform = 'translateY(-50%) scale(0.8)';
-      loadingIconWrapper.style.opacity = '0';
+      loadingIconWrapper.style.transition =
+        "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)";
+      loadingIconWrapper.style.transform = "translateY(-50%) scale(0.8)";
+      loadingIconWrapper.style.opacity = "0";
 
       setTimeout(() => {
         loadingIconWrapper.style.display = "none";
         loadingIcon.classList.remove("active");
 
         sendIcon.style.display = "block";
-        sendIcon.style.opacity = '0';
-        sendIcon.style.transform = 'translateY(-50%) scale(0.8)';
+        sendIcon.style.opacity = "0";
+        sendIcon.style.transform = "translateY(-50%) scale(0.8)";
 
         // 强制重绘以应用初始状态
         void sendIcon.offsetWidth;
 
         // 应用过渡动画，重置为默认非激活状态
-        sendIcon.style.transition = 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)';
-        sendIcon.style.opacity = '0.6';
-        sendIcon.style.transform = 'translateY(-50%) scale(1)';
-        sendIcon.style.color = 'var(--text-secondary)';
+        sendIcon.style.transition = "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)";
+        sendIcon.style.opacity = "0.6";
+        sendIcon.style.transform = "translateY(-50%) scale(1)";
+        sendIcon.style.color = "var(--text-secondary)";
 
         if (textarea.value.trim()) {
-          sendIcon.style.opacity = '0.8';
-          sendIcon.style.color = 'var(--accent-color)';
+          sendIcon.style.opacity = "0.8";
+          sendIcon.style.color = "var(--accent-color)";
         }
       }, 150);
 
@@ -531,7 +563,7 @@ const setupUpdateButtonState = (container) => {
       textarea.style.cursor = "text";
       textarea.removeAttribute("disabled");
       textarea.setAttribute("placeholder", "Ask me anything...");
-      textarea.style.opacity = '1';
+      textarea.style.opacity = "1";
     }
   };
 
@@ -543,31 +575,32 @@ const sendQuestion = (textarea, aiResponseContainer) => {
   const question = textarea.value.trim();
   if (question) {
     // 清空文本域并重置高度
-    textarea.style.transition = 'height 0.2s ease, background-color 0.2s ease';
+    textarea.style.transition = "height 0.2s ease, background-color 0.2s ease";
 
     // 立即创建用户问题并添加到聊天区域
     const aiResponseElement = getAiResponseElement();
 
-    const userQuestionDiv = document.createElement('div');
-    userQuestionDiv.className = 'user-question';
-    const userQuestionP = document.createElement('p');
+    const userQuestionDiv = document.createElement("div");
+    userQuestionDiv.className = "user-question";
+    const userQuestionP = document.createElement("p");
     userQuestionP.textContent = question;
-    userQuestionP.style.color = 'white';  // 直接设置内联样式，确保颜色正确
+    userQuestionP.style.color = "white"; // 直接设置内联样式，确保颜色正确
     userQuestionDiv.appendChild(userQuestionP);
     addIconsToElement(userQuestionDiv);
 
     // 设置初始状态：偏下+缩小+透明
-    userQuestionDiv.style.opacity = '0';
-    userQuestionDiv.style.transform = 'translateY(20px) scale(0.92)';
-    userQuestionDiv.style.transition = 'opacity 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)';
+    userQuestionDiv.style.opacity = "0";
+    userQuestionDiv.style.transform = "translateY(20px) scale(0.92)";
+    userQuestionDiv.style.transition =
+      "opacity 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)";
 
     // 立即添加到 DOM
     aiResponseElement.appendChild(userQuestionDiv);
 
     // 触发重排后应用动画
     requestAnimationFrame(() => {
-      userQuestionDiv.style.opacity = '1';
-      userQuestionDiv.style.transform = 'translateY(0) scale(1)';
+      userQuestionDiv.style.opacity = "1";
+      userQuestionDiv.style.transform = "translateY(0) scale(1)";
     });
 
     // 立即滚动到底部
@@ -583,19 +616,19 @@ const sendQuestion = (textarea, aiResponseContainer) => {
     resetTextareaLayout(textarea);
 
     // 重置父容器高度
-    const containerElement = textarea.closest('.input-container');
+    const containerElement = textarea.closest(".input-container");
     if (containerElement) {
-      containerElement.style.height = 'auto';
+      containerElement.style.height = "auto";
     }
 
-    textarea.classList.remove('has-content');
+    textarea.classList.remove("has-content");
 
     // 延迟创建答案元素，让用户看到消息发送动画
     setTimeout(() => {
       const answerElement = document.createElement("div");
       answerElement.className = "ai-answer";
       answerElement.textContent = "";
-      answerElement.classList.add('generating');
+      answerElement.classList.add("generating");
       addIconsToElement(answerElement);
       aiResponseElement.appendChild(answerElement);
 
@@ -608,10 +641,11 @@ const sendQuestion = (textarea, aiResponseContainer) => {
 
       const onGenerationComplete = () => {
         if (answerElement) {
-          answerElement.classList.remove('generating');
-          answerElement.style.transition = 'background-color 0.5s ease';
+          answerElement.classList.remove("generating");
+          answerElement.style.transition = "background-color 0.5s ease";
           const originalColor = getComputedStyle(answerElement).backgroundColor;
-          answerElement.style.backgroundColor = 'var(--success-color-alpha, rgba(52, 199, 89, 0.1))';
+          answerElement.style.backgroundColor =
+            "var(--success-color-alpha, rgba(52, 199, 89, 0.1))";
           setTimeout(() => {
             answerElement.style.backgroundColor = originalColor;
           }, 1000);
@@ -621,8 +655,8 @@ const sendQuestion = (textarea, aiResponseContainer) => {
 
       const onGenerationError = () => {
         if (answerElement) {
-          answerElement.classList.remove('generating');
-          answerElement.classList.add('error');
+          answerElement.classList.remove("generating");
+          answerElement.classList.add("error");
         }
       };
 
@@ -636,9 +670,9 @@ const sendQuestion = (textarea, aiResponseContainer) => {
         false,
         null,
         false,
-        '',
+        "",
         onGenerationComplete,
-        onGenerationError
+        onGenerationError,
       );
     }, 250); // 延迟 250ms，让消息发送动画更明显
   }

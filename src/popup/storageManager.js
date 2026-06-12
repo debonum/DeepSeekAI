@@ -12,53 +12,88 @@ export class StorageManager {
   async getSettings() {
     return new Promise((resolve) => {
       chrome.storage.sync.get(
-          ["deepseekApiKey", "siliconflowApiKey", "openrouterApiKey","volcengineApiKey" ,"tencentcloudApiKey", "iflytekstarApiKey","baiducloudApiKey","aliyunApiKey", "aihubmixApiKey",
-           "deepseekCustomApiUrl", "siliconflowCustomApiUrl", "openrouterCustomApiUrl", "volcengineCustomApiUrl", "tencentcloudCustomApiUrl", "iflytekstarCustomApiUrl", "baiducloudCustomApiUrl", "aliyunCustomApiUrl", "aihubmixCustomApiUrl",
-           "language", "model", "provider", "selectionEnabled", "rememberWindowSize", "pinWindow", "customModels", "customSystemPrompt", "shortcuts"],
+        [
+          "deepseekApiKey",
+          "siliconflowApiKey",
+          "openrouterApiKey",
+          "volcengineApiKey",
+          "tencentcloudApiKey",
+          "iflytekstarApiKey",
+          "baiducloudApiKey",
+          "aliyunApiKey",
+          "aihubmixApiKey",
+          "deepseekCustomApiUrl",
+          "siliconflowCustomApiUrl",
+          "openrouterCustomApiUrl",
+          "volcengineCustomApiUrl",
+          "tencentcloudCustomApiUrl",
+          "iflytekstarCustomApiUrl",
+          "baiducloudCustomApiUrl",
+          "aliyunCustomApiUrl",
+          "aihubmixCustomApiUrl",
+          "language",
+          "model",
+          "provider",
+          "selectionEnabled",
+          "rememberWindowSize",
+          "pinWindow",
+          "customModels",
+          "customSystemPrompt",
+          "shortcuts",
+        ],
         (data) => {
           // 更新缓存
           this.cachedSettings = {
-            deepseekApiKey: data.deepseekApiKey || '',
-            siliconflowApiKey: data.siliconflowApiKey || '',
-            openrouterApiKey: data.openrouterApiKey || '',
-            volcengineApiKey: data.volcengineApiKey || '',
-            tencentcloudApiKey: data.tencentcloudApiKey || '',
-            iflytekstarApiKey: data.iflytekstarApiKey || '',
-            baiducloudApiKey: data.baiducloudApiKey || '',
-            aliyunApiKey: data.aliyunApiKey || '',
-            aihubmixApiKey: data.aihubmixApiKey || '',
-            deepseekCustomApiUrl: data.deepseekCustomApiUrl || '',
-            siliconflowCustomApiUrl: data.siliconflowCustomApiUrl || '',
-            openrouterCustomApiUrl: data.openrouterCustomApiUrl || '',
-            volcengineCustomApiUrl: data.volcengineCustomApiUrl || '',
-            tencentcloudCustomApiUrl: data.tencentcloudCustomApiUrl || '',
-            iflytekstarCustomApiUrl: data.iflytekstarCustomApiUrl || '',
-            baiducloudCustomApiUrl: data.baiducloudCustomApiUrl || '',
-            aliyunCustomApiUrl: data.aliyunCustomApiUrl || '',
-            aihubmixCustomApiUrl: data.aihubmixCustomApiUrl || '',
-            language: data.language || 'en',
-            model: data.model || '',
-            provider: data.provider || 'deepseek',
-            selectionEnabled: typeof data.selectionEnabled === 'undefined' ? true : data.selectionEnabled,
-            rememberWindowSize: typeof data.rememberWindowSize === 'undefined' ? false : data.rememberWindowSize,
-            pinWindow: typeof data.pinWindow === 'undefined' ? false : data.pinWindow,
+            deepseekApiKey: data.deepseekApiKey || "",
+            siliconflowApiKey: data.siliconflowApiKey || "",
+            openrouterApiKey: data.openrouterApiKey || "",
+            volcengineApiKey: data.volcengineApiKey || "",
+            tencentcloudApiKey: data.tencentcloudApiKey || "",
+            iflytekstarApiKey: data.iflytekstarApiKey || "",
+            baiducloudApiKey: data.baiducloudApiKey || "",
+            aliyunApiKey: data.aliyunApiKey || "",
+            aihubmixApiKey: data.aihubmixApiKey || "",
+            deepseekCustomApiUrl: data.deepseekCustomApiUrl || "",
+            siliconflowCustomApiUrl: data.siliconflowCustomApiUrl || "",
+            openrouterCustomApiUrl: data.openrouterCustomApiUrl || "",
+            volcengineCustomApiUrl: data.volcengineCustomApiUrl || "",
+            tencentcloudCustomApiUrl: data.tencentcloudCustomApiUrl || "",
+            iflytekstarCustomApiUrl: data.iflytekstarCustomApiUrl || "",
+            baiducloudCustomApiUrl: data.baiducloudCustomApiUrl || "",
+            aliyunCustomApiUrl: data.aliyunCustomApiUrl || "",
+            aihubmixCustomApiUrl: data.aihubmixCustomApiUrl || "",
+            language: data.language || "en",
+            model: data.model || "",
+            provider: data.provider || "deepseek",
+            selectionEnabled:
+              typeof data.selectionEnabled === "undefined"
+                ? true
+                : data.selectionEnabled,
+            rememberWindowSize:
+              typeof data.rememberWindowSize === "undefined"
+                ? false
+                : data.rememberWindowSize,
+            pinWindow:
+              typeof data.pinWindow === "undefined" ? false : data.pinWindow,
             customModels: data.customModels || {},
-            customSystemPrompt: data.customSystemPrompt || '',
+            customSystemPrompt: data.customSystemPrompt || "",
             shortcuts: data.shortcuts || {
-              'toggle-chat': {
-                default: 'Ctrl+Shift+Y',
-                description: 'Open or close the chat window (destroys session).',
-                displayName: 'Open/Close Chat'
+              "toggle-chat": {
+                default: "Ctrl+Shift+Y",
+                description:
+                  "Open or close the chat window (destroys session).",
+                displayName: "Open/Close Chat",
               },
-              'show-hide-chat': {
-                default: 'Ctrl+Shift+U',
-                description: 'Show or hide the chat window (preserves session).',
-                displayName: 'Show/Hide Chat'
-              }
-            }
+              "show-hide-chat": {
+                default: "Ctrl+Shift+U",
+                description:
+                  "Show or hide the chat window (preserves session).",
+                displayName: "Show/Hide Chat",
+              },
+            },
           };
           resolve(this.cachedSettings);
-        }
+        },
       );
     });
   }
@@ -164,7 +199,7 @@ export class StorageManager {
   // 获取指定服务商的自定义模型
   async getCustomModels(provider) {
     return new Promise((resolve) => {
-      chrome.storage.sync.get(['customModels'], (data) => {
+      chrome.storage.sync.get(["customModels"], (data) => {
         const customModels = data.customModels || {};
         resolve(customModels[provider] || []);
       });
@@ -181,7 +216,9 @@ export class StorageManager {
         const providerModels = customModels[provider] || [];
 
         // 检查模型ID是否已存在
-        const existingModelIndex = providerModels.findIndex(model => model.value === modelId);
+        const existingModelIndex = providerModels.findIndex(
+          (model) => model.value === modelId,
+        );
         if (existingModelIndex >= 0) {
           // 如果已存在，更新显示名称
           providerModels[existingModelIndex].label = displayName;
@@ -189,7 +226,7 @@ export class StorageManager {
           // 如果不存在，添加新模型
           providerModels.push({
             value: modelId,
-            label: displayName
+            label: displayName,
           });
         }
 
@@ -219,13 +256,15 @@ export class StorageManager {
         const providerModels = customModels[provider] || [];
 
         // 过滤掉要删除的模型
-        const updatedModels = providerModels.filter(model => model.value !== modelId);
+        const updatedModels = providerModels.filter(
+          (model) => model.value !== modelId,
+        );
 
         // 更新保存
         customModels[provider] = updatedModels;
 
         // 直接更新 storage
-        await this.updateStorage('customModels', customModels);
+        await this.updateStorage("customModels", customModels);
 
         // 为了确保完全删除，也更新独立的provider存储
         const storageKey = `customModels_${provider}`;
@@ -233,12 +272,14 @@ export class StorageManager {
           // 从chrome.storage.sync中获取数据
           const data = await this.getFromStorage(storageKey);
           if (data) {
-            const providerCustomModels = data.filter(model => model.value !== modelId);
+            const providerCustomModels = data.filter(
+              (model) => model.value !== modelId,
+            );
             // 更新storage
             await this.updateStorage(storageKey, providerCustomModels);
           }
         } catch (error) {
-          console.error('更新provider特定存储时出错:', error);
+          console.error("更新provider特定存储时出错:", error);
           // 继续执行，不阻止主要删除操作
         }
 
@@ -291,7 +332,7 @@ export class StorageManager {
         customModels[provider] = models;
 
         // 保存到chrome.storage.sync
-        await this.updateStorage('customModels', customModels);
+        await this.updateStorage("customModels", customModels);
 
         // 同时保存到provider特定的存储中，确保数据一致性
         const storageKey = `customModels_${provider}`;
@@ -299,7 +340,7 @@ export class StorageManager {
 
         resolve();
       } catch (error) {
-        console.error('保存自定义模型列表失败:', error);
+        console.error("保存自定义模型列表失败:", error);
         reject(error);
       }
     });
@@ -313,7 +354,7 @@ export class StorageManager {
         localStorage.setItem(storageKey, JSON.stringify(models));
         resolve();
       } catch (error) {
-        console.error('保存默认模型列表失败:', error);
+        console.error("保存默认模型列表失败:", error);
         reject(error);
       }
     });
@@ -329,7 +370,7 @@ export class StorageManager {
       }
       return [];
     } catch (e) {
-      console.error('从localStorage获取自定义模型失败:', e);
+      console.error("从localStorage获取自定义模型失败:", e);
       return [];
     }
   }
@@ -344,7 +385,7 @@ export class StorageManager {
       }
       return null; // 返回null而不是空数组，表示没有设置
     } catch (e) {
-      console.error('从localStorage获取默认模型失败:', e);
+      console.error("从localStorage获取默认模型失败:", e);
       return null;
     }
   }
@@ -354,7 +395,7 @@ export class StorageManager {
     return new Promise((resolve) => {
       chrome.storage.sync.set(settings, () => {
         // 更新缓存
-        this.cachedSettings = {...this.cachedSettings, ...settings};
+        this.cachedSettings = { ...this.cachedSettings, ...settings };
         resolve();
       });
     });
@@ -374,8 +415,8 @@ export class StorageManager {
 
   async getCustomSystemPrompt() {
     return new Promise((resolve) => {
-      chrome.storage.sync.get(['customSystemPrompt'], (data) => {
-        resolve(data.customSystemPrompt || '');
+      chrome.storage.sync.get(["customSystemPrompt"], (data) => {
+        resolve(data.customSystemPrompt || "");
       });
     });
   }

@@ -1,4 +1,3 @@
-
 # 🚀 DeepSeekAI - 智能网页助手
 
 <div align="center">
@@ -20,6 +19,7 @@ DeepSeekAI 是一个开源浏览器扩展，可以在任何网页上随时呼出
 > **提示**：本扩展由社区维护。API Key、自定义 Endpoint 和偏好设置只会保存在你浏览器的 `chrome.storage.sync` 中。
 
 ### 🔌 支持的 API 服务商
+
 - [DeepSeek](https://deepseek.com)（官方接口）
 - [字节火山引擎 Volcengine](https://www.volcengine.com/experience/ark?utm_term=202502dsinvite&ac=DSASUQY5&rc=OXTHJAF8)
 - [SiliconFlow](https://cloud.siliconflow.cn/i/lStn36vH)
@@ -34,11 +34,13 @@ DeepSeekAI 是一个开源浏览器扩展，可以在任何网页上随时呼出
 ## ✨ 功能速览
 
 ### 🪄 划词即用的轻量助手
+
 - 划词后在文本旁生成快捷操作气泡：Chat、复制、翻译（19 种语言）、解释、总结、邮件、分析等模版一键可用。
 - SelectionPreservationManager 持久化 DOM Range，确保双击/三击或右键菜单时选区不会丢失。
 - 工具栏弹窗、右键菜单、快捷键全部复用同一套对话逻辑，选中内容与手动提问无缝切换。
 
 ### 🪟 漂浮式工作区
+
 - 基于 `interactjs` 的拖拽/缩放体验，自带弹簧过渡动画与可记忆的最小化图标（持久化位置）。
 - “记住窗口大小”和“固定窗口”开关可独立控制，防止误触关窗或在不同页面重复调整。
 - `popupStateManager` 统一记录创建/显示/最小化状态，切换选区或键盘打开都能保持一致体验。
@@ -47,18 +49,21 @@ DeepSeekAI 是一个开源浏览器扩展，可以在任何网页上随时呼出
 - ScrollManager 管理滚动惯性与冷却时间，既能跟随流式输出，也能在手动滚动时保持视图稳定。
 
 ### 🧠 服务商与模型管理
+
 - 弹窗 UI（中英双语）可为每个服务商分别存储 API Key、自定义 API 地址、默认语言与是否启用划词气泡。
 - ProviderManager 支持新增、重命名、隐藏、删除自定义服务商，并自动填充获取 Key 的帮助链接。
 - ModelManager 支持为任意服务商维护多模型列表（含 inline 删除按钮），表单内容由 TempStateManager 自动保存，防止弹窗刷新导致进度丢失。
 - SystemPromptManager 允许配置全局自定义 System Prompt；Quick Action 模板也可覆盖局部提示词。
 
 ### 📝 渲染、安全与体验细节
+
 - Markdown-It + highlight.js + KaTeX + DOMPurify 提供富文本、代码高亮、数学公式与 HTML 清洗能力。
 - 代码块包裹通用复制按钮；回答块的复制/重生按钮与气泡一致，方便“整理后即复制”。
 - 背景 Service Worker 通过现代 `fetch` + `AbortController` 代理所有请求，停止/重试/快捷键均可即时终止网络流。
 - ThemeManager 监听 `prefers-color-scheme` 自动切换暗黑/浅色主题，气泡与工作区视觉统一。
 
 ### ⌨️ 唤起方式与快捷键
+
 - 默认内置两个 Chrome Command：
   - `Ctrl/Cmd + Shift + Y` → Toggle chat（销毁并重建对话）
   - `Ctrl/Cmd + Shift + U` → Show/Hide chat（保留会话继续）
@@ -66,6 +71,7 @@ DeepSeekAI 是一个开源浏览器扩展，可以在任何网页上随时呼出
 - 右键菜单「DeepSeek AI」会带上当前选中内容，并附加早/午/晚问候语。
 
 ### 🔐 隐私与新手引导
+
 - 首次安装会自动打开 [Instructions/Instructions.html](src/Instructions/instructions.html)，内置离线教程，UI 采用 Apple 风格，覆盖所有界面和操作。
 - 仓库中附带 [PRIVACY.html](PRIVACY.html)，明确说明所有数据仅存在浏览器本地，不上传到任何服务器。
 - DOMPurify 负责清洗渲染内容，全流程无遥测、无埋点、无第三方统计。
@@ -94,10 +100,12 @@ sequenceDiagram
 ## 🚀 安装与构建
 
 ### 1. 应用商店安装（推荐）
+
 - **Chrome**： [Chrome Web Store](https://chromewebstore.google.com/detail/bjjobdlpgglckcmhgmmecijpfobmcpap)
 - **Microsoft Edge**：开启 “Allow extensions from other stores” 后，可直接使用同一 Chrome 商店链接。
 
 ### 2. 手动安装 / 开发流程
+
 ```bash
 # 依赖：Node.js 18+、pnpm（或 npm）、Chromium 内核浏览器
 pnpm install
@@ -112,6 +120,7 @@ pnpm run build   # 产出 dist/ 目录
 3. 将对应 ZIP 上传至各自商店控制台即可提交审核。
 
 ## 🧩 配置与日常使用
+
 1. 点击浏览器扩展图标打开弹窗。
 2. 选择服务商（或新建自定义服务商，填写名称 + 基础 URL + 默认模型）并输入对应 API Key。各服务商的 Key、API 地址互不干扰。
 3. 选择或创建模型。非 DeepSeek 服务商必须显式填写模型 ID；若缺失，UI 会提醒并自动弹出添加模型对话框。
@@ -125,6 +134,7 @@ pnpm run build   # 产出 dist/ 目录
 7. 需要复习？可随时打开扩展内的 [离线指南](src/Instructions/instructions.html) 或切换到顶部链接的英文版 README。
 
 ## ⌨️ 快捷操作与命令
+
 - **快捷操作内容**：
   - `Chat` → 直接发送当前选区。
   - `Copy` → 不唤出聊天，仅复制选中文本。
@@ -134,6 +144,7 @@ pnpm run build   # 产出 dist/ 目录
 - **右键菜单**：右键选择 “DeepSeek AI” 即可把选区连同问候语发送到新对话。
 
 ## 🏗️ 项目结构与技术栈
+
 ```
 .
 ├── src/
@@ -152,11 +163,13 @@ pnpm run build   # 产出 dist/ 目录
 **核心依赖**：`interactjs`、`markdown-it`、`highlight.js`、`DOMPurify`、`katex`、`clipboard`、`perfect-scrollbar`、`openai`（用于请求结构）以及 Chrome/Edge 的 MV3 API。
 
 ## 🔒 隐私与安全
+
 - API Key、偏好设置、快捷操作状态、最小化图标位置全部保存在 `chrome.storage.sync`，不会离开本地。
 - 文本仅发送至你配置的服务商 Endpoint，无中转服务器、无日志、无埋点。
 - 仓库内的 [PRIVACY.html](PRIVACY.html) 记录全部细节，DOMPurify 负责渲染前的安全清洗。
 
 ## 🤝 贡献指南
+
 欢迎提交 Bug 报告、文档修正或新功能提案：
 
 1. Fork 仓库并创建分支（`git checkout -b feature/my-update`）。

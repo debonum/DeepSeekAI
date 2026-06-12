@@ -1,9 +1,8 @@
-
 import "./publicPath";
 import { initMouseHandlers, hideQuickActions } from "./handlers/MouseHandler";
 import { popupManager } from "./components/PopupManager";
 import { selectionManager } from "./components/SelectionManager";
-import { popupStateManager } from './utils/popupStateManager';
+import { popupStateManager } from "./utils/popupStateManager";
 
 // Debug log
 console.log(`DeepSeek AI: Content script injected on ${window.location.href}`);
@@ -19,20 +18,20 @@ function getReliableSelectedText() {
     return selection.toString().trim();
   }
   if (selectionManager.hasSelection()) {
-      return selectionManager.getSavedText();
+    return selectionManager.getSavedText();
   }
   return "";
 }
 
 // Load settings
-chrome.storage.sync.get(['selectionEnabled'], function(data) {
-  if (typeof data.selectionEnabled !== 'undefined') {
+chrome.storage.sync.get(["selectionEnabled"], function (data) {
+  if (typeof data.selectionEnabled !== "undefined") {
     isSelectionEnabled = data.selectionEnabled;
   }
 });
 
-chrome.storage.onChanged.addListener(function(changes, namespace) {
-  if (namespace === 'sync') {
+chrome.storage.onChanged.addListener(function (changes, namespace) {
+  if (namespace === "sync") {
     if (changes.selectionEnabled) {
       isSelectionEnabled = changes.selectionEnabled.newValue;
       if (!isSelectionEnabled) {
@@ -69,14 +68,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       const finalSelectedText = selectedTextContent;
       let rect;
       const selection = window.getSelection();
-      if (selection && selection.rangeCount > 0 && selection.toString().trim()) {
+      if (
+        selection &&
+        selection.rangeCount > 0 &&
+        selection.toString().trim()
+      ) {
         rect = selection.getRangeAt(0).getBoundingClientRect();
       } else {
         rect = {
           left: window.innerWidth / 2,
           top: window.innerHeight / 2 - 190,
           width: 0,
-          height: 0
+          height: 0,
         };
       }
 
@@ -85,7 +88,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
       popupManager.handlePopupCreation(textToUse, rect, hideQuestion);
     } catch (error) {
-      console.warn('Error handling toggleChat:', error);
+      console.warn("Error handling toggleChat:", error);
       popupManager.safeRemovePopup();
     }
   } else if (request.action === "showHideChat") {
@@ -96,19 +99,23 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       }
 
       if (popupManager.currentPopup) {
-        const isCurrentlyVisible = popupManager.currentPopup.style.display !== 'none';
+        const isCurrentlyVisible =
+          popupManager.currentPopup.style.display !== "none";
         if (isCurrentlyVisible) {
           popupManager.minimizePopup();
         } else {
-          popupManager.currentPopup.style.display = 'block';
+          popupManager.currentPopup.style.display = "block";
           requestAnimationFrame(() => {
-            popupManager.currentPopup.style.opacity = '1';
-            popupManager.currentPopup.style.transform = 'translateY(0) scale(1)';
+            popupManager.currentPopup.style.opacity = "1";
+            popupManager.currentPopup.style.transform =
+              "translateY(0) scale(1)";
           });
           popupStateManager.setVisible(true);
           setTimeout(() => {
             if (popupManager.currentPopup) {
-              const textarea = popupManager.currentPopup.querySelector('.expandable-textarea');
+              const textarea = popupManager.currentPopup.querySelector(
+                ".expandable-textarea",
+              );
               if (textarea) textarea.focus();
             }
           }, 100);
@@ -128,14 +135,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       const finalSelectedText = selectedTextContent;
       let rect;
       const selection = window.getSelection();
-      if (selection && selection.rangeCount > 0 && selection.toString().trim()) {
+      if (
+        selection &&
+        selection.rangeCount > 0 &&
+        selection.toString().trim()
+      ) {
         rect = selection.getRangeAt(0).getBoundingClientRect();
       } else {
         rect = {
           left: window.innerWidth / 2,
           top: window.innerHeight / 2 - 190,
           width: 0,
-          height: 0
+          height: 0,
         };
       }
 
@@ -144,7 +155,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
       popupManager.handlePopupCreation(textToUse, rect, hideQuestion);
     } catch (error) {
-      console.warn('Error handling showHideChat:', error);
+      console.warn("Error handling showHideChat:", error);
       popupManager.safeRemovePopup();
     }
   } else if (request.action === "createPopup") {
@@ -152,19 +163,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       let selectedTextContent = request.selectedText;
       if (!selectedTextContent) {
         const selection = window.getSelection();
-        selectedTextContent = selection && selection.toString ? selection.toString().trim() : "";
+        selectedTextContent =
+          selection && selection.toString ? selection.toString().trim() : "";
       }
 
       let rect;
       const selection = window.getSelection();
-      if (selection && selection.rangeCount > 0 && selection.toString().trim()) {
+      if (
+        selection &&
+        selection.rangeCount > 0 &&
+        selection.toString().trim()
+      ) {
         rect = selection.getRangeAt(0).getBoundingClientRect();
       } else {
         rect = {
           left: window.innerWidth / 2,
           top: window.innerHeight / 2 - 190,
           width: 0,
-          height: 0
+          height: 0,
         };
       }
 
@@ -173,13 +189,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
       popupManager.handlePopupCreation(textToUse, rect, hideQuestion);
     } catch (error) {
-      console.warn('Error handling createPopup:', error);
+      console.warn("Error handling createPopup:", error);
       popupManager.safeRemovePopup();
     }
   } else if (request.action === "getSelectedText") {
     sendResponse({ selectedText: getReliableSelectedText() });
   } else if (request.action === "closeChat") {
-    if (popupManager.minimizeIcon && document.body.contains(popupManager.minimizeIcon)) {
+    if (
+      popupManager.minimizeIcon &&
+      document.body.contains(popupManager.minimizeIcon)
+    ) {
       if (popupManager.minimizeIcon.cleanup) {
         popupManager.minimizeIcon.cleanup();
       }

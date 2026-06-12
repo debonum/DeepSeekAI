@@ -8,7 +8,7 @@ export class EventManager {
     // API Key visibility toggle
     this.managers.uiManager.elements.toggleButton.addEventListener(
       "click",
-      () => this.managers.uiManager.toggleApiKeyVisibility()
+      () => this.managers.uiManager.toggleApiKeyVisibility(),
     );
 
     // API Key focus event - 确保在输入时可见
@@ -18,7 +18,7 @@ export class EventManager {
         // 确保当获得焦点时内容可见
         this.managers.uiManager.elements.apiKeyInput.type = "text";
         this.managers.uiManager.elements.iconSwitch.src = "../icons/hiddle.svg";
-      }
+      },
     );
 
     // API Key validation and hiding on blur
@@ -32,7 +32,7 @@ export class EventManager {
         }
         // 执行API验证
         this.managers.apiKeyManager.handleApiKeyValidation();
-      }
+      },
     );
 
     // API Key input event - 确保在输入时可见
@@ -42,7 +42,7 @@ export class EventManager {
         // 确保在输入时内容可见
         this.managers.uiManager.elements.apiKeyInput.type = "text";
         this.managers.uiManager.elements.iconSwitch.src = "../icons/hiddle.svg";
-      }
+      },
     );
 
     // 服务商切换事件
@@ -59,20 +59,24 @@ export class EventManager {
           await this.managers.providerUIManager.updateProviderUI(provider);
 
           // 更新模型选项
-          const models = await this.managers.modelManager.updateModelOptions(provider);
+          const models =
+            await this.managers.modelManager.updateModelOptions(provider);
 
           // 先检查是否已设置API Key
-          const apiKey = await this.managers.providerManager.getApiKey(provider);
+          const apiKey =
+            await this.managers.providerManager.getApiKey(provider);
 
           if (!apiKey) {
             // 已有默认模型时，只需补 API Key，不要误导到“添加模型”流程
             this.managers.uiManager.showMessage(
-              this.managers.i18nManager.getTranslation('noApiKey'),
-              false
+              this.managers.i18nManager.getTranslation("noApiKey"),
+              false,
             );
 
-            if (provider !== 'deepseek' && (!models || models.length === 0)) {
-              try { document.body.dataset.requireModelKeyProvider = provider; } catch (e) {}
+            if (provider !== "deepseek" && (!models || models.length === 0)) {
+              try {
+                document.body.dataset.requireModelKeyProvider = provider;
+              } catch (e) {}
               if (this.managers.modelManager?.showAddModelDialog) {
                 this.managers.modelManager.showAddModelDialog();
               } else {
@@ -86,7 +90,7 @@ export class EventManager {
           }
 
           // 非 deepseek：若无模型，强制弹出添加模型（使用带有Key自动隐藏逻辑的接口）
-          if (provider !== 'deepseek' && (!models || models.length === 0)) {
+          if (provider !== "deepseek" && (!models || models.length === 0)) {
             if (this.managers.modelManager?.showAddModelDialog) {
               this.managers.modelManager.showAddModelDialog();
             } else {
@@ -96,51 +100,51 @@ export class EventManager {
         } catch (error) {
           console.error(`服务商切换错误:`, error);
         }
-      }
+      },
     );
 
     // 自定义API URL保存
     this.managers.uiManager.elements.customApiUrlInput.addEventListener(
       "blur",
-      () => this.managers.providerUIManager.handleCustomApiUrlSave()
+      () => this.managers.providerUIManager.handleCustomApiUrlSave(),
     );
 
     // 关闭模型弹窗按钮
     this.managers.uiManager.elements.closeModelModal?.addEventListener(
       "click",
-      () => this.handleCloseModelModal()
+      () => this.handleCloseModelModal(),
     );
 
     this.managers.uiManager.elements.modelPickerTrigger?.addEventListener(
       "click",
-      () => this.managers.modelManager.openModelPicker()
+      () => this.managers.modelManager.openModelPicker(),
     );
 
     this.managers.uiManager.elements.closeModelPickerModal?.addEventListener(
       "click",
-      () => this.managers.modelManager.closeModelPicker()
+      () => this.managers.modelManager.closeModelPicker(),
     );
 
     this.managers.uiManager.elements.modelPickerSearch?.addEventListener(
       "input",
-      (e) => this.managers.modelManager.handleModelPickerSearch(e.target.value)
+      (e) => this.managers.modelManager.handleModelPickerSearch(e.target.value),
     );
 
     this.managers.uiManager.elements.modelPickerAddButton?.addEventListener(
       "click",
-      () => this.managers.modelManager.handleModelPickerAdd()
+      () => this.managers.modelManager.handleModelPickerAdd(),
     );
 
-      // 取消添加模型按钮
+    // 取消添加模型按钮
     this.managers.uiManager.elements.cancelModelButton?.addEventListener(
       "click",
-      () => this.handleCancelModelModal()
+      () => this.handleCancelModelModal(),
     );
 
     // 保存模型按钮
     this.managers.uiManager.elements.saveModelButton?.addEventListener(
       "click",
-      () => this.managers.modelManager.handleSaveModel()
+      () => this.managers.modelManager.handleSaveModel(),
     );
 
     // 自定义服务商API Key focus事件
@@ -149,7 +153,7 @@ export class EventManager {
       () => {
         // 确保当获得焦点时内容可见
         this.managers.uiManager.elements.customProviderApiKey.type = "text";
-      }
+      },
     );
 
     // 自定义服务商API Key input事件
@@ -158,7 +162,7 @@ export class EventManager {
       () => {
         // 确保在输入时内容可见
         this.managers.uiManager.elements.customProviderApiKey.type = "text";
-      }
+      },
     );
 
     // 自定义服务商API Key blur事件
@@ -167,27 +171,28 @@ export class EventManager {
       () => {
         // 当有内容时，失去焦点时隐藏内容
         if (this.managers.uiManager.getCustomProviderApiKey()) {
-          this.managers.uiManager.elements.customProviderApiKey.type = "password";
+          this.managers.uiManager.elements.customProviderApiKey.type =
+            "password";
         }
-      }
+      },
     );
 
     // 关闭自定义服务商弹窗按钮
     this.managers.uiManager.elements.closeCustomProviderModal?.addEventListener(
       "click",
-      () => this.handleCloseProviderModal()
+      () => this.handleCloseProviderModal(),
     );
 
     // 取消自定义服务商按钮
     this.managers.uiManager.elements.cancelCustomProviderButton?.addEventListener(
       "click",
-      () => this.handleCancelProviderModal()
+      () => this.handleCancelProviderModal(),
     );
 
     // 保存自定义服务商按钮
     this.managers.uiManager.elements.saveCustomProviderButton?.addEventListener(
       "click",
-      () => this.managers.providerUIManager.handleSaveCustomProvider()
+      () => this.managers.providerUIManager.handleSaveCustomProvider(),
     );
 
     // 点击弹窗外部关闭弹窗
@@ -197,7 +202,7 @@ export class EventManager {
         if (e.target === this.managers.uiManager.elements.addModelModal) {
           this.handleCloseModelModal();
         }
-      }
+      },
     );
 
     this.managers.uiManager.elements.modelPickerModal?.addEventListener(
@@ -206,7 +211,7 @@ export class EventManager {
         if (e.target === this.managers.uiManager.elements.modelPickerModal) {
           this.managers.modelManager.closeModelPicker();
         }
-      }
+      },
     );
 
     this.managers.uiManager.elements.customProviderModal?.addEventListener(
@@ -215,23 +220,23 @@ export class EventManager {
         if (e.target === this.managers.uiManager.elements.customProviderModal) {
           this.handleCloseProviderModal();
         }
-      }
+      },
     );
 
     // 删除服务商对话框相关事件监听
     this.managers.uiManager.elements.closeDeleteProviderModal?.addEventListener(
       "click",
-      () => this.managers.uiManager.hideDeleteProviderModal()
+      () => this.managers.uiManager.hideDeleteProviderModal(),
     );
 
     this.managers.uiManager.elements.cancelDeleteProviderButton?.addEventListener(
       "click",
-      () => this.managers.uiManager.hideDeleteProviderModal()
+      () => this.managers.uiManager.hideDeleteProviderModal(),
     );
 
     this.managers.uiManager.elements.confirmDeleteProviderButton?.addEventListener(
       "click",
-      () => this.managers.providerUIManager.handleDeleteProvider()
+      () => this.managers.providerUIManager.handleDeleteProvider(),
     );
 
     this.managers.uiManager.elements.deleteProviderModal?.addEventListener(
@@ -240,7 +245,7 @@ export class EventManager {
         if (e.target === this.managers.uiManager.elements.deleteProviderModal) {
           this.managers.uiManager.hideDeleteProviderModal();
         }
-      }
+      },
     );
 
     // Language selection
@@ -249,7 +254,7 @@ export class EventManager {
       (e) => {
         this.managers.storageManager.saveLanguage(e.target.value);
         this.managers.i18nManager.updateLabels();
-      }
+      },
     );
 
     // Model selection
@@ -262,48 +267,50 @@ export class EventManager {
         this.managers.storageManager.saveModel(model).then(() => {
           console.log(`✅ 模型已切换为: ${model}`);
         });
-      }
+      },
     );
 
     // Selection enabled toggle
     this.managers.uiManager.elements.selectionEnabled.addEventListener(
       "change",
-      (e) => this.managers.storageManager.saveSelectionEnabled(e.target.checked)
+      (e) =>
+        this.managers.storageManager.saveSelectionEnabled(e.target.checked),
     );
 
     // Remember window size toggle
     this.managers.uiManager.elements.rememberWindowSize.addEventListener(
       "change",
-      (e) => this.managers.storageManager.saveRememberWindowSize(e.target.checked)
+      (e) =>
+        this.managers.storageManager.saveRememberWindowSize(e.target.checked),
     );
 
     // Shortcut settings
-    document.getElementById('shortcutSettings').addEventListener(
-      'click',
-      (e) => this.handleShortcutSettings(e)
-    );
+    document
+      .getElementById("shortcutSettings")
+      .addEventListener("click", (e) => this.handleShortcutSettings(e));
 
     // Instructions link
-    document.getElementById('instructionsLink').addEventListener(
-      'click',
-      (e) => this.handleInstructionsLink(e)
-    );
+    document
+      .getElementById("instructionsLink")
+      .addEventListener("click", (e) => this.handleInstructionsLink(e));
   }
 
   // 处理快捷键设置
   handleShortcutSettings(e) {
     e.preventDefault();
     chrome.tabs.create({
-      url: "chrome://extensions/shortcuts"
+      url: "chrome://extensions/shortcuts",
     });
   }
 
   // 处理说明链接
   async handleInstructionsLink(e) {
     e.preventDefault();
-    const instructionsUrl = chrome.runtime.getURL('Instructions/Instructions.html');
+    const instructionsUrl = chrome.runtime.getURL(
+      "Instructions/Instructions.html",
+    );
     chrome.tabs.create({
-      url: instructionsUrl
+      url: instructionsUrl,
     });
   }
 
@@ -340,7 +347,9 @@ export class EventManager {
   // 处理模型对话框取消（清除临时状态）
   handleCancelModelModal() {
     // 清除临时状态
-    this.handleUserCancel(this.managers.tempStateManager?.constructor?.TYPES?.ADD_MODEL);
+    this.handleUserCancel(
+      this.managers.tempStateManager?.constructor?.TYPES?.ADD_MODEL,
+    );
     // 关闭对话框
     this.handleCloseModelModal();
   }
@@ -348,7 +357,9 @@ export class EventManager {
   // 处理服务商对话框取消（清除临时状态）
   handleCancelProviderModal() {
     // 清除临时状态
-    this.handleUserCancel(this.managers.tempStateManager?.constructor?.TYPES?.ADD_PROVIDER);
+    this.handleUserCancel(
+      this.managers.tempStateManager?.constructor?.TYPES?.ADD_PROVIDER,
+    );
     // 关闭对话框
     this.handleCloseProviderModal();
   }

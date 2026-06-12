@@ -1,15 +1,17 @@
-
-import { popupStateManager } from '../utils/popupStateManager';
-import { ensureShadowContainer, getShadowContainer } from './ShadowContainer';
-import { createPopup } from '../popup';
-import popupStyles from '../styles/style.css?raw';
-import katexStyles from 'katex/dist/katex.min.css?raw';
+import { popupStateManager } from "../utils/popupStateManager";
+import { ensureShadowContainer, getShadowContainer } from "./ShadowContainer";
+import { createPopup } from "../popup";
+import popupStyles from "../styles/style.css?raw";
+import katexStyles from "katex/dist/katex.min.css?raw";
 
 // 动态替换字体路径为绝对路径
-const fontBaseUrl = chrome.runtime.getURL('fonts/');
-const processedKatexStyles = katexStyles.replace(/url\((['"]?)fonts\//g, (match, quote) => {
-  return `url(${quote}${fontBaseUrl}`;
-});
+const fontBaseUrl = chrome.runtime.getURL("fonts/");
+const processedKatexStyles = katexStyles.replace(
+  /url\((['"]?)fonts\//g,
+  (match, quote) => {
+    return `url(${quote}${fontBaseUrl}`;
+  },
+);
 
 const shadowStyles = `${processedKatexStyles}\n${popupStyles}`;
 
@@ -27,7 +29,7 @@ class PopupManager {
 
     // 监听设置变化
     chrome.storage.onChanged.addListener((changes, namespace) => {
-      if (namespace === 'sync') {
+      if (namespace === "sync") {
         if (changes.rememberWindowSize) {
           this.isRememberWindowSize = changes.rememberWindowSize.newValue;
         }
@@ -41,10 +43,10 @@ class PopupManager {
   }
 
   loadSettings() {
-    chrome.storage.sync.get(['rememberWindowSize'], (data) => {
-        if (typeof data.rememberWindowSize !== 'undefined') {
-            this.isRememberWindowSize = data.rememberWindowSize;
-        }
+    chrome.storage.sync.get(["rememberWindowSize"], (data) => {
+      if (typeof data.rememberWindowSize !== "undefined") {
+        this.isRememberWindowSize = data.rememberWindowSize;
+      }
     });
   }
 
@@ -57,7 +59,7 @@ class PopupManager {
   safeRemovePopup(forceRemove = false) {
     // 如果窗口已最小化，不要移除它（除非强制移除）
     if (popupStateManager.isMinimized() && !forceRemove) {
-      console.log('窗口已最小化，跳过移除操作');
+      console.log("窗口已最小化，跳过移除操作");
       return;
     }
 
@@ -77,9 +79,12 @@ class PopupManager {
       }
 
       // 如果正在生成回答但被中断，清理最后一条不完整的消息
-      if (window.aiResponseContainer && window.aiResponseContainer.isGenerating) {
+      if (
+        window.aiResponseContainer &&
+        window.aiResponseContainer.isGenerating
+      ) {
         // 通过消息传递来清理消息历史
-        window.dispatchEvent(new CustomEvent('cleanupIncompleteMessage'));
+        window.dispatchEvent(new CustomEvent("cleanupIncompleteMessage"));
       }
 
       // 移除所有事件监听器和引用
@@ -102,12 +107,19 @@ class PopupManager {
 
         // 移除所有事件监听器
         const clone = window.aiResponseContainer.cloneNode(true);
-        window.aiResponseContainer.parentNode.replaceChild(clone, window.aiResponseContainer);
+        window.aiResponseContainer.parentNode.replaceChild(
+          clone,
+          window.aiResponseContainer,
+        );
         window.aiResponseContainer = clone;
       }
 
       // 保存窗口大小
-      if (this.isRememberWindowSize && this.currentPopup.offsetWidth > 100 && this.currentPopup.offsetHeight > 100) {
+      if (
+        this.isRememberWindowSize &&
+        this.currentPopup.offsetWidth > 100 &&
+        this.currentPopup.offsetHeight > 100
+      ) {
         const width = this.currentPopup.offsetWidth;
         const height = this.currentPopup.offsetHeight;
         chrome.storage.sync.set({ windowSize: { width, height } });
@@ -133,27 +145,27 @@ class PopupManager {
         const popupParent = shadowContainer?.container || document.body;
         if (popupParent.contains(this.currentPopup)) {
           // 在移除之前先将内容清空，避免触发不必要的事件
-          this.currentPopup.innerHTML = '';
+          this.currentPopup.innerHTML = "";
           popupParent.removeChild(this.currentPopup);
         }
       } catch (e) {
-        console.warn('Error removing popup from DOM:', e);
+        console.warn("Error removing popup from DOM:", e);
       }
 
       // 确保状态被重置
       window.aiResponseContainer = null;
       this.currentPopup = null;
     } catch (error) {
-      console.warn('Failed to remove popup:', error);
+      console.warn("Failed to remove popup:", error);
       // 确保在出错时也能重置所有状态 - 从 Shadow DOM 容器移除
       const shadowContainer = getShadowContainer();
       const popupParent = shadowContainer?.container || document.body;
       if (popupParent.contains(this.currentPopup)) {
         try {
-          this.currentPopup.innerHTML = '';
+          this.currentPopup.innerHTML = "";
           popupParent.removeChild(this.currentPopup);
         } catch (e) {
-          console.warn('Error removing popup in catch block:', e);
+          console.warn("Error removing popup in catch block:", e);
         }
       }
       // 重置所有状态
@@ -167,39 +179,40 @@ class PopupManager {
 
   // 最小化弹窗
   async minimizePopup() {
-    console.log('尝试最小化窗口...', { hasPopup: !!this.currentPopup });
+    console.log("尝试最小化窗口...", { hasPopup: !!this.currentPopup });
 
     if (!this.currentPopup) {
-      console.error('无法最小化：currentPopup 不存在');
+      console.error("无法最小化：currentPopup 不存在");
       return;
     }
 
     // 隐藏窗口（带动画）
-    this.currentPopup.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
-    this.currentPopup.style.opacity = '0';
-    this.currentPopup.style.transform = 'scale(0.9)';
+    this.currentPopup.style.transition =
+      "opacity 0.2s ease, transform 0.2s ease";
+    this.currentPopup.style.opacity = "0";
+    this.currentPopup.style.transform = "scale(0.9)";
 
     setTimeout(async () => {
       if (this.currentPopup) {
-        this.currentPopup.style.display = 'none';
+        this.currentPopup.style.display = "none";
         popupStateManager.setVisible(false);
         popupStateManager.setMinimized(true);
 
-        console.log('窗口已隐藏，创建小图标...');
+        console.log("窗口已隐藏，创建小图标...");
 
         // 创建并显示小图标
         const position = await popupStateManager.loadIconPosition();
-        const { createMinimizeIcon } = await import('./IconManager');
+        const { createMinimizeIcon } = await import("./IconManager");
 
         this.minimizeIcon = createMinimizeIcon(() => {
           this.restorePopup();
         }, position);
 
         document.body.appendChild(this.minimizeIcon);
-        console.log('小图标已创建', { position });
+        console.log("小图标已创建", { position });
 
         // 触觉反馈
-        if ('vibrate' in navigator) {
+        if ("vibrate" in navigator) {
           navigator.vibrate(8);
         }
       }
@@ -208,14 +221,14 @@ class PopupManager {
 
   // 恢复弹窗
   restorePopup() {
-    console.log('尝试恢复窗口...', {
+    console.log("尝试恢复窗口...", {
       hasPopup: !!this.currentPopup,
       hasIcon: !!this.minimizeIcon,
-      isMinimized: popupStateManager.isMinimized()
+      isMinimized: popupStateManager.isMinimized(),
     });
 
     if (!this.currentPopup) {
-      console.error('无法恢复窗口：currentPopup 不存在');
+      console.error("无法恢复窗口：currentPopup 不存在");
       // 清理小图标
       if (this.minimizeIcon && document.body.contains(this.minimizeIcon)) {
         document.body.removeChild(this.minimizeIcon);
@@ -227,9 +240,10 @@ class PopupManager {
 
     // 移除小图标
     if (this.minimizeIcon) {
-      this.minimizeIcon.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
-      this.minimizeIcon.style.opacity = '0';
-      this.minimizeIcon.style.transform = 'scale(0.5)';
+      this.minimizeIcon.style.transition =
+        "opacity 0.2s ease, transform 0.2s ease";
+      this.minimizeIcon.style.opacity = "0";
+      this.minimizeIcon.style.transform = "scale(0.5)";
 
       setTimeout(() => {
         if (this.minimizeIcon) {
@@ -245,29 +259,32 @@ class PopupManager {
     }
 
     // 显示窗口（带动画）
-    this.currentPopup.style.display = 'block';
+    this.currentPopup.style.display = "block";
     requestAnimationFrame(() => {
       if (this.currentPopup) {
-        this.currentPopup.style.transition = 'opacity 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
-        this.currentPopup.style.opacity = '1';
-        this.currentPopup.style.transform = 'scale(1)';
+        this.currentPopup.style.transition =
+          "opacity 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)";
+        this.currentPopup.style.opacity = "1";
+        this.currentPopup.style.transform = "scale(1)";
       }
     });
 
     popupStateManager.setVisible(true);
     popupStateManager.setMinimized(false);
 
-    console.log('窗口已恢复');
+    console.log("窗口已恢复");
 
     // 触觉反馈
-    if ('vibrate' in navigator) {
+    if ("vibrate" in navigator) {
       navigator.vibrate(8);
     }
 
     // 自动聚焦到输入框
     setTimeout(() => {
       if (this.currentPopup) {
-        const textarea = this.currentPopup.querySelector('.expandable-textarea');
+        const textarea = this.currentPopup.querySelector(
+          ".expandable-textarea",
+        );
         if (textarea) {
           textarea.focus();
         }
@@ -275,7 +292,13 @@ class PopupManager {
     }, 350); // 等待动画完成后聚焦
   }
 
-  handlePopupCreation(selectedText, rect, hideQuestion = false, messages = null, quickActionPrompt = null) {
+  handlePopupCreation(
+    selectedText,
+    rect,
+    hideQuestion = false,
+    messages = null,
+    quickActionPrompt = null,
+  ) {
     if (popupStateManager.isCreating()) return;
 
     popupStateManager.setCreating(true);
@@ -287,17 +310,26 @@ class PopupManager {
 
       // 再兜底清理任何遗留
       try {
-        const wrapper = document.getElementById('quick-actions-wrapper');
-        if (wrapper && wrapper.parentNode) wrapper.parentNode.removeChild(wrapper);
-        const legacy = document.getElementById('fixed-quick-actions-container');
-        if (legacy) { legacy.style.opacity = '0'; legacy.style.pointerEvents = 'none'; legacy.innerHTML = ''; }
-        document.querySelectorAll('.deepseek-quick-action-buttons, .quick-action-buttons').forEach(n => n.parentNode && n.parentNode.removeChild(n));
-      } catch(_) {}
+        const wrapper = document.getElementById("quick-actions-wrapper");
+        if (wrapper && wrapper.parentNode)
+          wrapper.parentNode.removeChild(wrapper);
+        const legacy = document.getElementById("fixed-quick-actions-container");
+        if (legacy) {
+          legacy.style.opacity = "0";
+          legacy.style.pointerEvents = "none";
+          legacy.innerHTML = "";
+        }
+        document
+          .querySelectorAll(
+            ".deepseek-quick-action-buttons, .quick-action-buttons",
+          )
+          .forEach((n) => n.parentNode && n.parentNode.removeChild(n));
+      } catch (_) {}
 
       // 清理最小化图标（如果存在）
       if (this.minimizeIcon && document.body.contains(this.minimizeIcon)) {
         if (this.minimizeIcon.cleanup) {
-            this.minimizeIcon.cleanup();
+          this.minimizeIcon.cleanup();
         }
         document.body.removeChild(this.minimizeIcon);
         this.minimizeIcon = null;
@@ -305,16 +337,26 @@ class PopupManager {
       }
 
       this.safeRemovePopup();
-      this.currentPopup = createPopup(selectedText, rect, hideQuestion, this.safeRemovePopup, messages, quickActionPrompt, this.minimizePopup);
-      this.currentPopup.style.minWidth = '300px';
-      this.currentPopup.style.minHeight = '200px';
+      this.currentPopup = createPopup(
+        selectedText,
+        rect,
+        hideQuestion,
+        this.safeRemovePopup,
+        messages,
+        quickActionPrompt,
+        this.minimizePopup,
+      );
+      this.currentPopup.style.minWidth = "300px";
+      this.currentPopup.style.minHeight = "200px";
 
       if (this.isRememberWindowSize) {
-        chrome.storage.sync.get(['windowSize'], (data) => {
-          if (data.windowSize &&
-              data.windowSize.width >= 300 &&
-              data.windowSize.height >= 200 &&
-              this.currentPopup) {
+        chrome.storage.sync.get(["windowSize"], (data) => {
+          if (
+            data.windowSize &&
+            data.windowSize.width >= 300 &&
+            data.windowSize.height >= 200 &&
+            this.currentPopup
+          ) {
             requestAnimationFrame(() => {
               this.currentPopup.style.width = `${data.windowSize.width}px`;
               this.currentPopup.style.height = `${data.windowSize.height}px`;
@@ -326,7 +368,7 @@ class PopupManager {
       // 使用 Shadow DOM 容器挂载弹窗，实现样式隔离
       const shadowContainer = ensureShadowContainer(shadowStyles);
       shadowContainer.container.appendChild(this.currentPopup);
-      popupStateManager.setVisible(true);  // 更新状态
+      popupStateManager.setVisible(true); // 更新状态
       // 打开弹窗后，短时间抑制快捷按钮再次唤起
       this.suppressQuickActionsUntil = Date.now() + 500;
 
@@ -335,7 +377,7 @@ class PopupManager {
         this.setupResizeObserver(this.currentPopup);
       }
     } catch (error) {
-      console.error('Error in handlePopupCreation:', error);
+      console.error("Error in handlePopupCreation:", error);
       this.safeRemovePopup();
     } finally {
       setTimeout(() => {
@@ -374,7 +416,7 @@ class PopupManager {
     }, 500);
 
     // 创建新的 ResizeObserver
-    popup._resizeObserver = new ResizeObserver(entries => {
+    popup._resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const { width, height } = entry.contentRect;
         debouncedSaveSize(width, height);

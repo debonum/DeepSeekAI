@@ -19,6 +19,7 @@ DeepSeekAI is an open-source browser extension that lets you summon a private De
 > **Note**: This extension is maintained by the community. Keys, custom endpoints, and preferences are stored only in `chrome.storage.sync` on your device.
 
 ### 🔌 Supported API Providers
+
 - [DeepSeek](https://deepseek.com) (official endpoint)
 - [ByteDance Volcengine](https://www.volcengine.com/experience/ark?utm_term=202502dsinvite&ac=DSASUQY5&rc=OXTHJAF8)
 - [SiliconFlow](https://cloud.siliconflow.cn/i/lStn36vH)
@@ -33,11 +34,13 @@ DeepSeekAI is an open-source browser extension that lets you summon a private De
 ## ✨ Feature Overview
 
 ### 🪄 Inline Assistants
+
 - Rich quick-action bubble appears beside any text selection with Chat, Copy, Translate (19 languages), Explain, Summarize, Email, and Analyze templates.
 - SelectionPreservationManager keeps the DOM range alive so the bubble never steals your highlight during double/triple clicks or context-menu usage.
 - Right-click context menu entry and toolbar popup both reuse the same flow, so highlighted text, manual prompts, and keyboard shortcuts share the session logic.
 
 ### 🪟 Floating Workspace
+
 - `interactjs` gives the chat window magnetic drag + resize handles, snap animations, and a persistent minimize icon whose position is saved per user.
 - Toggle "Remember window size" to keep the workspace dimensions across sites, and "Pin window" to prevent accidental closes when clicking outside.
 - Minimized state, popup visibility, and icon location are tracked by `popupStateManager`, ensuring state survives selection changes.
@@ -46,18 +49,21 @@ DeepSeekAI is an open-source browser extension that lets you summon a private De
 - Auto-scroll follows the stream until you scroll manually. Scroll momentum + cooldown logic prevent janky jumps.
 
 ### 🧠 Provider & Model Controls
+
 - Popup UI (English/Chinese) manages API keys per provider, preferred language (auto-detect or force output), and whether the selection bubble is enabled.
 - Add, rename, hide, or delete custom providers with their own base URL, display name, default model, and placeholder API-key links.
 - ModelManager stores multiple custom models per provider. Dropdowns support inline delete buttons, and forms auto-save via TempStateManager so unfinished entries survive popup reloads.
 - Configure a global custom system prompt used for every conversation, or override per quick action via templated prompts.
 
 ### 📝 Rendering, Safety & UX Polishing
+
 - Markdown-It + highlight.js + KaTeX + DOMPurify ensure rich formatting, syntax highlighting, math rendering, and sanitized HTML.
 - Code blocks gain reusable “Copy” controls, while each AI block also exposes regenerate + share-ready text copy actions.
 - Streaming is proxied through the background service worker using modern `fetch` + `AbortController`, so stop/regenerate/shortcut commands instantly cut network traffic.
 - ThemeManager listens to `prefers-color-scheme` and toggles CSS variables to keep the popover and quick buttons readable in both modes.
 
 ### ⌨️ Shortcuts & Invocation Options
+
 - Two Chrome commands ship by default:
   - `Ctrl/Cmd + Shift + Y` → toggle chat (new session)
   - `Ctrl/Cmd + Shift + U` → show/hide chat (preserve session)
@@ -65,6 +71,7 @@ DeepSeekAI is an open-source browser extension that lets you summon a private De
 - Context menu entry (“DeepSeek AI”) sends the selected text directly, and the icon in the toolbar opens the configuration popup.
 
 ### 🔐 Privacy & Onboarding
+
 - On first install we open [`src/Instructions/Instructions.html`](src/Instructions/instructions.html), an offline-friendly Apple-style guide covering every screen.
 - `PRIVACY.html` documents exactly what is stored (API keys + user preferences in local browser storage) and reminds you that no remote server is involved.
 - DOMPurify sanitizes all rendered HTML, and no telemetry or analytics is collected.
@@ -93,10 +100,12 @@ sequenceDiagram
 ## 🚀 Installation & Build
 
 ### 1. Install from the store (recommended)
+
 - **Chrome**: [Chrome Web Store](https://chromewebstore.google.com/detail/bjjobdlpgglckcmhgmmecijpfobmcpap)
 - **Microsoft Edge**: enable “Allow extensions from other stores,” then install via the same Chrome Web Store listing above.
 
 ### 2. Manual installation / development flow
+
 ```bash
 # Requirements: Node.js 18+, pnpm (or npm), and a Chromium-based browser
 pnpm install
@@ -111,6 +120,7 @@ pnpm run build   # outputs the production bundle into dist/
 3. Upload the generated ZIP to the respective store dashboards.
 
 ## 🧩 Setup & Daily Use
+
 1. Click the extension icon to open the popup.
 2. Choose a provider (or create a custom one with a name + base URL + default model) and paste its API key. Each provider keeps its own key and optional custom API URL.
 3. Pick or add a model. Non-DeepSeek providers require an explicit model ID; the UI will auto-prompt you to add one if missing.
@@ -124,6 +134,7 @@ pnpm run build   # outputs the production bundle into dist/
 7. Need a refresher? Open the in-extension [usage guide](src/Instructions/instructions.html) or switch to the Simplified Chinese README linked at the top.
 
 ## ⌨️ Shortcuts & Quick Actions
+
 - **Quick actions:**
   - `Chat` → sends selection verbatim.
   - `Copy` → copies selection without opening chat.
@@ -133,6 +144,7 @@ pnpm run build   # outputs the production bundle into dist/
 - **Context menu:** right-click → “DeepSeek AI” to push highlighted text directly into a new chat with a contextual greeting (morning/afternoon/evening).
 
 ## 🏗️ Project Layout & Stack
+
 ```
 .
 ├── src/
@@ -151,11 +163,13 @@ pnpm run build   # outputs the production bundle into dist/
 **Key dependencies:** `interactjs`, `markdown-it`, `highlight.js`, `DOMPurify`, `katex`, `clipboard`, `perfect-scrollbar`, and `openai` (for payload typing) plus the MV3 APIs exposed by Chrome/Edge.
 
 ## 🔒 Privacy & Security
+
 - API keys, preferences, quick-action states, and minimized icon positions live only inside `chrome.storage.sync`.
 - Text is sent solely to the provider endpoint you configure. There are no intermediary servers, analytics calls, or remote logs.
 - The offline [privacy policy](PRIVACY.html) inside the repo details data handling, and DOMPurify removes any potentially unsafe markup before rendering.
 
 ## 🤝 Contributing
+
 Contributions are welcome—bug reports, documentation fixes, and feature proposals all help the community.
 
 1. Fork the repo and create a branch (`git checkout -b feature/my-update`).

@@ -2,7 +2,12 @@
   "mcpServers": {
     "neon": {
       "command": "npx",
-      "args": ["-y", "@neondatabase/mcp-server-neon", "start", "<YOUR_NEON_API_KEY>"]
+      "args": [
+        "-y",
+        "@neondatabase/mcp-server-neon",
+        "start",
+        "<YOUR_NEON_API_KEY>"
+      ]
     },
     "browser-tools": {
       "command": "npx",

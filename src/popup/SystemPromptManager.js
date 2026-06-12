@@ -9,7 +9,8 @@ export class SystemPromptManager {
   async initialize() {
     try {
       // 加载现有的自定义 system prompt
-      const customSystemPrompt = await this.storageManager.getCustomSystemPrompt();
+      const customSystemPrompt =
+        await this.storageManager.getCustomSystemPrompt();
       if (customSystemPrompt) {
         this.uiManager.setCustomSystemPromptValue(customSystemPrompt);
       }
@@ -17,7 +18,7 @@ export class SystemPromptManager {
       // 设置事件监听器
       this.setupEventListeners();
     } catch (error) {
-      console.error('初始化自定义 system prompt 管理器失败:', error);
+      console.error("初始化自定义 system prompt 管理器失败:", error);
     }
   }
 
@@ -25,53 +26,71 @@ export class SystemPromptManager {
   setupEventListeners() {
     // 配置按钮点击事件
     if (this.uiManager.elements.customSystemPromptButton) {
-      this.uiManager.elements.customSystemPromptButton.addEventListener('click', () => {
-        this.showCustomSystemPromptModal();
-      });
+      this.uiManager.elements.customSystemPromptButton.addEventListener(
+        "click",
+        () => {
+          this.showCustomSystemPromptModal();
+        },
+      );
     }
 
     // 关闭按钮事件
     if (this.uiManager.elements.closeCustomSystemPromptModal) {
-      this.uiManager.elements.closeCustomSystemPromptModal.addEventListener('click', () => {
-        this.hideCustomSystemPromptModal();
-      });
+      this.uiManager.elements.closeCustomSystemPromptModal.addEventListener(
+        "click",
+        () => {
+          this.hideCustomSystemPromptModal();
+        },
+      );
     }
 
     // 取消按钮事件
     if (this.uiManager.elements.cancelCustomSystemPromptButton) {
-      this.uiManager.elements.cancelCustomSystemPromptButton.addEventListener('click', () => {
-        this.hideCustomSystemPromptModal();
-      });
+      this.uiManager.elements.cancelCustomSystemPromptButton.addEventListener(
+        "click",
+        () => {
+          this.hideCustomSystemPromptModal();
+        },
+      );
     }
 
     // 保存按钮事件
     if (this.uiManager.elements.saveCustomSystemPromptButton) {
-      this.uiManager.elements.saveCustomSystemPromptButton.addEventListener('click', () => {
-        this.saveCustomSystemPrompt();
-      });
+      this.uiManager.elements.saveCustomSystemPromptButton.addEventListener(
+        "click",
+        () => {
+          this.saveCustomSystemPrompt();
+        },
+      );
     }
 
     // 点击弹窗外部关闭
     if (this.uiManager.elements.customSystemPromptModal) {
-      this.uiManager.elements.customSystemPromptModal.addEventListener('click', (e) => {
-        if (e.target === this.uiManager.elements.customSystemPromptModal) {
-          this.hideCustomSystemPromptModal();
-        }
-      });
+      this.uiManager.elements.customSystemPromptModal.addEventListener(
+        "click",
+        (e) => {
+          if (e.target === this.uiManager.elements.customSystemPromptModal) {
+            this.hideCustomSystemPromptModal();
+          }
+        },
+      );
     }
 
     // 输入框内容变化事件
     if (this.uiManager.elements.customSystemPromptInput) {
-      this.uiManager.elements.customSystemPromptInput.addEventListener('input', () => {
-        this.updateCharCount();
-      });
+      this.uiManager.elements.customSystemPromptInput.addEventListener(
+        "input",
+        () => {
+          this.updateCharCount();
+        },
+      );
     }
   }
 
   // 显示自定义 system prompt 弹窗
   showCustomSystemPromptModal() {
     // 加载当前的自定义 system prompt
-    this.storageManager.getCustomSystemPrompt().then(prompt => {
+    this.storageManager.getCustomSystemPrompt().then((prompt) => {
       this.uiManager.setCustomSystemPromptValue(prompt);
       this.updateCharCount();
       this.uiManager.showCustomSystemPromptModal();
@@ -98,22 +117,23 @@ export class SystemPromptManager {
       await this.storageManager.saveCustomSystemPrompt(prompt);
 
       // 显示成功消息
-      const successMsg = currentLang === 'zh'
-        ? '自定义系统提示词保存成功'
-        : 'Custom system prompt saved successfully';
+      const successMsg =
+        currentLang === "zh"
+          ? "自定义系统提示词保存成功"
+          : "Custom system prompt saved successfully";
       this.uiManager.showCustomSystemPromptValidationMessage(successMsg, true);
 
       // 延迟关闭弹窗
       setTimeout(() => {
         this.hideCustomSystemPromptModal();
       }, 1500);
-
     } catch (error) {
-      console.error('保存自定义 system prompt 失败:', error);
+      console.error("保存自定义 system prompt 失败:", error);
       const currentLang = this.i18nManager.getCurrentLang();
-      const errorMsg = currentLang === 'zh'
-        ? '保存自定义系统提示词失败。请重试。'
-        : 'Failed to save custom system prompt. Please try again.';
+      const errorMsg =
+        currentLang === "zh"
+          ? "保存自定义系统提示词失败。请重试。"
+          : "Failed to save custom system prompt. Please try again.";
       this.uiManager.showCustomSystemPromptValidationMessage(errorMsg, false);
     }
   }
@@ -129,12 +149,12 @@ export class SystemPromptManager {
 
       // 添加视觉反馈
       if (length >= 2000) {
-        counter.classList.add('error');
+        counter.classList.add("error");
       } else if (length >= 1800) {
-        counter.classList.add('warning');
-        counter.classList.remove('error');
+        counter.classList.add("warning");
+        counter.classList.remove("error");
       } else {
-        counter.classList.remove('warning', 'error');
+        counter.classList.remove("warning", "error");
       }
     }
   }
@@ -145,9 +165,10 @@ export class SystemPromptManager {
 
     // 基本验证：不能超过2000字符
     if (prompt.length > 2000) {
-      const errorMsg = currentLang === 'zh'
-        ? '系统提示词不能超过2000个字符'
-        : 'System prompt cannot exceed 2000 characters.';
+      const errorMsg =
+        currentLang === "zh"
+          ? "系统提示词不能超过2000个字符"
+          : "System prompt cannot exceed 2000 characters.";
       this.uiManager.showCustomSystemPromptValidationMessage(errorMsg, false);
       return false;
     }
@@ -163,8 +184,8 @@ export class SystemPromptManager {
     try {
       return await this.storageManager.getCustomSystemPrompt();
     } catch (error) {
-      console.error('获取自定义 system prompt 失败:', error);
-      return '';
+      console.error("获取自定义 system prompt 失败:", error);
+      return "";
     }
   }
 }

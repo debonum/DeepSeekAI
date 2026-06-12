@@ -1,4 +1,4 @@
-import PerfectScrollbar from 'perfect-scrollbar';
+import PerfectScrollbar from "perfect-scrollbar";
 
 export function styleResponseContainer(container) {
   container.id = "ai-response-container";

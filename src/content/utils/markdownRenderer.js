@@ -2,17 +2,17 @@ import MarkdownIt from "markdown-it";
 import hljs from "highlight.js/lib/common";
 import DOMPurify from "dompurify";
 
-
 import katex from "katex";
 import "katex/dist/katex.min.css";
 import "katex/contrib/mhchem"; // Enable chemical equation rendering
 import { ICONS } from "../components/Icons";
 
-const isBrowserEnvironment = typeof window !== "undefined" && typeof document !== "undefined";
+const isBrowserEnvironment =
+  typeof window !== "undefined" && typeof document !== "undefined";
 
 // Minimal markdown-it: default rules only (no plugins, no custom rules)
 const mdIt = new MarkdownIt({ html: true, linkify: true, breaks: true });
-mdIt.disable('code'); // Disable indented code blocks to prevent indented math from being treated as code
+mdIt.disable("code"); // Disable indented code blocks to prevent indented math from being treated as code
 
 const sanitizeHtml = (html) => {
   if (!isBrowserEnvironment) return html;
@@ -20,7 +20,8 @@ const sanitizeHtml = (html) => {
     return DOMPurify.sanitize(html, {
       ADD_ATTR: ["target", "rel", "aria-label", "style", "open", "class"],
       ADD_TAGS: ["details", "summary", "kbd", "dl", "dt", "dd"],
-      ALLOWED_URI_REGEXP: /^(?:(?:https?|ftp|mailto|tel|data):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i
+      ALLOWED_URI_REGEXP:
+        /^(?:(?:https?|ftp|mailto|tel|data):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
     });
   } catch (error) {
     console.warn("DOMPurify failed to sanitize HTML:", error);
@@ -31,11 +32,12 @@ const sanitizeHtml = (html) => {
 // Regex to match code blocks (fence or inline) OR math blocks
 // Group 1: Code (```...``` or `...`)
 // Group 2: Math ($$...$$ or \[...\] or \(...\) or \begin{...}...\end{...} or $...$)
-const PROTECT_REGEX = /((?:^|\n)```[\s\S]*?```|`[^`\n]*`)|(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\)|\\begin\s*\{([a-zA-Z]+\*?)\}[\s\S]*?\\end\s*\{\3\}|(?<!\\)\$[^$]+(?<!\\)\$)/g;
+const PROTECT_REGEX =
+  /((?:^|\n)```[\s\S]*?```|`[^`\n]*`)|(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\)|\\begin\s*\{([a-zA-Z]+\*?)\}[\s\S]*?\\end\s*\{\3\}|(?<!\\)\$[^$]+(?<!\\)\$)/g;
 
 function ensureListSpacing(text) {
   const listMarkerRegex = /^[ \t]*([-*+]|\d+[.)]) +/;
-  const lines = text.split('\n');
+  const lines = text.split("\n");
   const newLines = [];
 
   for (let i = 0; i < lines.length; i++) {
@@ -50,13 +52,13 @@ function ensureListSpacing(text) {
       // If current is list item, and previous was NOT list item and NOT blank
       // Insert a blank line to ensure proper Markdown list rendering
       if (isListItem && !prevIsListItem && !prevIsBlank) {
-        newLines.push('');
+        newLines.push("");
       }
     }
     newLines.push(line);
   }
 
-  return newLines.join('\n');
+  return newLines.join("\n");
 }
 
 function preprocessMarkdown(text) {
@@ -93,13 +95,16 @@ function protectMath(text) {
     if (math) {
       const key = `@@MATH_PLACEHOLDER_${index++}@@`;
       // Determine display mode
-      const isDisplay = math.startsWith('$$') || math.startsWith('\\[') || math.startsWith('\\begin');
+      const isDisplay =
+        math.startsWith("$$") ||
+        math.startsWith("\\[") ||
+        math.startsWith("\\begin");
       // Strip delimiters for KaTeX
       let content = math;
-      if (math.startsWith('$$')) content = math.slice(2, -2);
-      else if (math.startsWith('\\[')) content = math.slice(2, -2);
-      else if (math.startsWith('\\(')) content = math.slice(2, -2);
-      else if (math.startsWith('$')) content = math.slice(1, -1);
+      if (math.startsWith("$$")) content = math.slice(2, -2);
+      else if (math.startsWith("\\[")) content = math.slice(2, -2);
+      else if (math.startsWith("\\(")) content = math.slice(2, -2);
+      else if (math.startsWith("$")) content = math.slice(1, -1);
 
       // Fix double-escaped backslashes often returned by LLMs (e.g. \\ce -> \ce, \\frac -> \frac)
       // We only touch backslashes followed by a letter, to avoid breaking \\ (newline) followed by space/end
@@ -116,24 +121,30 @@ function protectMath(text) {
 
 function processMarkdownFeatures(text) {
   // 1. Highlight: ==text== -> <mark>text</mark>
-  text = text.replace(/==([^=]+)==/g, '<mark>$1</mark>');
+  text = text.replace(/==([^=]+)==/g, "<mark>$1</mark>");
 
   // 2. Subscript: ~text~ -> <sub>text</sub>
-  text = text.replace(/~([^~]+)~/g, '<sub>$1</sub>');
+  text = text.replace(/~([^~]+)~/g, "<sub>$1</sub>");
 
   // 3. Superscript: ^text^ -> <sup>text</sup>
-  text = text.replace(/\^([^\^]+)\^/g, '<sup>$1</sup>');
+  text = text.replace(/\^([^\^]+)\^/g, "<sup>$1</sup>");
 
   // 4. Footnotes: [^1] -> <sup>[1]</sup> (simplified visual only)
-  text = text.replace(/\[\^(\d+)\]/g, '<sup>[$1]</sup>');
+  text = text.replace(/\[\^(\d+)\]/g, "<sup>[$1]</sup>");
 
   // 5. Task Lists: - [ ] or - [x]
   // Note: This is a simple visual replacement.
-  text = text.replace(/^([\s]*)[-*+]\s+\[ \]\s+(.*)/gm, '$1<ul class="contains-task-list"><li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled> $2</li></ul>');
-  text = text.replace(/^([\s]*)[-*+]\s+\[x\]\s+(.*)/gim, '$1<ul class="contains-task-list"><li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked disabled> $2</li></ul>');
+  text = text.replace(
+    /^([\s]*)[-*+]\s+\[ \]\s+(.*)/gm,
+    '$1<ul class="contains-task-list"><li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled> $2</li></ul>',
+  );
+  text = text.replace(
+    /^([\s]*)[-*+]\s+\[x\]\s+(.*)/gim,
+    '$1<ul class="contains-task-list"><li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked disabled> $2</li></ul>',
+  );
 
   // Fix nested lists created by the regex above (naive approach)
-  text = text.replace(/<\/ul>\n<ul class="contains-task-list">/g, '');
+  text = text.replace(/<\/ul>\n<ul class="contains-task-list">/g, "");
 
   return text;
 }
@@ -145,16 +156,18 @@ function restoreMath(html, map) {
     try {
       if (isChemfigMath(entry.content)) {
         const escaped = escapeHtml(entry.content);
-        const tag = entry.isDisplay ? 'div' : 'span';
-        const cls = entry.isDisplay ? 'plain-math chem-fallback chem-display' : 'plain-math chem-fallback';
+        const tag = entry.isDisplay ? "div" : "span";
+        const cls = entry.isDisplay
+          ? "plain-math chem-fallback chem-display"
+          : "plain-math chem-fallback";
         return `<${tag} class="${cls}">${escaped}</${tag}>`;
       }
       const rendered = katex.renderToString(entry.content, {
         displayMode: entry.isDisplay,
-        throwOnError: false
+        throwOnError: false,
       });
       // 用容器包裹，防止根号等元素溢出气泡
-      const wrapperClass = entry.isDisplay ? 'math-block' : 'math-inline';
+      const wrapperClass = entry.isDisplay ? "math-block" : "math-inline";
       return `<span class="${wrapperClass}">${rendered}</span>`;
     } catch (err) {
       console.warn("KaTeX render error:", err);
@@ -173,31 +186,41 @@ function escapeHtml(str = "") {
 }
 
 function isChemfigMath(str = "") {
-  return /\\chemfig|\\chemabove|\\chembelow|\\chemrel|\\lewis|\\chemup|\\chemdown/i.test(str);
+  return /\\chemfig|\\chemabove|\\chembelow|\\chemrel|\\lewis|\\chemup|\\chemdown/i.test(
+    str,
+  );
 }
 
 // 在渲染阶段直接处理代码块：包裹 wrapper + 高亮，避免后续 DOM 操作导致抖动
 function processCodeBlocks(html) {
-  return html.replace(/<pre><code(?:\s+class="language-([^"]*)")?>([\s\S]*?)<\/code><\/pre>/g, (match, lang, code) => {
-    const decoded = code
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&amp;/g, '&')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'");
-    
-    let highlighted = decoded;
-    try {
-      if (lang && hljs.getLanguage(lang)) {
-        highlighted = hljs.highlight(decoded, { language: lang, ignoreIllegals: true }).value;
-      } else {
-        highlighted = hljs.highlightAuto(decoded).value;
+  return html.replace(
+    /<pre><code(?:\s+class="language-([^"]*)")?>([\s\S]*?)<\/code><\/pre>/g,
+    (match, lang, code) => {
+      const decoded = code
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&amp;/g, "&")
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'");
+
+      let highlighted = decoded;
+      try {
+        if (lang && hljs.getLanguage(lang)) {
+          highlighted = hljs.highlight(decoded, {
+            language: lang,
+            ignoreIllegals: true,
+          }).value;
+        } else {
+          highlighted = hljs.highlightAuto(decoded).value;
+        }
+      } catch (e) {
+        /* fallback to raw */
       }
-    } catch (e) { /* fallback to raw */ }
-    
-    const langClass = lang ? ` language-${lang}` : '';
-    return `<div class="code-block-wrapper"><pre class="hljs"><code class="hljs${langClass}">${highlighted}</code></pre></div>`;
-  });
+
+      const langClass = lang ? ` language-${lang}` : "";
+      return `<div class="code-block-wrapper"><pre class="hljs"><code class="hljs${langClass}">${highlighted}</code></pre></div>`;
+    },
+  );
 }
 
 export function render(text) {
@@ -238,16 +261,21 @@ export function render(text) {
 function processAdmonitions(html) {
   // Regex to match blockquotes starting with [!TYPE]
   // Matches: <blockquote><p>[!NOTE] or <blockquote>\n<p>[!NOTE]
-  return html.replace(/<blockquote>\s*<p>\s*\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]/gi, (match, type) => {
-    const lowerType = type.toLowerCase();
-    const title = type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
-    return `<blockquote class="markdown-alert markdown-alert-${lowerType}"><p class="markdown-alert-title">${title}</p>`;
-  });
+  return html.replace(
+    /<blockquote>\s*<p>\s*\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]/gi,
+    (match, type) => {
+      const lowerType = type.toLowerCase();
+      const title = type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
+      return `<blockquote class="markdown-alert markdown-alert-${lowerType}"><p class="markdown-alert-title">${title}</p>`;
+    },
+  );
 }
 
 function processTables(html) {
   // Wrap tables in a scrolling container
-  return html.replace(/<table/g, '<div class="table-wrapper"><table').replace(/<\/table>/g, '</table></div>');
+  return html
+    .replace(/<table/g, '<div class="table-wrapper"><table')
+    .replace(/<\/table>/g, "</table></div>");
 }
 
 // ——— Code block copy button bindCopyButton ———
@@ -292,9 +320,12 @@ const bindCopyButton = (button, codeElement) => {
       button.title = "Copied!";
       button.style.color = "var(--success-color, #34c759)";
       button.style.transform = "scale(1.15)";
-      button.style.transition = "transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.15s ease";
+      button.style.transition =
+        "transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.15s ease";
 
-      setTimeout(() => { button.style.transform = "scale(1)"; }, 120);
+      setTimeout(() => {
+        button.style.transform = "scale(1)";
+      }, 120);
       setTimeout(() => resetState(), 1500);
     } catch (error) {
       console.warn("Copy to clipboard failed:", error);
@@ -348,7 +379,12 @@ export function initCopyButtonsVisibility(container) {
   };
 
   const observer = new MutationObserver((mutations) => {
-    if (mutations.some((mutation) => mutation.addedNodes.length > 0 || mutation.removedNodes.length > 0)) {
+    if (
+      mutations.some(
+        (mutation) =>
+          mutation.addedNodes.length > 0 || mutation.removedNodes.length > 0,
+      )
+    ) {
       scheduleUpdate();
     }
   });
@@ -356,7 +392,9 @@ export function initCopyButtonsVisibility(container) {
   observer.observe(container, { childList: true, subtree: true });
 
   const handleInteraction = () => scheduleUpdate();
-  container.addEventListener("mouseenter", handleInteraction, { passive: true });
+  container.addEventListener("mouseenter", handleInteraction, {
+    passive: true,
+  });
   container.addEventListener("focusin", handleInteraction, { passive: true });
   container.addEventListener("scroll", scheduleUpdate, { passive: true });
 
@@ -395,7 +433,8 @@ function normalizeMathDelimiters(input) {
   while (i < lines.length) {
     const line = lines[i];
 
-    if (isFence(line)) { // toggle code fence
+    if (isFence(line)) {
+      // toggle code fence
       inCode = !inCode;
       out.push(line);
       i += 1;
@@ -407,7 +446,10 @@ function normalizeMathDelimiters(input) {
       let j = i + 1;
       while (j < lines.length && !isCloseBracket(lines[j])) {
         // if a fence starts before close, abort conversion
-        if (isFence(lines[j])) { j = -1; break; }
+        if (isFence(lines[j])) {
+          j = -1;
+          break;
+        }
         j += 1;
       }
       if (j > i + 1 && j !== -1 && isCloseBracket(lines[j])) {
@@ -446,15 +488,22 @@ function convertParenInlineMath(src) {
   while (i < n) {
     // handle fences ``` or ~~~ at line starts
     if (!inInline) {
-      const lineStart = i === 0 || src[i-1] === "\n";
+      const lineStart = i === 0 || src[i - 1] === "\n";
       if (lineStart) {
-        if (!inFence && (src.startsWith("```", i) || src.startsWith("~~~", i))) {
+        if (
+          !inFence &&
+          (src.startsWith("```", i) || src.startsWith("~~~", i))
+        ) {
           inFence = true;
           fenceMarker = src.substr(i, 3);
-          out += fenceMarker; i += 3; continue;
+          out += fenceMarker;
+          i += 3;
+          continue;
         } else if (inFence && src.startsWith(fenceMarker, i)) {
           inFence = false;
-          out += fenceMarker; i += 3; continue;
+          out += fenceMarker;
+          i += 3;
+          continue;
         }
       }
     }
@@ -463,9 +512,13 @@ function convertParenInlineMath(src) {
     if (!inFence && src[i] === "`") {
       let tickCount = 1;
       let j = i + 1;
-      while (j < n && src[j] === "`") { tickCount++; j++; }
+      while (j < n && src[j] === "`") {
+        tickCount++;
+        j++;
+      }
       const marker = "`".repeat(tickCount);
-      out += marker; i = j;
+      out += marker;
+      i = j;
       // toggle inline — naive but effective
       inInline = !inInline;
       continue;
@@ -477,7 +530,10 @@ function convertParenInlineMath(src) {
       let j = i + 1;
       while (j < n && depth > 0) {
         const ch = src[j];
-        if (ch === "\\") { j += 2; continue; }
+        if (ch === "\\") {
+          j += 2;
+          continue;
+        }
         if (ch === "(") depth++;
         else if (ch === ")") depth--;
         j++;
@@ -506,15 +562,19 @@ function mergeSoftBreaksForMath(root) {
   while (walker.nextNode()) {
     const el = walker.currentNode;
     if (forbidden.has(el.nodeName)) continue;
-    if (el.closest && el.closest('.katex')) continue;
+    if (el.closest && el.closest(".katex")) continue;
     const children = Array.from(el.childNodes);
     if (!children.length) continue;
-    const onlyTextAndBr = children.every(n => n.nodeType === 3 || (n.nodeType === 1 && n.nodeName === 'BR'));
-    const hasBr = children.some(n => n.nodeType === 1 && n.nodeName === 'BR');
+    const onlyTextAndBr = children.every(
+      (n) => n.nodeType === 3 || (n.nodeType === 1 && n.nodeName === "BR"),
+    );
+    const hasBr = children.some((n) => n.nodeType === 1 && n.nodeName === "BR");
     if (onlyTextAndBr && hasBr) candidates.push(el);
   }
   for (const el of candidates) {
-    const parts = Array.from(el.childNodes).map(n => n.nodeType === 3 ? n.nodeValue : '\n');
+    const parts = Array.from(el.childNodes).map((n) =>
+      n.nodeType === 3 ? n.nodeValue : "\n",
+    );
     el.textContent = parts.join("");
   }
 }
@@ -530,9 +590,15 @@ export function isMathBalanced(text = "") {
     let single = 0;
     for (let i = 0; i < text.length; i++) {
       const ch = text[i];
-      if (ch === '\\') { i++; continue; }
-      if (ch === '$') {
-        if (text[i+1] === '$') { i++; continue; } // skip $$ counted above
+      if (ch === "\\") {
+        i++;
+        continue;
+      }
+      if (ch === "$") {
+        if (text[i + 1] === "$") {
+          i++;
+          continue;
+        } // skip $$ counted above
         single ^= 1; // toggle
       }
     }
@@ -550,9 +616,12 @@ export function isMathBalanced(text = "") {
     let braceBalance = 0;
     for (let i = 0; i < text.length; i++) {
       const ch = text[i];
-      if (ch === '\\') { i++; continue; } // 跳过转义
-      if (ch === '{') braceBalance++;
-      if (ch === '}') braceBalance--;
+      if (ch === "\\") {
+        i++;
+        continue;
+      } // 跳过转义
+      if (ch === "{") braceBalance++;
+      if (ch === "}") braceBalance--;
     }
     if (braceBalance !== 0) return false;
 

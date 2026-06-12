@@ -1,4 +1,3 @@
-
 // 选区保持管理器
 export class SelectionPreservationManager {
   constructor() {
@@ -23,10 +22,17 @@ export class SelectionPreservationManager {
   // 恢复选区
   restoreSelection(force = false) {
     const activeElement = document.activeElement;
-    if (activeElement &&
-        (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA') &&
-        activeElement.closest && activeElement.closest('.deepseek-quick-action-buttons, .quick-action-buttons')) {
-      if (!force) { // 非强制恢复时，如果焦点在QAB输入框，则不打扰
+    if (
+      activeElement &&
+      (activeElement.tagName === "INPUT" ||
+        activeElement.tagName === "TEXTAREA") &&
+      activeElement.closest &&
+      activeElement.closest(
+        ".deepseek-quick-action-buttons, .quick-action-buttons",
+      )
+    ) {
+      if (!force) {
+        // 非强制恢复时，如果焦点在QAB输入框，则不打扰
         return false;
       }
       // 如果是强制恢复(force=true)，目前逻辑会继续。这在某些情况是必要的（如QAB初次显示后）
@@ -47,19 +53,18 @@ export class SelectionPreservationManager {
       // 目的是减少不必要的DOM操作和事件触发
       let shouldRestore = force;
       if (!shouldRestore) {
-          if (selection.rangeCount === 0 || selection.isCollapsed) {
-              shouldRestore = true;
-          } else if (selection.toString().trim() !== this.savedText) {
-              shouldRestore = true;
-          }
+        if (selection.rangeCount === 0 || selection.isCollapsed) {
+          shouldRestore = true;
+        } else if (selection.toString().trim() !== this.savedText) {
+          shouldRestore = true;
+        }
       }
       // 如果isPreserving为false，但force为true，也应该恢复
-      if(!this.isPreserving && !force && !shouldRestore) return false;
-
+      if (!this.isPreserving && !force && !shouldRestore) return false;
 
       if (shouldRestore || force) {
-          selection.removeAllRanges();
-          selection.addRange(this.savedRange.cloneRange());
+        selection.removeAllRanges();
+        selection.addRange(this.savedRange.cloneRange());
       }
       return true;
     } catch (error) {
@@ -73,8 +78,10 @@ export class SelectionPreservationManager {
   isRangeValid(range) {
     try {
       if (!range || !range.startContainer || !range.endContainer) return false;
-      return document.contains(range.startContainer) &&
-             document.contains(range.endContainer);
+      return (
+        document.contains(range.startContainer) &&
+        document.contains(range.endContainer)
+      );
     } catch (error) {
       return false;
     }
@@ -127,9 +134,14 @@ export function isPointInSavedSelection(e, padding = 12) {
   try {
     if (!selectionManager.savedRange) return false;
     const rect = selectionManager.savedRange.getBoundingClientRect();
-    const x = e.clientX, y = e.clientY;
-    return x >= rect.left - padding && x <= rect.right + padding &&
-           y >= rect.top - padding && y <= rect.bottom + padding;
+    const x = e.clientX,
+      y = e.clientY;
+    return (
+      x >= rect.left - padding &&
+      x <= rect.right + padding &&
+      y >= rect.top - padding &&
+      y <= rect.bottom + padding
+    );
   } catch (_) {
     return false;
   }

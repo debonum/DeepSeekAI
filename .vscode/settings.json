@@ -1,5 +1,5 @@
 {
-    "editor.fontFamily": "Maple Mono NF CN, Menlo, Monaco, 'Courier New', monospace",
-    "editor.mouseWheelZoom": true,
-    "terminal.integrated.fontFamily": "Maple Mono NF CN"
+  "editor.fontFamily": "Maple Mono NF CN, Menlo, Monaco, 'Courier New', monospace",
+  "editor.mouseWheelZoom": true,
+  "terminal.integrated.fontFamily": "monospace"
 }

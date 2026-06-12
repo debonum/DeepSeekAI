@@ -13,8 +13,12 @@ export class UiManager {
       languageSelect: document.getElementById("language"),
       modelSelect: document.getElementById("model"),
       modelPickerTrigger: document.getElementById("modelPickerTrigger"),
-      modelPickerTriggerLabel: document.getElementById("modelPickerTriggerLabel"),
-      modelPickerTriggerValue: document.getElementById("modelPickerTriggerValue"),
+      modelPickerTriggerLabel: document.getElementById(
+        "modelPickerTriggerLabel",
+      ),
+      modelPickerTriggerValue: document.getElementById(
+        "modelPickerTriggerValue",
+      ),
       modelPickerModal: document.getElementById("modelPickerModal"),
       closeModelPickerModal: document.getElementById("closeModelPickerModal"),
       modelPickerTitle: document.getElementById("modelPickerTitle"),
@@ -27,22 +31,42 @@ export class UiManager {
       rememberWindowSize: document.getElementById("rememberWindowSize"),
       customApiUrl: document.getElementById("customApiUrl"),
       customApiUrlInput: document.getElementById("customApiUrlInput"),
-      customProviderNameInput: document.getElementById("customProviderNameInput"),
+      customProviderNameInput: document.getElementById(
+        "customProviderNameInput",
+      ),
       providerNameContainer: document.getElementById("providerNameContainer"),
       customModelIdInput: document.getElementById("customModelIdInput"),
       customModelNameInput: document.getElementById("customModelNameInput"),
       customModelContainer: document.getElementById("customModelContainer"),
       saveCustomProviderBtn: document.getElementById("saveCustomProviderBtn"),
-      saveCustomProviderContainer: document.getElementById("saveCustomProviderContainer"),
+      saveCustomProviderContainer: document.getElementById(
+        "saveCustomProviderContainer",
+      ),
       // 自定义 system prompt 相关元素
-      customSystemPromptButton: document.getElementById("customSystemPromptButton"),
-      customSystemPromptModal: document.getElementById("customSystemPromptModal"),
-      closeCustomSystemPromptModal: document.getElementById("closeCustomSystemPromptModal"),
-      customSystemPromptInput: document.getElementById("customSystemPromptInput"),
-      saveCustomSystemPromptButton: document.getElementById("saveCustomSystemPromptButton"),
-      cancelCustomSystemPromptButton: document.getElementById("cancelCustomSystemPromptButton"),
-      customSystemPromptValidationMessage: document.getElementById("customSystemPromptValidationMessage"),
-      customSystemPromptTitle: document.getElementById("customSystemPromptTitle"),
+      customSystemPromptButton: document.getElementById(
+        "customSystemPromptButton",
+      ),
+      customSystemPromptModal: document.getElementById(
+        "customSystemPromptModal",
+      ),
+      closeCustomSystemPromptModal: document.getElementById(
+        "closeCustomSystemPromptModal",
+      ),
+      customSystemPromptInput: document.getElementById(
+        "customSystemPromptInput",
+      ),
+      saveCustomSystemPromptButton: document.getElementById(
+        "saveCustomSystemPromptButton",
+      ),
+      cancelCustomSystemPromptButton: document.getElementById(
+        "cancelCustomSystemPromptButton",
+      ),
+      customSystemPromptValidationMessage: document.getElementById(
+        "customSystemPromptValidationMessage",
+      ),
+      customSystemPromptTitle: document.getElementById(
+        "customSystemPromptTitle",
+      ),
       charCount: document.getElementById("charCount"),
       // 添加模型相关元素
       addModelButton: document.getElementById("addModelButton"),
@@ -60,33 +84,63 @@ export class UiManager {
       modelApiKeyLabel: document.getElementById("modelApiKeyLabel"),
       // 自定义服务商弹窗元素
       customProviderModal: document.getElementById("customProviderModal"),
-      closeCustomProviderModal: document.getElementById("closeCustomProviderModal"),
+      closeCustomProviderModal: document.getElementById(
+        "closeCustomProviderModal",
+      ),
       customProviderApiKey: document.getElementById("customProviderApiKey"),
-      saveCustomProviderButton: document.getElementById("saveCustomProviderButton"),
-      cancelCustomProviderButton: document.getElementById("cancelCustomProviderButton"),
-      customProviderValidationMessage: document.getElementById("customProviderValidationMessage"),
+      saveCustomProviderButton: document.getElementById(
+        "saveCustomProviderButton",
+      ),
+      cancelCustomProviderButton: document.getElementById(
+        "cancelCustomProviderButton",
+      ),
+      customProviderValidationMessage: document.getElementById(
+        "customProviderValidationMessage",
+      ),
       customProviderTitle: document.getElementById("customProviderTitle"),
-      customProviderNameInputLabel: document.getElementById("customProviderNameInputLabel"),
+      customProviderNameInputLabel: document.getElementById(
+        "customProviderNameInputLabel",
+      ),
       customApiUrlInputLabel: document.getElementById("customApiUrlInputLabel"),
-      customModelNameInputLabel: document.getElementById("customModelNameInputLabel"),
-      customProviderApiKeyLabel: document.getElementById("customProviderApiKeyLabel"),
+      customModelNameInputLabel: document.getElementById(
+        "customModelNameInputLabel",
+      ),
+      customProviderApiKeyLabel: document.getElementById(
+        "customProviderApiKeyLabel",
+      ),
       // 删除服务商相关元素
       deleteProviderBtn: document.getElementById("deleteProviderBtn"),
       deleteProviderModal: document.getElementById("deleteProviderModal"),
-      closeDeleteProviderModal: document.getElementById("closeDeleteProviderModal"),
-      deleteProviderConfirmText: document.getElementById("deleteProviderConfirmText"),
-      cancelDeleteProviderButton: document.getElementById("cancelDeleteProviderButton"),
-      confirmDeleteProviderButton: document.getElementById("confirmDeleteProviderButton"),
-      deleteProviderValidationMessage: document.getElementById("deleteProviderValidationMessage"),
+      closeDeleteProviderModal: document.getElementById(
+        "closeDeleteProviderModal",
+      ),
+      deleteProviderConfirmText: document.getElementById(
+        "deleteProviderConfirmText",
+      ),
+      cancelDeleteProviderButton: document.getElementById(
+        "cancelDeleteProviderButton",
+      ),
+      confirmDeleteProviderButton: document.getElementById(
+        "confirmDeleteProviderButton",
+      ),
+      deleteProviderValidationMessage: document.getElementById(
+        "deleteProviderValidationMessage",
+      ),
       deleteProviderTitle: document.getElementById("deleteProviderTitle"),
       // 删除模型相关元素
       deleteModelModal: document.getElementById("deleteModelModal"),
       closeDeleteModelModal: document.getElementById("closeDeleteModelModal"),
       deleteModelConfirmText: document.getElementById("deleteModelConfirmText"),
-      cancelDeleteModelButton: document.getElementById("cancelDeleteModelButton"),
-      confirmDeleteModelButton: document.getElementById("confirmDeleteModelButton"),
-      deleteModelValidationMessage: document.getElementById("deleteModelValidationMessage"),
-      deleteModelTitle: document.getElementById("deleteModelTitle")
+      cancelDeleteModelButton: document.getElementById(
+        "cancelDeleteModelButton",
+      ),
+      confirmDeleteModelButton: document.getElementById(
+        "confirmDeleteModelButton",
+      ),
+      deleteModelValidationMessage: document.getElementById(
+        "deleteModelValidationMessage",
+      ),
+      deleteModelTitle: document.getElementById("deleteModelTitle"),
     };
   }
 
@@ -97,86 +151,122 @@ export class UiManager {
       this.elements.customApiUrl = document.getElementById("customApiUrl");
     }
     if (!this.elements.customApiUrlInput) {
-      this.elements.customApiUrlInput = document.getElementById("customApiUrlInput");
+      this.elements.customApiUrlInput =
+        document.getElementById("customApiUrlInput");
     }
     if (!this.elements.customProviderNameInput) {
-      this.elements.customProviderNameInput = document.getElementById("customProviderNameInput");
+      this.elements.customProviderNameInput = document.getElementById(
+        "customProviderNameInput",
+      );
     }
     if (!this.elements.providerNameContainer) {
-      this.elements.providerNameContainer = document.getElementById("providerNameContainer");
+      this.elements.providerNameContainer = document.getElementById(
+        "providerNameContainer",
+      );
     }
     if (!this.elements.customModelIdInput) {
-      this.elements.customModelIdInput = document.getElementById("customModelIdInput");
+      this.elements.customModelIdInput =
+        document.getElementById("customModelIdInput");
     }
     if (!this.elements.customModelNameInput) {
-      this.elements.customModelNameInput = document.getElementById("customModelNameInput");
+      this.elements.customModelNameInput = document.getElementById(
+        "customModelNameInput",
+      );
     }
     if (!this.elements.customModelContainer) {
-      this.elements.customModelContainer = document.getElementById("customModelContainer");
+      this.elements.customModelContainer = document.getElementById(
+        "customModelContainer",
+      );
     }
     if (!this.elements.saveCustomProviderBtn) {
-      this.elements.saveCustomProviderBtn = document.getElementById("saveCustomProviderBtn");
+      this.elements.saveCustomProviderBtn = document.getElementById(
+        "saveCustomProviderBtn",
+      );
     }
     if (!this.elements.saveCustomProviderContainer) {
-      this.elements.saveCustomProviderContainer = document.getElementById("saveCustomProviderContainer");
+      this.elements.saveCustomProviderContainer = document.getElementById(
+        "saveCustomProviderContainer",
+      );
     }
     // 添加模型相关元素
     if (!this.elements.addModelButton) {
       this.elements.addModelButton = document.getElementById("addModelButton");
     }
     if (!this.elements.modelPickerTrigger) {
-      this.elements.modelPickerTrigger = document.getElementById("modelPickerTrigger");
+      this.elements.modelPickerTrigger =
+        document.getElementById("modelPickerTrigger");
     }
     if (!this.elements.modelPickerTriggerLabel) {
-      this.elements.modelPickerTriggerLabel = document.getElementById("modelPickerTriggerLabel");
+      this.elements.modelPickerTriggerLabel = document.getElementById(
+        "modelPickerTriggerLabel",
+      );
     }
     if (!this.elements.modelPickerTriggerValue) {
-      this.elements.modelPickerTriggerValue = document.getElementById("modelPickerTriggerValue");
+      this.elements.modelPickerTriggerValue = document.getElementById(
+        "modelPickerTriggerValue",
+      );
     }
     if (!this.elements.modelPickerModal) {
-      this.elements.modelPickerModal = document.getElementById("modelPickerModal");
+      this.elements.modelPickerModal =
+        document.getElementById("modelPickerModal");
     }
     if (!this.elements.closeModelPickerModal) {
-      this.elements.closeModelPickerModal = document.getElementById("closeModelPickerModal");
+      this.elements.closeModelPickerModal = document.getElementById(
+        "closeModelPickerModal",
+      );
     }
     if (!this.elements.modelPickerTitle) {
-      this.elements.modelPickerTitle = document.getElementById("modelPickerTitle");
+      this.elements.modelPickerTitle =
+        document.getElementById("modelPickerTitle");
     }
     if (!this.elements.modelPickerSearch) {
-      this.elements.modelPickerSearch = document.getElementById("modelPickerSearch");
+      this.elements.modelPickerSearch =
+        document.getElementById("modelPickerSearch");
     }
     if (!this.elements.modelPickerList) {
-      this.elements.modelPickerList = document.getElementById("modelPickerList");
+      this.elements.modelPickerList =
+        document.getElementById("modelPickerList");
     }
     if (!this.elements.modelPickerEmptyState) {
-      this.elements.modelPickerEmptyState = document.getElementById("modelPickerEmptyState");
+      this.elements.modelPickerEmptyState = document.getElementById(
+        "modelPickerEmptyState",
+      );
     }
     if (!this.elements.modelPickerFooter) {
-      this.elements.modelPickerFooter = document.getElementById("modelPickerFooter");
+      this.elements.modelPickerFooter =
+        document.getElementById("modelPickerFooter");
     }
     if (!this.elements.modelPickerAddButton) {
-      this.elements.modelPickerAddButton = document.getElementById("modelPickerAddButton");
+      this.elements.modelPickerAddButton = document.getElementById(
+        "modelPickerAddButton",
+      );
     }
     if (!this.elements.addModelModal) {
       this.elements.addModelModal = document.getElementById("addModelModal");
     }
     if (!this.elements.closeModelModal) {
-      this.elements.closeModelModal = document.getElementById("closeModelModal");
+      this.elements.closeModelModal =
+        document.getElementById("closeModelModal");
     }
     if (!this.elements.modelApiId) {
       this.elements.modelApiId = document.getElementById("modelApiId");
     }
     if (!this.elements.modelDisplayName) {
-      this.elements.modelDisplayName = document.getElementById("modelDisplayName");
+      this.elements.modelDisplayName =
+        document.getElementById("modelDisplayName");
     }
     if (!this.elements.saveModelButton) {
-      this.elements.saveModelButton = document.getElementById("saveModelButton");
+      this.elements.saveModelButton =
+        document.getElementById("saveModelButton");
     }
     if (!this.elements.cancelModelButton) {
-      this.elements.cancelModelButton = document.getElementById("cancelModelButton");
+      this.elements.cancelModelButton =
+        document.getElementById("cancelModelButton");
     }
     if (!this.elements.modelValidationMessage) {
-      this.elements.modelValidationMessage = document.getElementById("modelValidationMessage");
+      this.elements.modelValidationMessage = document.getElementById(
+        "modelValidationMessage",
+      );
     }
     if (!this.elements.addModelTitle) {
       this.elements.addModelTitle = document.getElementById("addModelTitle");
@@ -185,113 +275,177 @@ export class UiManager {
       this.elements.modelIdLabel = document.getElementById("modelIdLabel");
     }
     if (!this.elements.modelDisplayNameLabel) {
-      this.elements.modelDisplayNameLabel = document.getElementById("modelDisplayNameLabel");
+      this.elements.modelDisplayNameLabel = document.getElementById(
+        "modelDisplayNameLabel",
+      );
     }
 
     // 自定义服务商弹窗元素
     if (!this.elements.customProviderModal) {
-      this.elements.customProviderModal = document.getElementById("customProviderModal");
+      this.elements.customProviderModal = document.getElementById(
+        "customProviderModal",
+      );
     }
     if (!this.elements.closeCustomProviderModal) {
-      this.elements.closeCustomProviderModal = document.getElementById("closeCustomProviderModal");
+      this.elements.closeCustomProviderModal = document.getElementById(
+        "closeCustomProviderModal",
+      );
     }
     if (!this.elements.customProviderApiKey) {
-      this.elements.customProviderApiKey = document.getElementById("customProviderApiKey");
+      this.elements.customProviderApiKey = document.getElementById(
+        "customProviderApiKey",
+      );
     }
     if (!this.elements.saveCustomProviderButton) {
-      this.elements.saveCustomProviderButton = document.getElementById("saveCustomProviderButton");
+      this.elements.saveCustomProviderButton = document.getElementById(
+        "saveCustomProviderButton",
+      );
     }
     if (!this.elements.cancelCustomProviderButton) {
-      this.elements.cancelCustomProviderButton = document.getElementById("cancelCustomProviderButton");
+      this.elements.cancelCustomProviderButton = document.getElementById(
+        "cancelCustomProviderButton",
+      );
     }
     if (!this.elements.customProviderValidationMessage) {
-      this.elements.customProviderValidationMessage = document.getElementById("customProviderValidationMessage");
+      this.elements.customProviderValidationMessage = document.getElementById(
+        "customProviderValidationMessage",
+      );
     }
     if (!this.elements.customProviderTitle) {
-      this.elements.customProviderTitle = document.getElementById("customProviderTitle");
+      this.elements.customProviderTitle = document.getElementById(
+        "customProviderTitle",
+      );
     }
     if (!this.elements.customApiUrlInputLabel) {
-      this.elements.customApiUrlInputLabel = document.getElementById("customApiUrlInputLabel");
+      this.elements.customApiUrlInputLabel = document.getElementById(
+        "customApiUrlInputLabel",
+      );
     }
     if (!this.elements.customModelNameInputLabel) {
-      this.elements.customModelNameInputLabel = document.getElementById("customModelNameInputLabel");
+      this.elements.customModelNameInputLabel = document.getElementById(
+        "customModelNameInputLabel",
+      );
     }
     if (!this.elements.customProviderApiKeyLabel) {
-      this.elements.customProviderApiKeyLabel = document.getElementById("customProviderApiKeyLabel");
+      this.elements.customProviderApiKeyLabel = document.getElementById(
+        "customProviderApiKeyLabel",
+      );
     }
 
     // 删除服务商相关元素
     if (!this.elements.deleteProviderBtn) {
-      this.elements.deleteProviderBtn = document.getElementById("deleteProviderBtn");
+      this.elements.deleteProviderBtn =
+        document.getElementById("deleteProviderBtn");
     }
     if (!this.elements.deleteProviderModal) {
-      this.elements.deleteProviderModal = document.getElementById("deleteProviderModal");
+      this.elements.deleteProviderModal = document.getElementById(
+        "deleteProviderModal",
+      );
     }
     if (!this.elements.closeDeleteProviderModal) {
-      this.elements.closeDeleteProviderModal = document.getElementById("closeDeleteProviderModal");
+      this.elements.closeDeleteProviderModal = document.getElementById(
+        "closeDeleteProviderModal",
+      );
     }
     if (!this.elements.deleteProviderConfirmText) {
-      this.elements.deleteProviderConfirmText = document.getElementById("deleteProviderConfirmText");
+      this.elements.deleteProviderConfirmText = document.getElementById(
+        "deleteProviderConfirmText",
+      );
     }
     if (!this.elements.cancelDeleteProviderButton) {
-      this.elements.cancelDeleteProviderButton = document.getElementById("cancelDeleteProviderButton");
+      this.elements.cancelDeleteProviderButton = document.getElementById(
+        "cancelDeleteProviderButton",
+      );
     }
     if (!this.elements.confirmDeleteProviderButton) {
-      this.elements.confirmDeleteProviderButton = document.getElementById("confirmDeleteProviderButton");
+      this.elements.confirmDeleteProviderButton = document.getElementById(
+        "confirmDeleteProviderButton",
+      );
     }
     if (!this.elements.deleteProviderValidationMessage) {
-      this.elements.deleteProviderValidationMessage = document.getElementById("deleteProviderValidationMessage");
+      this.elements.deleteProviderValidationMessage = document.getElementById(
+        "deleteProviderValidationMessage",
+      );
     }
     if (!this.elements.deleteProviderTitle) {
-      this.elements.deleteProviderTitle = document.getElementById("deleteProviderTitle");
+      this.elements.deleteProviderTitle = document.getElementById(
+        "deleteProviderTitle",
+      );
     }
     // 添加删除模型相关元素
     if (!this.elements.deleteModelModal) {
-      this.elements.deleteModelModal = document.getElementById("deleteModelModal");
+      this.elements.deleteModelModal =
+        document.getElementById("deleteModelModal");
     }
     if (!this.elements.closeDeleteModelModal) {
-      this.elements.closeDeleteModelModal = document.getElementById("closeDeleteModelModal");
+      this.elements.closeDeleteModelModal = document.getElementById(
+        "closeDeleteModelModal",
+      );
     }
     if (!this.elements.deleteModelConfirmText) {
-      this.elements.deleteModelConfirmText = document.getElementById("deleteModelConfirmText");
+      this.elements.deleteModelConfirmText = document.getElementById(
+        "deleteModelConfirmText",
+      );
     }
     if (!this.elements.cancelDeleteModelButton) {
-      this.elements.cancelDeleteModelButton = document.getElementById("cancelDeleteModelButton");
+      this.elements.cancelDeleteModelButton = document.getElementById(
+        "cancelDeleteModelButton",
+      );
     }
     if (!this.elements.confirmDeleteModelButton) {
-      this.elements.confirmDeleteModelButton = document.getElementById("confirmDeleteModelButton");
+      this.elements.confirmDeleteModelButton = document.getElementById(
+        "confirmDeleteModelButton",
+      );
     }
     if (!this.elements.deleteModelValidationMessage) {
-      this.elements.deleteModelValidationMessage = document.getElementById("deleteModelValidationMessage");
+      this.elements.deleteModelValidationMessage = document.getElementById(
+        "deleteModelValidationMessage",
+      );
     }
     if (!this.elements.deleteModelTitle) {
-      this.elements.deleteModelTitle = document.getElementById("deleteModelTitle");
+      this.elements.deleteModelTitle =
+        document.getElementById("deleteModelTitle");
     }
 
     // 自定义 system prompt 相关元素
     if (!this.elements.customSystemPromptButton) {
-      this.elements.customSystemPromptButton = document.getElementById("customSystemPromptButton");
+      this.elements.customSystemPromptButton = document.getElementById(
+        "customSystemPromptButton",
+      );
     }
     if (!this.elements.customSystemPromptModal) {
-      this.elements.customSystemPromptModal = document.getElementById("customSystemPromptModal");
+      this.elements.customSystemPromptModal = document.getElementById(
+        "customSystemPromptModal",
+      );
     }
     if (!this.elements.closeCustomSystemPromptModal) {
-      this.elements.closeCustomSystemPromptModal = document.getElementById("closeCustomSystemPromptModal");
+      this.elements.closeCustomSystemPromptModal = document.getElementById(
+        "closeCustomSystemPromptModal",
+      );
     }
     if (!this.elements.customSystemPromptInput) {
-      this.elements.customSystemPromptInput = document.getElementById("customSystemPromptInput");
+      this.elements.customSystemPromptInput = document.getElementById(
+        "customSystemPromptInput",
+      );
     }
     if (!this.elements.saveCustomSystemPromptButton) {
-      this.elements.saveCustomSystemPromptButton = document.getElementById("saveCustomSystemPromptButton");
+      this.elements.saveCustomSystemPromptButton = document.getElementById(
+        "saveCustomSystemPromptButton",
+      );
     }
     if (!this.elements.cancelCustomSystemPromptButton) {
-      this.elements.cancelCustomSystemPromptButton = document.getElementById("cancelCustomSystemPromptButton");
+      this.elements.cancelCustomSystemPromptButton = document.getElementById(
+        "cancelCustomSystemPromptButton",
+      );
     }
     if (!this.elements.customSystemPromptValidationMessage) {
-      this.elements.customSystemPromptValidationMessage = document.getElementById("customSystemPromptValidationMessage");
+      this.elements.customSystemPromptValidationMessage =
+        document.getElementById("customSystemPromptValidationMessage");
     }
     if (!this.elements.customSystemPromptTitle) {
-      this.elements.customSystemPromptTitle = document.getElementById("customSystemPromptTitle");
+      this.elements.customSystemPromptTitle = document.getElementById(
+        "customSystemPromptTitle",
+      );
     }
     if (!this.elements.charCount) {
       this.elements.charCount = document.getElementById("charCount");
@@ -302,9 +456,9 @@ export class UiManager {
   showAddModelModal() {
     this.refreshElements();
     if (this.elements.addModelModal) {
-      this.elements.addModelModal.classList.add('show');
-      this.elements.modelApiId.value = '';
-      this.elements.modelDisplayName.value = '';
+      this.elements.addModelModal.classList.add("show");
+      this.elements.modelApiId.value = "";
+      this.elements.modelDisplayName.value = "";
       this.clearValidationMessage(this.elements.modelValidationMessage);
     }
   }
@@ -313,10 +467,10 @@ export class UiManager {
   hideAddModelModal() {
     this.refreshElements();
     if (this.elements.addModelModal) {
-      this.elements.addModelModal.classList.remove('show');
+      this.elements.addModelModal.classList.remove("show");
       // 清空输入字段
-      this.elements.modelApiId.value = '';
-      this.elements.modelDisplayName.value = '';
+      this.elements.modelApiId.value = "";
+      this.elements.modelDisplayName.value = "";
       this.clearValidationMessage(this.elements.modelValidationMessage);
     }
   }
@@ -325,24 +479,26 @@ export class UiManager {
   showCustomProviderModal() {
     this.refreshElements();
     if (this.elements.customProviderModal) {
-      this.elements.customProviderModal.classList.add('show');
+      this.elements.customProviderModal.classList.add("show");
       // 清空输入字段
       if (this.elements.customProviderNameInput) {
-        this.elements.customProviderNameInput.value = '';
+        this.elements.customProviderNameInput.value = "";
       }
       if (this.elements.customProviderApiKey) {
-        this.elements.customProviderApiKey.value = '';
+        this.elements.customProviderApiKey.value = "";
       }
       if (this.elements.customApiUrlInput) {
-        this.elements.customApiUrlInput.value = '';
+        this.elements.customApiUrlInput.value = "";
       }
       if (this.elements.customModelIdInput) {
-        this.elements.customModelIdInput.value = '';
+        this.elements.customModelIdInput.value = "";
       }
       if (this.elements.customModelNameInput) {
-        this.elements.customModelNameInput.value = '';
+        this.elements.customModelNameInput.value = "";
       }
-      this.clearValidationMessage(this.elements.customProviderValidationMessage);
+      this.clearValidationMessage(
+        this.elements.customProviderValidationMessage,
+      );
     }
   }
 
@@ -350,32 +506,34 @@ export class UiManager {
   hideCustomProviderModal() {
     this.refreshElements();
     if (this.elements.customProviderModal) {
-      this.elements.customProviderModal.classList.remove('show');
+      this.elements.customProviderModal.classList.remove("show");
       // 清空输入字段
       if (this.elements.customProviderNameInput) {
-        this.elements.customProviderNameInput.value = '';
+        this.elements.customProviderNameInput.value = "";
       }
       if (this.elements.customProviderApiKey) {
-        this.elements.customProviderApiKey.value = '';
+        this.elements.customProviderApiKey.value = "";
       }
       if (this.elements.customApiUrlInput) {
-        this.elements.customApiUrlInput.value = '';
+        this.elements.customApiUrlInput.value = "";
       }
       if (this.elements.customModelIdInput) {
-        this.elements.customModelIdInput.value = '';
+        this.elements.customModelIdInput.value = "";
       }
       if (this.elements.customModelNameInput) {
-        this.elements.customModelNameInput.value = '';
+        this.elements.customModelNameInput.value = "";
       }
-      this.clearValidationMessage(this.elements.customProviderValidationMessage);
+      this.clearValidationMessage(
+        this.elements.customProviderValidationMessage,
+      );
     }
   }
 
   // 清除验证消息的通用方法
   clearValidationMessage(element) {
     if (element) {
-      element.innerHTML = '';
-      element.className = 'validation-message';
+      element.innerHTML = "";
+      element.className = "validation-message";
     }
   }
 
@@ -392,26 +550,28 @@ export class UiManager {
   // 获取模型API ID
   getModelApiId() {
     this.refreshElements();
-    return this.elements.modelApiId?.value?.trim() || '';
+    return this.elements.modelApiId?.value?.trim() || "";
   }
 
   // 获取模型显示名称输入值
   getModelDisplayNameValue() {
     this.refreshElements();
-    return this.elements.modelDisplayName?.value?.trim() || '';
+    return this.elements.modelDisplayName?.value?.trim() || "";
   }
 
   // 获取模型显示名称
   getModelDisplayName() {
     this.refreshElements();
-    return this.elements.modelDisplayName?.textContent?.trim() || '';
+    return this.elements.modelDisplayName?.textContent?.trim() || "";
   }
 
   // 显示或隐藏Provider Name输入框
   toggleProviderNameContainer(show) {
     this.refreshElements();
     if (this.elements.providerNameContainer) {
-      this.elements.providerNameContainer.style.display = show ? 'flex' : 'none';
+      this.elements.providerNameContainer.style.display = show
+        ? "flex"
+        : "none";
     }
   }
 
@@ -419,7 +579,7 @@ export class UiManager {
   toggleCustomModelContainer(show) {
     this.refreshElements();
     if (this.elements.customModelContainer) {
-      this.elements.customModelContainer.style.display = show ? 'flex' : 'none';
+      this.elements.customModelContainer.style.display = show ? "flex" : "none";
     }
   }
 
@@ -427,32 +587,34 @@ export class UiManager {
   toggleSaveCustomProviderBtn(show) {
     this.refreshElements();
     if (this.elements.saveCustomProviderContainer) {
-      this.elements.saveCustomProviderContainer.style.display = show ? 'block' : 'none';
+      this.elements.saveCustomProviderContainer.style.display = show
+        ? "block"
+        : "none";
     }
   }
 
   // 获取自定义Provider名称
   getCustomProviderName() {
     this.refreshElements();
-    return this.elements.customProviderNameInput?.value?.trim() || '';
+    return this.elements.customProviderNameInput?.value?.trim() || "";
   }
 
   // 获取自定义服务商API密钥
   getCustomProviderApiKey() {
     this.refreshElements();
-    return this.elements.customProviderApiKey?.value?.trim() || '';
+    return this.elements.customProviderApiKey?.value?.trim() || "";
   }
 
   // 获取自定义Model名称
   getCustomModelName() {
     this.refreshElements();
-    return this.elements.customModelNameInput?.value?.trim() || '';
+    return this.elements.customModelNameInput?.value?.trim() || "";
   }
 
   // 获取自定义Model ID
   getCustomModelId() {
     this.refreshElements();
-    return this.elements.customModelIdInput?.value?.trim() || '';
+    return this.elements.customModelIdInput?.value?.trim() || "";
   }
 
   // 添加自定义Provider到下拉列表
@@ -466,7 +628,7 @@ export class UiManager {
     }
 
     // 创建新的选项
-    const option = document.createElement('option');
+    const option = document.createElement("option");
     option.value = id;
     option.id = id;
     option.textContent = name;
@@ -482,33 +644,35 @@ export class UiManager {
 
   showMessage(message, isSuccess) {
     // 使用已存在的错误消息div
-    const errorMessageElement = document.getElementById('errorMessage');
+    const errorMessageElement = document.getElementById("errorMessage");
     if (!errorMessageElement) return;
 
     // 清空原有内容
-    errorMessageElement.innerHTML = '';
+    errorMessageElement.innerHTML = "";
 
     // 设置正确的class
-    errorMessageElement.className = isSuccess ? 'success-message' : 'error-message';
+    errorMessageElement.className = isSuccess
+      ? "success-message"
+      : "error-message";
 
     // 检查是否是验证中的消息
-    if (message.includes('验证中') || message.includes('Validating')) {
+    if (message.includes("验证中") || message.includes("Validating")) {
       // 创建文本节点
-      const textNode = document.createTextNode(message + ' ');
+      const textNode = document.createTextNode(message + " ");
       errorMessageElement.appendChild(textNode);
 
       // 创建加载动画
-      const spinner = document.createElement('span');
-      spinner.className = 'spinner';
+      const spinner = document.createElement("span");
+      spinner.className = "spinner";
       errorMessageElement.appendChild(spinner);
     } else {
       // 普通消息
       errorMessageElement.textContent = message;
 
       // 如果不是验证消息，2秒后自动清除
-      if (!message.includes('验证') && !message.includes('Validating')) {
+      if (!message.includes("验证") && !message.includes("Validating")) {
         setTimeout(() => {
-          errorMessageElement.textContent = '';
+          errorMessageElement.textContent = "";
         }, 2000);
       }
     }
@@ -517,7 +681,9 @@ export class UiManager {
   toggleApiKeyVisibility() {
     const isPassword = this.elements.apiKeyInput.type === "password";
     this.elements.apiKeyInput.type = isPassword ? "text" : "password";
-    this.elements.iconSwitch.src = isPassword ? "../icons/hiddle.svg" : "../icons/show.svg";
+    this.elements.iconSwitch.src = isPassword
+      ? "../icons/hiddle.svg"
+      : "../icons/show.svg";
   }
 
   getApiKeyValue() {
@@ -530,12 +696,12 @@ export class UiManager {
 
   getCustomApiUrlValue() {
     this.refreshElements();
-    return this.elements.customApiUrl?.value?.trim() || '';
+    return this.elements.customApiUrl?.value?.trim() || "";
   }
 
   getModalCustomApiUrlValue() {
     this.refreshElements();
-    return this.elements.customApiUrlInput?.value?.trim() || '';
+    return this.elements.customApiUrlInput?.value?.trim() || "";
   }
 
   setCustomApiUrlValue(value) {
@@ -561,8 +727,10 @@ export class UiManager {
   showDeleteProviderModal() {
     this.refreshElements();
     if (this.elements.deleteProviderModal) {
-      this.elements.deleteProviderModal.classList.add('show');
-      this.clearValidationMessage(this.elements.deleteProviderValidationMessage);
+      this.elements.deleteProviderModal.classList.add("show");
+      this.clearValidationMessage(
+        this.elements.deleteProviderValidationMessage,
+      );
     }
   }
 
@@ -572,8 +740,10 @@ export class UiManager {
   hideDeleteProviderModal() {
     this.refreshElements();
     if (this.elements.deleteProviderModal) {
-      this.elements.deleteProviderModal.classList.remove('show');
-      this.clearValidationMessage(this.elements.deleteProviderValidationMessage);
+      this.elements.deleteProviderModal.classList.remove("show");
+      this.clearValidationMessage(
+        this.elements.deleteProviderValidationMessage,
+      );
     }
   }
 
@@ -585,11 +755,12 @@ export class UiManager {
   showDeleteProviderValidationMessage(message, isSuccess) {
     if (this.elements.deleteProviderValidationMessage) {
       this.elements.deleteProviderValidationMessage.textContent = message;
-      this.elements.deleteProviderValidationMessage.className = 'validation-message';
+      this.elements.deleteProviderValidationMessage.className =
+        "validation-message";
       if (isSuccess) {
-        this.elements.deleteProviderValidationMessage.classList.add('success');
+        this.elements.deleteProviderValidationMessage.classList.add("success");
       } else {
-        this.elements.deleteProviderValidationMessage.classList.add('error');
+        this.elements.deleteProviderValidationMessage.classList.add("error");
       }
     }
   }
@@ -598,8 +769,10 @@ export class UiManager {
   showCustomSystemPromptModal() {
     this.refreshElements();
     if (this.elements.customSystemPromptModal) {
-      this.elements.customSystemPromptModal.classList.add('show');
-      this.clearValidationMessage(this.elements.customSystemPromptValidationMessage);
+      this.elements.customSystemPromptModal.classList.add("show");
+      this.clearValidationMessage(
+        this.elements.customSystemPromptValidationMessage,
+      );
     }
   }
 
@@ -607,15 +780,17 @@ export class UiManager {
   hideCustomSystemPromptModal() {
     this.refreshElements();
     if (this.elements.customSystemPromptModal) {
-      this.elements.customSystemPromptModal.classList.remove('show');
-      this.clearValidationMessage(this.elements.customSystemPromptValidationMessage);
+      this.elements.customSystemPromptModal.classList.remove("show");
+      this.clearValidationMessage(
+        this.elements.customSystemPromptValidationMessage,
+      );
     }
   }
 
   // 获取自定义 system prompt 输入值
   getCustomSystemPromptValue() {
     this.refreshElements();
-    return this.elements.customSystemPromptInput?.value?.trim() || '';
+    return this.elements.customSystemPromptInput?.value?.trim() || "";
   }
 
   // 设置自定义 system prompt 输入值
@@ -630,11 +805,16 @@ export class UiManager {
   showCustomSystemPromptValidationMessage(message, isSuccess) {
     if (this.elements.customSystemPromptValidationMessage) {
       this.elements.customSystemPromptValidationMessage.textContent = message;
-      this.elements.customSystemPromptValidationMessage.className = 'validation-message';
+      this.elements.customSystemPromptValidationMessage.className =
+        "validation-message";
       if (isSuccess) {
-        this.elements.customSystemPromptValidationMessage.classList.add('success');
+        this.elements.customSystemPromptValidationMessage.classList.add(
+          "success",
+        );
       } else {
-        this.elements.customSystemPromptValidationMessage.classList.add('error');
+        this.elements.customSystemPromptValidationMessage.classList.add(
+          "error",
+        );
       }
     }
   }

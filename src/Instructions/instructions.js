@@ -26,16 +26,19 @@ const translations = {
     ],
     usage: "使用方法",
     quickButton: "快捷按钮使用",
-    quickButtonDesc: "在扩展设置中开启快捷按钮后，选中网页文本时会自动显示一个工具栏，可以根据自己的需求单击对应按钮。",
+    quickButtonDesc:
+      "在扩展设置中开启快捷按钮后，选中网页文本时会自动显示一个工具栏，可以根据自己的需求单击对应按钮。",
     shortcutUsage: "快捷键使用",
     shortcutUsageDesc:
       "扩展提供了三种可自定义的快捷键，无论是否选中文本都可使用，可在浏览器的扩展设置中修改：",
     shortcutKey1: "激活扩展程序",
     shortcutKey1Desc: "快速激活 DeepSeek AI 扩展",
     shortcutKey2: "显示/隐藏对话窗口",
-    shortcutKey2Desc: "切换对话窗口的显示状态（保留当前会话内容，无论是否选中文本都可使用）",
+    shortcutKey2Desc:
+      "切换对话窗口的显示状态（保留当前会话内容，无论是否选中文本都可使用）",
     shortcutKey3: "打开/关闭对话窗口",
-    shortcutKey3Desc: "打开或关闭对话窗口（关闭时会清除会话记录，无论是否选中文本都可使用）",
+    shortcutKey3Desc:
+      "打开或关闭对话窗口（关闭时会清除会话记录，无论是否选中文本都可使用）",
     shortcutCustomTipPrefix: "提示：可在",
     shortcutCustomTipSuffix: "页面自定义这些快捷键",
     features: "功能特点",
@@ -93,16 +96,19 @@ const translations = {
     ],
     usage: "Usage",
     quickButton: "Quick Button Usage",
-    quickButtonDesc: "After enabling the quick button in the extension settings, a toolbar will automatically appear when you select webpage text, allowing you to click on the corresponding button according to your needs.",
+    quickButtonDesc:
+      "After enabling the quick button in the extension settings, a toolbar will automatically appear when you select webpage text, allowing you to click on the corresponding button according to your needs.",
     shortcutUsage: "Shortcut Usage",
     shortcutUsageDesc:
       "The extension provides three customizable shortcuts that work regardless of whether text is selected, and can be modified in your browser's extension settings:",
     shortcutKey1: "Activate Extension",
     shortcutKey1Desc: "Quickly activate the DeepSeek AI extension",
     shortcutKey2: "Show/Hide Chat Window",
-    shortcutKey2Desc: "Toggle the chat window visibility (preserves current session, works regardless of text selection)",
+    shortcutKey2Desc:
+      "Toggle the chat window visibility (preserves current session, works regardless of text selection)",
     shortcutKey3: "Open/Close Chat Window",
-    shortcutKey3Desc: "Open or close the chat window (clears session history when closed, works regardless of text selection)",
+    shortcutKey3Desc:
+      "Open or close the chat window (clears session history when closed, works regardless of text selection)",
     shortcutCustomTipPrefix: "Tip: Customize these shortcuts at",
     shortcutCustomTipSuffix: "",
     features: "Features",
@@ -167,27 +173,36 @@ const updateContent = () => {
   document.getElementById("edge-desc").textContent = langData.edgeDesc;
 
   // Handle hidden elements safely
-  if (document.getElementById("deepseek-website")) document.getElementById("deepseek-website").textContent = langData.deepseekWebsite;
-  if (document.getElementById("deepseek-desc")) document.getElementById("deepseek-desc").textContent = langData.deepseekDesc;
+  if (document.getElementById("deepseek-website"))
+    document.getElementById("deepseek-website").textContent =
+      langData.deepseekWebsite;
+  if (document.getElementById("deepseek-desc"))
+    document.getElementById("deepseek-desc").textContent =
+      langData.deepseekDesc;
 
   document.getElementById("api-key").textContent = langData.apiKey;
   document.getElementById("api-desc").textContent = langData.apiDesc;
 
-  if (document.getElementById("shortcuts")) document.getElementById("shortcuts").textContent = langData.shortcuts;
-  if (document.getElementById("shortcuts-desc")) document.getElementById("shortcuts-desc").textContent = langData.shortcutsDesc;
+  if (document.getElementById("shortcuts"))
+    document.getElementById("shortcuts").textContent = langData.shortcuts;
+  if (document.getElementById("shortcuts-desc"))
+    document.getElementById("shortcuts-desc").textContent =
+      langData.shortcutsDesc;
 
   document.getElementById("github").textContent = langData.github;
   document.getElementById("github-desc").textContent = langData.githubDesc;
 
   // Update installation steps - New Structure
-  const stepsContainer = document.getElementById("installation-steps-container");
+  const stepsContainer = document.getElementById(
+    "installation-steps-container",
+  );
   if (stepsContainer) {
-    stepsContainer.innerHTML = ''; // Clear existing steps
+    stepsContainer.innerHTML = ""; // Clear existing steps
     langData.installationSteps.forEach((stepText) => {
-      const stepItem = document.createElement('div');
-      stepItem.className = 'step-item';
-      const stepContent = document.createElement('div');
-      stepContent.className = 'step-content';
+      const stepItem = document.createElement("div");
+      stepItem.className = "step-item";
+      const stepContent = document.createElement("div");
+      stepContent.className = "step-content";
       stepContent.textContent = stepText;
       stepItem.appendChild(stepContent);
       stepsContainer.appendChild(stepItem);
@@ -196,7 +211,8 @@ const updateContent = () => {
 
   document.getElementById("usage").textContent = langData.usage;
   document.getElementById("quick-button").textContent = langData.quickButton;
-  document.getElementById("quick-button-desc").textContent = langData.quickButtonDesc;
+  document.getElementById("quick-button-desc").textContent =
+    langData.quickButtonDesc;
   document.getElementById("shortcut-usage").textContent =
     langData.shortcutUsage;
   document.getElementById("shortcut-usage-desc").textContent =
@@ -204,28 +220,36 @@ const updateContent = () => {
 
   // Update shortcut descriptions
   if (document.getElementById("shortcut-key-1")) {
-    document.getElementById("shortcut-key-1").textContent = langData.shortcutKey1;
+    document.getElementById("shortcut-key-1").textContent =
+      langData.shortcutKey1;
   }
   if (document.getElementById("shortcut-key-1-desc")) {
-    document.getElementById("shortcut-key-1-desc").textContent = langData.shortcutKey1Desc;
+    document.getElementById("shortcut-key-1-desc").textContent =
+      langData.shortcutKey1Desc;
   }
   if (document.getElementById("shortcut-key-2")) {
-    document.getElementById("shortcut-key-2").textContent = langData.shortcutKey2;
+    document.getElementById("shortcut-key-2").textContent =
+      langData.shortcutKey2;
   }
   if (document.getElementById("shortcut-key-2-desc")) {
-    document.getElementById("shortcut-key-2-desc").textContent = langData.shortcutKey2Desc;
+    document.getElementById("shortcut-key-2-desc").textContent =
+      langData.shortcutKey2Desc;
   }
   if (document.getElementById("shortcut-key-3")) {
-    document.getElementById("shortcut-key-3").textContent = langData.shortcutKey3;
+    document.getElementById("shortcut-key-3").textContent =
+      langData.shortcutKey3;
   }
   if (document.getElementById("shortcut-key-3-desc")) {
-    document.getElementById("shortcut-key-3-desc").textContent = langData.shortcutKey3Desc;
+    document.getElementById("shortcut-key-3-desc").textContent =
+      langData.shortcutKey3Desc;
   }
   if (document.getElementById("shortcut-custom-tip-prefix")) {
-    document.getElementById("shortcut-custom-tip-prefix").textContent = langData.shortcutCustomTipPrefix;
+    document.getElementById("shortcut-custom-tip-prefix").textContent =
+      langData.shortcutCustomTipPrefix;
   }
   if (document.getElementById("shortcut-custom-tip-suffix")) {
-    document.getElementById("shortcut-custom-tip-suffix").textContent = langData.shortcutCustomTipSuffix || "";
+    document.getElementById("shortcut-custom-tip-suffix").textContent =
+      langData.shortcutCustomTipSuffix || "";
   }
 
   document.getElementById("features").textContent = langData.features;
@@ -244,7 +268,9 @@ const updateContent = () => {
   document.getElementById("ui-interaction-4").textContent =
     langData.uiInteraction4;
   // ui-interaction-5 might be missing in new design, handle safely
-  if (document.getElementById("ui-interaction-5")) document.getElementById("ui-interaction-5").textContent = langData.uiInteraction5;
+  if (document.getElementById("ui-interaction-5"))
+    document.getElementById("ui-interaction-5").textContent =
+      langData.uiInteraction5;
 
   document.getElementById("personalization").textContent =
     langData.personalization;
@@ -256,10 +282,14 @@ const updateContent = () => {
     langData.personalization3;
 
   // Tips section might be hidden or restructured
-  if (document.getElementById("tips")) document.getElementById("tips").textContent = langData.tips;
-  if (document.getElementById("tip-1")) document.getElementById("tip-1").textContent = langData.tip1;
-  if (document.getElementById("tip-2")) document.getElementById("tip-2").textContent = langData.tip2;
-  if (document.getElementById("tip-3")) document.getElementById("tip-3").textContent = langData.tip3;
+  if (document.getElementById("tips"))
+    document.getElementById("tips").textContent = langData.tips;
+  if (document.getElementById("tip-1"))
+    document.getElementById("tip-1").textContent = langData.tip1;
+  if (document.getElementById("tip-2"))
+    document.getElementById("tip-2").textContent = langData.tip2;
+  if (document.getElementById("tip-3"))
+    document.getElementById("tip-3").textContent = langData.tip3;
 
   document.getElementById("feedback").textContent = langData.feedback;
   document.getElementById("feedback-desc").textContent = langData.feedbackDesc;
@@ -284,13 +314,15 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Check for file access hash
-  if (window.location.hash === '#file-access') {
-    const cnMsg = "请在扩展管理页面中启用“允许访问文件网址”权限，以便在本地文件中使用 DeepSeek AI。";
-    const enMsg = "Please enable 'Allow access to file URLs' in the extension management page to use DeepSeek AI with local files.";
+  if (window.location.hash === "#file-access") {
+    const cnMsg =
+      "请在扩展管理页面中启用“允许访问文件网址”权限，以便在本地文件中使用 DeepSeek AI。";
+    const enMsg =
+      "Please enable 'Allow access to file URLs' in the extension management page to use DeepSeek AI with local files.";
     // Simple alert for immediate attention. A custom modal would be better but this is effective and simple.
     // Using setTimeout to ensure the page renders first
     setTimeout(() => {
-        alert(currentLang === 'zh' ? cnMsg : enMsg);
+      alert(currentLang === "zh" ? cnMsg : enMsg);
     }, 500);
   }
 });
@@ -304,7 +336,9 @@ document
   });
 
 // 快捷键设置链接点击事件
-const shortcutsSettingsLink = document.getElementById("shortcuts-settings-link");
+const shortcutsSettingsLink = document.getElementById(
+  "shortcuts-settings-link",
+);
 if (shortcutsSettingsLink) {
   shortcutsSettingsLink.addEventListener("click", function (e) {
     e.preventDefault();

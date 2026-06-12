@@ -8,21 +8,39 @@ class PopupStateManager {
   }
 
   // 基本状态
-  setCreating(value) { this.isCreatingPopup = Boolean(value); }
-  setVisible(value) { this.isPopupVisible = Boolean(value); }
-  isCreating() { return this.isCreatingPopup; }
-  isVisible() { return this.isPopupVisible; }
+  setCreating(value) {
+    this.isCreatingPopup = Boolean(value);
+  }
+  setVisible(value) {
+    this.isPopupVisible = Boolean(value);
+  }
+  isCreating() {
+    return this.isCreatingPopup;
+  }
+  isVisible() {
+    return this.isPopupVisible;
+  }
 
   // 最小化状态
-  setMinimized(value) { this.isPopupMinimized = Boolean(value); }
-  isMinimized() { return this.isPopupMinimized; }
+  setMinimized(value) {
+    this.isPopupMinimized = Boolean(value);
+  }
+  isMinimized() {
+    return this.isPopupMinimized;
+  }
 
   // 图标位置持久化（同步存储，容错返回默认值）
   async saveIconPosition(bottom, right) {
     try {
-      const b = Number.isFinite(bottom) ? bottom : this.DEFAULT_ICON_POSITION.bottom;
-      const r = Number.isFinite(right) ? right : this.DEFAULT_ICON_POSITION.right;
-      await chrome.storage.sync.set({ minimizeIconPosition: { bottom: b, right: r } });
+      const b = Number.isFinite(bottom)
+        ? bottom
+        : this.DEFAULT_ICON_POSITION.bottom;
+      const r = Number.isFinite(right)
+        ? right
+        : this.DEFAULT_ICON_POSITION.right;
+      await chrome.storage.sync.set({
+        minimizeIconPosition: { bottom: b, right: r },
+      });
     } catch (_) {
       // 忽略存储错误，避免影响主流程
     }
@@ -30,13 +48,9 @@ class PopupStateManager {
 
   async loadIconPosition() {
     try {
-      const data = await chrome.storage.sync.get(['minimizeIconPosition']);
+      const data = await chrome.storage.sync.get(["minimizeIconPosition"]);
       const pos = data && data.minimizeIconPosition;
-      if (
-        pos &&
-        Number.isFinite(pos.bottom) &&
-        Number.isFinite(pos.right)
-      ) {
+      if (pos && Number.isFinite(pos.bottom) && Number.isFinite(pos.right)) {
         return { bottom: pos.bottom, right: pos.right };
       }
     } catch (_) {
